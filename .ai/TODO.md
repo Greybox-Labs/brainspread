@@ -1,5 +1,5 @@
 # Features
 - [x] daily journal
-- [ ] web history import
+- [ ] refactor into logseq clone
 
 # Bugs
