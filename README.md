@@ -1,7 +1,7 @@
 # Django w/ Postgres starter
 
 * git clone the repo to your machine
-* find and replace instances of `yourproject` with the name of your project
+* find and replace instances of `yourproject` with the name of your project (already done for brainspread)
 * `$ cd packages/django-app`
 * `python -m venv .venv`
   * not technically necessary, but useful for installing locally to add pip packages and update the requirements.txt file
