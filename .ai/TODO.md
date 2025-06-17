@@ -1,5 +1,5 @@
 # Features
-- daily journal
-- 
+- [x] daily journal
+- [ ] web history import
 
 # Bugs

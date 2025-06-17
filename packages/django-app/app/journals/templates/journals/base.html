@@ -1,31 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Journals{% endblock %}</title>
-    {% load static %}
-    {% csrf_token %}
-    <link rel="stylesheet" href="{% static 'journals/css/app.css' %}">
+    {% load static %} {% csrf_token %}
+    <link rel="stylesheet" href="{% static 'journals/css/app.css' %}" />
     {% block extra_css %}{% endblock %}
-</head>
-<body>
-    <div id="app">
-        {% block content %}{% endblock %}
-    </div>
+  </head>
+  <body>
+    <div id="app">{% block content %}{% endblock %}</div>
 
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    
+
     <!-- API Service -->
     <script src="{% static 'journals/js/services/api.js' %}"></script>
-    
+
     <!-- Vue Components -->
     <script src="{% static 'journals/js/components/LoginForm.js' %}"></script>
     <script src="{% static 'journals/js/components/JournalEntry.js' %}"></script>
-    
+
     <!-- Main App -->
     <script src="{% static 'journals/js/app.js' %}"></script>
     {% block extra_js %}{% endblock %}
-</body>
+  </body>
 </html>

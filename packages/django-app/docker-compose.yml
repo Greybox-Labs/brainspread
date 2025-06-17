@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 name: brainspread
 
@@ -26,13 +26,13 @@ services:
       - STATIC_ROOT=/code/app/static/
       - MEDIA_ROOT=/code/app/media/
     command:
-      - '/code/bin/wait-for-it.sh'
-      - 'db:5432'
-      - '--'
-      - 'python'
-      - '/code/app/manage.py'
-      - 'runserver'
-      - '0.0.0.0:8000'
+      - "/code/bin/wait-for-it.sh"
+      - "db:5432"
+      - "--"
+      - "python"
+      - "/code/app/manage.py"
+      - "runserver"
+      - "0.0.0.0:8000"
     volumes:
       - .:/code
     ports:

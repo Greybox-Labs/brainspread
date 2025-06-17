@@ -11,7 +11,9 @@
       "Bash(python manage.py startapp:*)",
       "Bash(docker-compose exec:*)",
       "Bash(pipenv lock:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,7 @@
+.venv/
+node_modules/
+*.min.js
+*.min.css
+dist/
+build/
+dev_data.json

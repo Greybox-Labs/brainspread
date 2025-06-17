@@ -2,74 +2,74 @@ const { createApp } = Vue;
 
 // Global Vue app for journals
 const JournalsApp = createApp({
-    data() {
-        return {
-            user: null,
-            isAuthenticated: false,
-            currentView: 'journal', // 'journal' or 'login'
-            loading: true
-        }
-    },
-    
-    components: {
-        JournalEntry: window.JournalEntry,
-        LoginForm: window.LoginForm
-    },
-    
-    async mounted() {
-        console.log('Journals app mounted');
-        await this.checkAuth();
-    },
-    
-    methods: {
-        async checkAuth() {
-            this.loading = true;
-            
-            if (window.apiService.isAuthenticated()) {
-                try {
-                    const result = await window.apiService.me();
-                    if (result.success) {
-                        this.user = result.data.user;
-                        this.isAuthenticated = true;
-                        this.currentView = 'journal';
-                    } else {
-                        this.handleLogout();
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                    this.handleLogout();
-                }
-            } else {
-                this.currentView = 'login';
-            }
-            
-            this.loading = false;
-        },
-        
-        onLoginSuccess(user) {
-            this.user = user;
+  data() {
+    return {
+      user: null,
+      isAuthenticated: false,
+      currentView: "journal", // 'journal' or 'login'
+      loading: true,
+    };
+  },
+
+  components: {
+    JournalEntry: window.JournalEntry,
+    LoginForm: window.LoginForm,
+  },
+
+  async mounted() {
+    console.log("Journals app mounted");
+    await this.checkAuth();
+  },
+
+  methods: {
+    async checkAuth() {
+      this.loading = true;
+
+      if (window.apiService.isAuthenticated()) {
+        try {
+          const result = await window.apiService.me();
+          if (result.success) {
+            this.user = result.data.user;
             this.isAuthenticated = true;
-            this.currentView = 'journal';
-        },
-        
-        async handleLogout() {
-            try {
-                await window.apiService.logout();
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                this.user = null;
-                this.isAuthenticated = false;
-                this.currentView = 'login';
-            }
-        },
-        
-        switchView(view) {
-            this.currentView = view;
+            this.currentView = "journal";
+          } else {
+            this.handleLogout();
+          }
+        } catch (error) {
+          console.error("Auth check failed:", error);
+          this.handleLogout();
         }
+      } else {
+        this.currentView = "login";
+      }
+
+      this.loading = false;
     },
-    
-    template: `
+
+    onLoginSuccess(user) {
+      this.user = user;
+      this.isAuthenticated = true;
+      this.currentView = "journal";
+    },
+
+    async handleLogout() {
+      try {
+        await window.apiService.logout();
+      } catch (error) {
+        console.error("Logout error:", error);
+      } finally {
+        this.user = null;
+        this.isAuthenticated = false;
+        this.currentView = "login";
+      }
+    },
+
+    switchView(view) {
+      this.currentView = view;
+    },
+  },
+
+  template: `
         <div class="journals-app">
             <nav v-if="isAuthenticated" class="navbar">
                 <div class="nav-content">
@@ -95,10 +95,10 @@ const JournalsApp = createApp({
                 </div>
             </main>
         </div>
-    `
+    `,
 });
 
 // Mount the app when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    JournalsApp.mount('#app');
+document.addEventListener("DOMContentLoaded", function () {
+  JournalsApp.mount("#app");
 });

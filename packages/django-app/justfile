@@ -187,6 +187,10 @@ create-json-backup location=default_backups_location:
 format:
   docker-compose run --rm -w /code/app web bash -c "find . -name '*.py' -type f -not -path '*/migrations/*' | xargs autopep8 --in-place --aggressive --aggressive"
 
+# Format JavaScript code
+format-js:
+  npm run format
+
 # Initialize project - create volumes, build images, setup database
 init:
   just create-volumes

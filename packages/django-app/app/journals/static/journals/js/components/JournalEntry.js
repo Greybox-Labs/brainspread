@@ -1,76 +1,81 @@
 // Journal Entry Component
 const JournalEntry = {
-    data() {
-        return {
-            entryDate: new Date().toISOString().split('T')[0],
-            content: '',
-            tags: [],
-            saving: false,
-            loading: false,
-            error: null,
-            successMessage: ''
-        }
-    },
-    
-    async mounted() {
-        await this.loadEntry();
-    },
-    
-    methods: {
-        async loadEntry() {
-            this.loading = true;
-            this.error = null;
-            
-            try {
-                const result = await window.apiService.getEntry(this.entryDate);
-                if (result.success && result.data) {
-                    this.content = result.data.content || '';
-                    this.tags = result.data.tags || [];
-                } else {
-                    this.content = '';
-                    this.tags = [];
-                }
-            } catch (error) {
-                console.error('Failed to load entry:', error);
-                this.error = 'Failed to load journal entry';
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        async saveEntry() {
-            this.saving = true;
-            this.error = null;
-            this.successMessage = '';
-            
-            try {
-                const result = await window.apiService.createOrUpdateEntry(this.entryDate, this.content);
-                
-                if (result.success) {
-                    this.tags = result.data.tags || [];
-                    this.successMessage = 'Entry saved successfully!';
-                    setTimeout(() => { this.successMessage = '' }, 3000);
-                } else {
-                    this.error = 'Failed to save entry';
-                }
-            } catch (error) {
-                console.error('Failed to save entry:', error);
-                this.error = 'Failed to save journal entry';
-            } finally {
-                this.saving = false;
-            }
-        },
+  data() {
+    return {
+      entryDate: new Date().toISOString().split("T")[0],
+      content: "",
+      tags: [],
+      saving: false,
+      loading: false,
+      error: null,
+      successMessage: "",
+    };
+  },
 
-        async onDateChange() {
-            await this.loadEntry();
-        },
+  async mounted() {
+    await this.loadEntry();
+  },
 
-        formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString();
+  methods: {
+    async loadEntry() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const result = await window.apiService.getEntry(this.entryDate);
+        if (result.success && result.data) {
+          this.content = result.data.content || "";
+          this.tags = result.data.tags || [];
+        } else {
+          this.content = "";
+          this.tags = [];
         }
+      } catch (error) {
+        console.error("Failed to load entry:", error);
+        this.error = "Failed to load journal entry";
+      } finally {
+        this.loading = false;
+      }
     },
-    
-    template: `
+
+    async saveEntry() {
+      this.saving = true;
+      this.error = null;
+      this.successMessage = "";
+
+      try {
+        const result = await window.apiService.createOrUpdateEntry(
+          this.entryDate,
+          this.content
+        );
+
+        if (result.success) {
+          this.tags = result.data.tags || [];
+          this.successMessage = "Entry saved successfully!";
+          setTimeout(() => {
+            this.successMessage = "";
+          }, 3000);
+        } else {
+          this.error = "Failed to save entry";
+        }
+      } catch (error) {
+        console.error("Failed to save entry:", error);
+        this.error = "Failed to save journal entry";
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    async onDateChange() {
+      await this.loadEntry();
+    },
+
+    formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString();
+    },
+  },
+
+  template: `
         <div class="journal-entry">
             <h2>Journal Entry for {{ formatDate(entryDate) }}</h2>
             
@@ -119,7 +124,7 @@ const JournalEntry = {
             <div v-if="error" class="alert alert-error">{{ error }}</div>
             <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
         </div>
-    `
+    `,
 };
 
 // Register component globally

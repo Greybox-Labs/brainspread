@@ -1,63 +1,69 @@
 // Login Form Component
 const LoginForm = {
-    data() {
-        return {
-            email: 'test@example.com', // Pre-filled for testing
-            password: 'testpass123',   // Pre-filled for testing
-            loading: false,
-            error: null,
-            showRegister: false
-        }
-    },
-    
-    methods: {
-        async handleLogin() {
-            this.loading = true;
-            this.error = null;
-            
-            try {
-                const result = await window.apiService.login(this.email, this.password);
-                
-                if (result.success) {
-                    this.$emit('login-success', result.data.user);
-                } else {
-                    this.error = result.errors?.non_field_errors?.[0] || 'Login failed';
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                this.error = 'Login failed. Please try again.';
-            } finally {
-                this.loading = false;
-            }
-        },
+  data() {
+    return {
+      email: "test@example.com", // Pre-filled for testing
+      password: "testpass123", // Pre-filled for testing
+      loading: false,
+      error: null,
+      showRegister: false,
+    };
+  },
 
-        async handleRegister() {
-            this.loading = true;
-            this.error = null;
-            
-            try {
-                const result = await window.apiService.register(this.email, this.password);
-                
-                if (result.success) {
-                    this.$emit('login-success', result.data.user);
-                } else {
-                    this.error = result.errors?.email?.[0] || result.errors?.non_field_errors?.[0] || 'Registration failed';
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                this.error = 'Registration failed. Please try again.';
-            } finally {
-                this.loading = false;
-            }
-        },
+  methods: {
+    async handleLogin() {
+      this.loading = true;
+      this.error = null;
 
-        toggleForm() {
-            this.showRegister = !this.showRegister;
-            this.error = null;
+      try {
+        const result = await window.apiService.login(this.email, this.password);
+
+        if (result.success) {
+          this.$emit("login-success", result.data.user);
+        } else {
+          this.error = result.errors?.non_field_errors?.[0] || "Login failed";
         }
+      } catch (error) {
+        console.error("Login error:", error);
+        this.error = "Login failed. Please try again.";
+      } finally {
+        this.loading = false;
+      }
     },
-    
-    template: `
+
+    async handleRegister() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const result = await window.apiService.register(
+          this.email,
+          this.password
+        );
+
+        if (result.success) {
+          this.$emit("login-success", result.data.user);
+        } else {
+          this.error =
+            result.errors?.email?.[0] ||
+            result.errors?.non_field_errors?.[0] ||
+            "Registration failed";
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        this.error = "Registration failed. Please try again.";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    toggleForm() {
+      this.showRegister = !this.showRegister;
+      this.error = null;
+    },
+  },
+
+  template: `
         <div class="login-form">
             <h2>{{ showRegister ? 'Register' : 'Login' }}</h2>
             
@@ -97,7 +103,7 @@ const LoginForm = {
             
             <div v-if="error" class="alert alert-error">{{ error }}</div>
         </div>
-    `
+    `,
 };
 
 // Register component globally
