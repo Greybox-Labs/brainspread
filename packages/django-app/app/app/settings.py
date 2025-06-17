@@ -53,6 +53,8 @@ INSTALLED_APPS = [
 
     # own
     'core',
+    'tagging',
+    'journals',
 ]
 
 MIDDLEWARE = [

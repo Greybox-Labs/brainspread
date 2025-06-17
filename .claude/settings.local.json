@@ -4,7 +4,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(rm:*)",
       "Bash(just:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python manage.py startapp:*)"
     ],
     "deny": []
   }

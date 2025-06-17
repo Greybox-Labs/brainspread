@@ -111,10 +111,6 @@ shell:
 collectstatic:
   just django-admin collectstatic --noinput
 
-# Start development server
-runserver:
-  just django-admin runserver 0.0.0.0:8000
-
 # Database shortcuts
 dbshell:
   just django-admin dbshell
