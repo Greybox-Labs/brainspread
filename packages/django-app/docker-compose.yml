@@ -1,7 +1,9 @@
 version: '3.8'
 
+name: brainspread
+
 volumes:
-  yourproject_postgres:
+  brainspread_postgres:
     external: true
 
 services:
@@ -12,7 +14,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - yourproject_postgres:/var/lib/postgresql/data/
+      - brainspread_postgres:/var/lib/postgresql/data/
   web:
     build:
       context: .
