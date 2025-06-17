@@ -147,8 +147,55 @@ logs SERVICE="":
     docker-compose logs -f {{SERVICE}}; \
   fi
 
+# Show container status
+ps:
+  docker-compose ps
+
 # Clean up project Docker resources
 dcp-cleanup:
   docker-compose stop
   docker-compose rm -f db web
   docker volume rm brainspread_postgres
+
+# Setup local Python virtual environment
+setup-local-python-venv:
+  python3 -m venv .venv
+  source .venv/bin/activate
+  PIPENV_VENV_IN_PROJECT=1 pipenv install --dev --deploy
+
+# Copy environment template file
+copy-env:
+  cp .env.template .env
+
+# Create Django superuser
+create-superuser:
+  just django-admin createsuperuser
+
+default_backups_location := "./backups"
+
+# Create backup with pgdump
+create-pgdump location=default_backups_location:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p {{location}}
+  docker-compose exec db pg_dump -U $POSTGRES_USER $POSTGRES_DB > {{location}}/`date +%Y-%m-%d_%H-%M-%S`-brainspread-dump.sql
+
+# Create JSON backup of the database
+create-json-backup location=default_backups_location:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p {{location}}
+  just dump-data > {{location}}/`date +%Y-%m-%d_%H-%M-%S`-brainspread-dump.json
+
+# Format Python code
+format:
+  docker-compose run --rm -w /code/app web bash -c "find . -name '*.py' -type f -not -path '*/migrations/*' | xargs autopep8 --in-place --aggressive --aggressive"
+
+# Initialize project - create volumes, build images, setup database
+init:
+  just create-volumes
+  just build
+  just up-d db
+  sleep 5
+  just migrate
+  echo "Project initialized! Run 'just copy-env' and add your SECRET_KEY, then 'just create-superuser' to get started."

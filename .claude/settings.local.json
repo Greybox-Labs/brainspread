@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(rm:*)",
-      "Bash(just:*)"
+      "Bash(just:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
