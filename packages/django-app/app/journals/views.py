@@ -1,10 +1,9 @@
 from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 from .forms import (
     CreateOrUpdateJournalEntryForm,
@@ -63,89 +62,86 @@ def model_to_dict(instance):
     return data
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_or_update_journal_entry(request):
     """API endpoint to create or update journal entry"""
     try:
-        data = json.loads(request.body)
+        data = request.data
         form = CreateOrUpdateJournalEntryForm(data)
         
         if form.is_valid():
             command = CreateOrUpdateJournalEntryCommand(form, request.user)
             entry = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': model_to_dict(entry)
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except ValidationError as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=400)
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["GET"])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_journal_entry(request):
     """API endpoint to get journal entry"""
     try:
-        data = request.GET.dict()
+        data = request.query_params
         form = GetJournalEntryForm(data)
         
         if form.is_valid():
             command = GetJournalEntryCommand(form, request.user)
             entry = command.execute()
             if entry:
-                return JsonResponse({
+                return Response({
                     'success': True,
                     'data': model_to_dict(entry)
                 })
             else:
-                return JsonResponse({
+                return Response({
                     'success': True,
                     'data': None
                 })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["GET"])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_journal_entries(request):
     """API endpoint to get user's journal entries"""
     try:
-        data = request.GET.dict()
+        data = request.query_params
         form = GetUserJournalEntriesForm(data)
         
         if form.is_valid():
             command = GetUserJournalEntriesCommand(form, request.user)
             result = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': {
                     'entries': [model_to_dict(entry) for entry in result['entries']],
@@ -154,136 +150,132 @@ def get_journal_entries(request):
                 }
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["POST"])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_page(request):
     """API endpoint to create page"""
     try:
-        data = json.loads(request.body)
+        data = request.data
         form = CreatePageForm(data, request.user)
         
         if form.is_valid():
             command = CreatePageCommand(form, request.user)
             page = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': model_to_dict(page)
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except ValidationError as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=400)
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["PUT"])
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_page(request):
     """API endpoint to update page"""
     try:
-        data = json.loads(request.body)
+        data = request.data
         form = UpdatePageForm(data, request.user)
         
         if form.is_valid():
             command = UpdatePageCommand(form, request.user)
             page = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': model_to_dict(page)
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except ValidationError as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=400)
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["DELETE"])
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_page(request):
     """API endpoint to delete page"""
     try:
-        data = json.loads(request.body)
+        data = request.data
         form = DeletePageForm(data, request.user)
         
         if form.is_valid():
             command = DeletePageCommand(form, request.user)
             result = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': {'deleted': result}
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except ValidationError as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=400)
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@login_required
-@require_http_methods(["GET"])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_pages(request):
     """API endpoint to get user's pages"""
     try:
-        data = request.GET.dict()
+        data = request.query_params
         form = GetUserPagesForm(data)
         
         if form.is_valid():
             command = GetUserPagesCommand(form, request.user)
             result = command.execute()
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'data': {
                     'pages': [model_to_dict(page) for page in result['pages']],
@@ -292,13 +284,13 @@ def get_pages(request):
                 }
             })
         else:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'errors': form.errors
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'errors': {'non_field_errors': [str(e)]}
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

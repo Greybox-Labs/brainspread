@@ -8,7 +8,10 @@
       "Bash(find:*)",
       "Bash(mv:*)",
       "WebFetch(domain:github.com)",
-      "Bash(python manage.py startapp:*)"
+      "Bash(python manage.py startapp:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(pipenv lock:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

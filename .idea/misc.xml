@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.10 (django-starter)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (django-starter)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13 virtualenv at ~/code/projects/brainspread-brain-dump-app/astria-brainspread-mvp/brainspread/packages/django-app/.venv" project-jdk-type="Python SDK" />
 </project>

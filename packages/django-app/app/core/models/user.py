@@ -4,10 +4,12 @@ from django.utils.translation import gettext_lazy as _
 
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.soft_delete_timestamp_mixin import SoftDeleteTimestampMixin
+from common.models.uuid_mixin import UUIDModelMixin
 from core.managers import UserManager
 
 
-class User(CRUDTimestampsMixin,
+class User(UUIDModelMixin,
+           CRUDTimestampsMixin,
            SoftDeleteTimestampMixin,
            AbstractBaseUser,
            PermissionsMixin):

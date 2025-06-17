@@ -18,7 +18,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/django-app/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/packages/yourproject/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (django-starter)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 virtualenv at ~/code/projects/brainspread-brain-dump-app/astria-brainspread-mvp/brainspread/packages/django-app/.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

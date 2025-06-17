@@ -14,4 +14,4 @@ class UUIDModelMixin(models.Model):
 
     @property
     def short_uuid(self):
-        return truncatechars(self.uuid, 8)
+        return truncatechars(str(self.uuid), 8)
