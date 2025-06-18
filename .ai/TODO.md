@@ -11,7 +11,7 @@
 - [ ] /knowledge page should show historical pages and blocks also
 - [ ] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
 - [ ] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
-
+- [ ] should support nested blocks
 
 # Questions
 - [ ] Filebase storage vs database? filebase storage could
@@ -23,6 +23,6 @@
 
 # Bugs
 - [x] tags not created when block created, maybe when block is updated too
-- [ ] is the management command to create a test user necessary?
-- [ ] the auto save feature on the front end moves selection away from the input
+- [x] is the management command to create a test user necessary?
+- [x] the auto save feature on the front end moves selection away from the input
       so it suddenly stops user input and is annoying

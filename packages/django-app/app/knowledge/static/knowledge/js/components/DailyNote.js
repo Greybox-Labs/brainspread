@@ -8,6 +8,7 @@ const DailyNote = {
       loading: false,
       error: null,
       successMessage: "",
+      isNavigating: false,
     };
   },
 
@@ -86,7 +87,7 @@ const DailyNote = {
       }
     },
 
-    async updateBlock(block, newContent) {
+    async updateBlock(block, newContent, skipReload = false) {
       try {
         const result = await window.apiService.updateBlock({
           block_id: block.id,
@@ -94,9 +95,12 @@ const DailyNote = {
         });
 
         if (result.success) {
-          // Update local state and reload page to refresh tags
+          // Update local state
           block.content = newContent;
-          await this.loadPage(); // Reload to get updated tags
+          // Only reload if explicitly requested (e.g., when user stops editing)
+          if (!skipReload) {
+            await this.loadPage(); // Reload to get updated tags
+          }
         }
       } catch (error) {
         console.error("Failed to update block:", error);
@@ -148,20 +152,66 @@ const DailyNote = {
     },
 
     onBlockContentChange(block, newContent) {
-      // Debounced update
-      clearTimeout(block.updateTimeout);
-      block.updateTimeout = setTimeout(() => {
-        this.updateBlock(block, newContent);
-      }, 500);
+      // Just update the local content, don't save yet
+      block.content = newContent;
     },
 
-    onBlockKeyDown(event, block) {
+    async onBlockKeyDown(event, block) {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
+        // Save current block before creating new one
+        await this.updateBlock(block, block.content, true);
         this.createBlock("", block.parent, block.order + 1);
       } else if (event.key === "Tab") {
         event.preventDefault();
         // TODO: Implement indentation/outdentation
+      } else if (event.key === "ArrowDown") {
+        const textarea = event.target;
+        const cursorPos = textarea.selectionStart;
+        const value = textarea.value;
+        
+        // For single line content, check if cursor is at end
+        if (value.indexOf('\n') === -1) {
+          // Single line - if cursor is at end, move to next block
+          if (cursorPos === value.length) {
+            event.preventDefault();
+            this.focusNextBlock(block);
+          }
+        } else {
+          // Multi-line content
+          const lines = value.substr(0, cursorPos).split('\n');
+          const currentLine = lines.length - 1;
+          const totalLines = value.split('\n').length;
+          
+          // If cursor is on the last line, move to next block
+          if (currentLine === totalLines - 1) {
+            event.preventDefault();
+            this.focusNextBlock(block);
+          }
+        }
+      } else if (event.key === "ArrowUp") {
+        const textarea = event.target;
+        const cursorPos = textarea.selectionStart;
+        const value = textarea.value;
+        
+        // For single line content, check if cursor is at beginning
+        if (value.indexOf('\n') === -1) {
+          // Single line - if cursor is at beginning, move to previous block
+          if (cursorPos === 0) {
+            event.preventDefault();
+            this.focusPreviousBlock(block);
+          }
+        } else {
+          // Multi-line content
+          const lines = value.substr(0, cursorPos).split('\n');
+          const currentLine = lines.length - 1;
+          
+          // If cursor is on the first line, move to previous block
+          if (currentLine === 0) {
+            event.preventDefault();
+            this.focusPreviousBlock(block);
+          }
+        }
       }
     },
 
@@ -180,21 +230,72 @@ const DailyNote = {
     },
 
     startEditing(block) {
+      // Stop editing all other blocks first (save them)
+      const allBlocks = this.getAllBlocks();
+      allBlocks.forEach(b => {
+        if (b.id !== block.id && b.isEditing) {
+          this.updateBlock(b, b.content, true); // Save without reload
+          b.isEditing = false;
+        }
+      });
+      
       block.isEditing = true;
       this.$nextTick(() => {
-        // Focus the textarea when editing starts
-        const textareas = this.$refs.blockTextarea;
-        if (textareas) {
-          const textarea = Array.isArray(textareas)
-            ? textareas.find((t) => t)
-            : textareas;
-          if (textarea) textarea.focus();
+        // Focus the specific textarea for this block
+        const blockElement = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+        if (blockElement) {
+          blockElement.focus();
         }
       });
     },
 
-    stopEditing(block) {
+    async stopEditing(block) {
+      // Don't stop editing if we're navigating between blocks
+      if (this.isNavigating) {
+        this.isNavigating = false;
+        return;
+      }
+      
+      // Save the block when user stops editing (blur event)
+      await this.updateBlock(block, block.content);
       block.isEditing = false;
+    },
+
+    getAllBlocks() {
+      // Get all blocks in document order (flattened tree)
+      const result = [];
+      const addBlocks = (blocks) => {
+        for (const block of blocks) {
+          result.push(block);
+          if (block.children && block.children.length) {
+            addBlocks(block.children);
+          }
+        }
+      };
+      addBlocks(this.blocks);
+      return result;
+    },
+
+    focusNextBlock(currentBlock) {
+      const allBlocks = this.getAllBlocks();
+      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      
+      if (currentIndex >= 0 && currentIndex < allBlocks.length - 1) {
+        const nextBlock = allBlocks[currentIndex + 1];
+        this.isNavigating = true;
+        this.startEditing(nextBlock);
+      }
+    },
+
+    focusPreviousBlock(currentBlock) {
+      const allBlocks = this.getAllBlocks();
+      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      
+      if (currentIndex > 0) {
+        const previousBlock = allBlocks[currentIndex - 1];
+        this.isNavigating = true;
+        this.startEditing(previousBlock);
+      }
     },
   },
 
@@ -218,7 +319,7 @@ const DailyNote = {
         <h2>{{ formatDate(currentDate) }}</h2>
 
         <div class="blocks-container">
-          <div v-for="block in blocks" :key="block.id" class="block-wrapper">
+          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :data-block-id="block.id">
             <div class="block">
               <div
                 class="block-bullet"
@@ -257,7 +358,7 @@ const DailyNote = {
 
             <!-- Render children blocks recursively -->
             <div v-if="block.children && block.children.length" class="block-children">
-              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block">
+              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :data-block-id="child.id">
                 <div class="block">
                   <div
                     class="block-bullet"

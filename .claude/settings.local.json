@@ -31,7 +31,9 @@
       "Bash(pipenv install:*)",
       "Bash(docker-compose run:*)",
       "Bash(docker-compose build:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "mcp__sse-server__browser_snapshot",
+      "mcp__sse-server__browser_press_key"
     ],
     "deny": []
   }
