@@ -7,6 +7,7 @@
 - [ ] implement python formatting with black. install in Pipfile,
       ensure Pipfile.lock is updated, add a just command, and run it
 - [x] implement tests for the commands
+- [ ] refactor user views to use commands and repositories
 
 # Questions
 - [ ] Filebase storage vs database? filebase storage could

@@ -7,12 +7,13 @@ class UserManager(BaseUserManager):
     """
     Manager used for creating users.
     """
+
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
         # email = self.normalize_email(email)
         if not email:
-            raise ValueError('The email must be set')
+            raise ValueError("The email must be set")
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -33,7 +34,7 @@ class UserManager(BaseUserManager):
         :return: Instance of created :class:`User<core.models.User>`
         :rtype: :class:`core.models.User`
         """
-        extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -51,8 +52,8 @@ class UserManager(BaseUserManager):
         :return: Instance of created :class:`User<core.models.User>`
         :rtype: :class:`core.models.User`
         """
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("is_staff", True)
 
         return self._create_user(email, password, **extra_fields)

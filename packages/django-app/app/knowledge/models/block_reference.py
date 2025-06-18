@@ -8,20 +8,17 @@ class BlockReference(UUIDModelMixin, CRUDTimestampsMixin):
     """
     Track references between blocks ((block-id))
     """
+
     source_block = models.ForeignKey(
-        'Block',
-        on_delete=models.CASCADE,
-        related_name='outgoing_references'
+        "Block", on_delete=models.CASCADE, related_name="outgoing_references"
     )
     target_block = models.ForeignKey(
-        'Block',
-        on_delete=models.CASCADE,
-        related_name='incoming_references'
+        "Block", on_delete=models.CASCADE, related_name="incoming_references"
     )
-    
+
     class Meta:
-        db_table = 'block_references'
-        unique_together = [('source_block', 'target_block')]
+        db_table = "block_references"
+        unique_together = [("source_block", "target_block")]
         indexes = [
-            models.Index(fields=['target_block']),
+            models.Index(fields=["target_block"]),
         ]

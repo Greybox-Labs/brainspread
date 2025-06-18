@@ -28,30 +28,38 @@ django-admin +ARGS:
 exec +ARGS:
   docker-compose exec web {{ARGS}}
 
-# Install pipenv package (dev or prod)
+# Install pipenv package (dev or prod) - NOTE: Run this from host with pipenv installed
 install-package PACKAGE DEV="":
   #!/usr/bin/env bash
   set -euo pipefail
   
   if [ "{{DEV}}" = "--dev" ]; then
     echo "Installing {{PACKAGE}} as dev dependency..."
-    docker-compose run --rm -w /code web pipenv install --dev {{PACKAGE}}
+    echo "Run: pipenv install --dev {{PACKAGE}}"
+    echo "Then: pipenv lock"
+    echo "Then: just build"
   else
     echo "Installing {{PACKAGE}} as production dependency..."
-    docker-compose run --rm -w /code web pipenv install {{PACKAGE}}
+    echo "Run: pipenv install {{PACKAGE}}"
+    echo "Then: pipenv lock"
+    echo "Then: just build"
   fi
-  
-  echo "Rebuilding containers with new dependencies..."
-  docker-compose build web
 
-# Install dev package shorthand
+# Install dev package shorthand - NOTE: Run this from host with pipenv installed
 install-dev PACKAGE:
-  just install-package {{PACKAGE}} --dev
+  #!/usr/bin/env bash
+  echo "To install {{PACKAGE}} as dev dependency:"
+  echo "1. Run: pipenv install --dev {{PACKAGE}}"
+  echo "2. Run: pipenv lock" 
+  echo "3. Run: just build"
 
-# Update pipenv dependencies
+# Update pipenv dependencies - NOTE: Run this from host with pipenv installed
 update-deps:
-  docker-compose run --rm -w /code web pipenv update
-  docker-compose build web
+  #!/usr/bin/env bash
+  echo "To update dependencies:"
+  echo "1. Run: pipenv update"
+  echo "2. Run: pipenv lock"
+  echo "3. Run: just build"
 
 # Generate Django secret key
 generate-secret-key:
@@ -218,7 +226,7 @@ create-json-backup location=default_backups_location:
 
 # Format Python code
 format:
-  docker-compose run --rm -w /code/app web bash -c "find . -name '*.py' -type f -not -path '*/migrations/*' | xargs autopep8 --in-place --aggressive --aggressive"
+  docker-compose run --rm -w /code/app web python -m black . --exclude="migrations/"
 
 # Format JavaScript code
 format-js:

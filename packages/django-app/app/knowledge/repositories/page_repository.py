@@ -15,7 +15,7 @@ class PageRepository(BaseRepository):
         queryset = cls.get_queryset()
         if user:
             queryset = queryset.filter(user=user)
-        
+
         try:
             return queryset.get(uuid=uuid)
         except cls.model.DoesNotExist:
@@ -27,39 +27,36 @@ class PageRepository(BaseRepository):
         queryset = cls.get_queryset()
         if user:
             queryset = queryset.filter(user=user)
-        
+
         try:
             return queryset.get(slug=slug)
         except cls.model.DoesNotExist:
             return None
 
     @classmethod
-    def get_user_pages(cls, user, published_only: bool = True, 
-                      limit: int = 10, offset: int = 0) -> Dict[str, Any]:
+    def get_user_pages(
+        cls, user, published_only: bool = True, limit: int = 10, offset: int = 0
+    ) -> Dict[str, Any]:
         """Get paginated user pages with filtering"""
         queryset = cls.get_queryset().filter(user=user)
-        
+
         if published_only:
             queryset = queryset.filter(is_published=True)
-        
+
         total_count = queryset.count()
-        pages = list(queryset[offset:offset + limit])
-        
+        pages = list(queryset[offset : offset + limit])
+
         return {
-            'pages': pages,
-            'total_count': total_count,
-            'has_more': (offset + limit) < total_count
+            "pages": pages,
+            "total_count": total_count,
+            "has_more": (offset + limit) < total_count,
         }
 
     @classmethod
     def get_daily_note(cls, user, date: date) -> Optional[Page]:
         """Get daily note for specific date"""
         try:
-            return cls.get_queryset().get(
-                user=user,
-                page_type='daily',
-                date=date
-            )
+            return cls.get_queryset().get(user=user, page_type="daily", date=date)
         except cls.model.DoesNotExist:
             return None
 
@@ -71,33 +68,24 @@ class PageRepository(BaseRepository):
     @classmethod
     def search_by_title(cls, user, query: str) -> QuerySet:
         """Search pages by title"""
-        return cls.get_queryset().filter(
-            user=user,
-            title__icontains=query
-        )
+        return cls.get_queryset().filter(user=user, title__icontains=query)
 
     @classmethod
     def get_published_pages(cls, user) -> QuerySet:
         """Get all published pages for user"""
-        return cls.get_queryset().filter(
-            user=user,
-            is_published=True
-        )
+        return cls.get_queryset().filter(user=user, is_published=True)
 
     @classmethod
     def get_unpublished_pages(cls, user) -> QuerySet:
         """Get all unpublished pages for user"""
-        return cls.get_queryset().filter(
-            user=user,
-            is_published=False
-        )
+        return cls.get_queryset().filter(user=user, is_published=False)
 
     @classmethod
     def create(cls, data: dict) -> Page:
         """Create a new page"""
         return cls.model.objects.create(**data)
 
-    @classmethod 
+    @classmethod
     def update(cls, *, pk=None, uuid=None, obj: Page = None, data: dict) -> Page:
         """Update a page"""
         if obj:
@@ -106,14 +94,14 @@ class PageRepository(BaseRepository):
             page = cls.get_by_uuid(uuid)
         else:
             page = cls.get(pk=pk)
-        
+
         if not page:
             raise cls.model.DoesNotExist("Page not found")
-        
+
         for field, value in data.items():
             if hasattr(page, field):
                 setattr(page, field, value)
-        
+
         page.save()
         return page
 

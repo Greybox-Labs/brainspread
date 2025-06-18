@@ -14,16 +14,16 @@ class UserRepository(BaseRepository):
         return objects
 
     @classmethod
-    def create(cls, data: dict) -> 'User':
+    def create(cls, data: dict) -> "User":
         user = cls.model.objects.create(**data)
         return user
 
     @classmethod
-    def update(cls, *, pk=None, obj: 'User' = None, data: dict) -> 'User':
+    def update(cls, *, pk=None, obj: "User" = None, data: dict) -> "User":
         user = obj or cls.get(pk=pk)
 
-        if data.get('is_active'):
-            user.is_active = data['is_active']
+        if data.get("is_active"):
+            user.is_active = data["is_active"]
 
         user.save()
         return user

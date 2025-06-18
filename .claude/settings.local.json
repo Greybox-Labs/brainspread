@@ -28,7 +28,9 @@
       "Bash(DJANGO_SETTINGS_MODULE=app.settings python -c \"import django; django.setup(); from knowledge.models import Page, Block, PageLink, BlockReference; print(''✅ Models import successfully!'')\")",
       "Bash(DJANGO_SETTINGS_MODULE=app.settings python -c \"import django; django.setup(); from knowledge.models import Page, Block, PageLink, BlockReference; print(''✅ Models import successfully!'')\")",
       "Bash(DJANGO_SETTINGS_MODULE=app.settings python -c \"import django; django.setup(); from knowledge.models import Page, Block, PageLink, BlockReference; print(''✅ Models import successfully!'')\")",
-      "Bash(pipenv install:*)"
+      "Bash(pipenv install:*)",
+      "Bash(docker-compose run:*)",
+      "Bash(docker-compose build:*)"
     ],
     "deny": []
   }

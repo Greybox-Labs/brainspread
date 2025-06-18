@@ -7,7 +7,7 @@ User = get_user_model()
 
 
 class UserFactory(DjangoModelFactory):
-    email = Faker('email')
+    email = Faker("email")
     is_active = True
 
     class Meta:

@@ -14,7 +14,7 @@ class BlockRepository(BaseRepository):
         queryset = cls.get_queryset()
         if user:
             queryset = queryset.filter(user=user)
-        
+
         try:
             return queryset.get(uuid=uuid)
         except cls.model.DoesNotExist:
@@ -24,87 +24,76 @@ class BlockRepository(BaseRepository):
     def get_page_blocks(cls, page: Page, include_children: bool = True) -> QuerySet:
         """Get blocks for a page"""
         queryset = cls.get_queryset().filter(page=page)
-        
+
         if not include_children:
             queryset = queryset.filter(parent=None)
-        
-        return queryset.order_by('order')
+
+        return queryset.order_by("order")
 
     @classmethod
     def get_root_blocks(cls, page: Page) -> QuerySet:
         """Get top-level blocks (no parent) for a page"""
-        return cls.get_queryset().filter(
-            page=page,
-            parent=None
-        ).order_by('order')
+        return cls.get_queryset().filter(page=page, parent=None).order_by("order")
 
     @classmethod
     def get_child_blocks(cls, parent_block: Block) -> QuerySet:
         """Get direct children of a block"""
-        return cls.get_queryset().filter(
-            parent=parent_block
-        ).order_by('order')
+        return cls.get_queryset().filter(parent=parent_block).order_by("order")
 
     @classmethod
     def get_block_descendants(cls, block: Block) -> List[Block]:
         """Get all descendant blocks recursively"""
         descendants = []
         children = cls.get_child_blocks(block)
-        
+
         for child in children:
             descendants.append(child)
             descendants.extend(cls.get_block_descendants(child))
-        
+
         return descendants
 
     @classmethod
     def get_blocks_by_type(cls, user, block_type: str) -> QuerySet:
         """Get blocks by type for a user"""
-        return cls.get_queryset().filter(
-            user=user,
-            block_type=block_type
-        )
+        return cls.get_queryset().filter(user=user, block_type=block_type)
 
     @classmethod
     def get_todo_blocks(cls, user) -> QuerySet:
         """Get all todo blocks for user"""
-        return cls.get_blocks_by_type(user, 'todo')
+        return cls.get_blocks_by_type(user, "todo")
 
     @classmethod
     def get_done_blocks(cls, user) -> QuerySet:
         """Get all done blocks for user"""
-        return cls.get_blocks_by_type(user, 'done')
+        return cls.get_blocks_by_type(user, "done")
 
     @classmethod
     def search_by_content(cls, user, query: str) -> QuerySet:
         """Search blocks by content"""
-        return cls.get_queryset().filter(
-            user=user,
-            content__icontains=query
-        )
+        return cls.get_queryset().filter(user=user, content__icontains=query)
 
     @classmethod
     def get_blocks_with_media(cls, user, content_type: str = None) -> QuerySet:
         """Get blocks that have media content"""
         queryset = cls.get_queryset().filter(user=user)
-        
+
         if content_type:
             queryset = queryset.filter(content_type=content_type)
         else:
-            queryset = queryset.exclude(content_type='text')
-        
+            queryset = queryset.exclude(content_type="text")
+
         return queryset
 
     @classmethod
     def get_blocks_with_properties(cls, user, property_key: str = None) -> QuerySet:
         """Get blocks that have properties"""
         queryset = cls.get_queryset().filter(user=user)
-        
+
         if property_key:
             queryset = queryset.filter(properties__has_key=property_key)
         else:
             queryset = queryset.exclude(properties={})
-        
+
         return queryset
 
     @classmethod
@@ -121,14 +110,14 @@ class BlockRepository(BaseRepository):
             block = cls.get_by_uuid(uuid)
         else:
             block = cls.get(pk=pk)
-        
+
         if not block:
             raise cls.model.DoesNotExist("Block not found")
-        
+
         for field, value in data.items():
             if hasattr(block, field):
                 setattr(block, field, value)
-        
+
         block.save()
         return block
 
@@ -145,23 +134,24 @@ class BlockRepository(BaseRepository):
     def get_max_order(cls, page: Page, parent: Block = None) -> int:
         """Get the maximum order value for blocks in a page/parent"""
         from django.db.models import Max
+
         queryset = cls.get_queryset().filter(page=page, parent=parent)
-        max_order = queryset.aggregate(max_order=Max('order'))['max_order']
+        max_order = queryset.aggregate(max_order=Max("order"))["max_order"]
         return max_order if max_order is not None else 0
 
     @classmethod
     def reorder_blocks(cls, blocks_order_data: List[Dict[str, Any]]) -> bool:
         """Reorder blocks based on provided order data
-        
+
         Args:
             blocks_order_data: List of dicts with 'uuid' and 'order' keys
         """
         try:
             for item in blocks_order_data:
-                block = cls.get_by_uuid(item['uuid'])
+                block = cls.get_by_uuid(item["uuid"])
                 if block:
-                    block.order = item['order']
-                    block.save(update_fields=['order'])
+                    block.order = item["order"]
+                    block.save(update_fields=["order"])
             return True
         except Exception:
             return False
