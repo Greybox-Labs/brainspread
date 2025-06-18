@@ -2,8 +2,8 @@
 const LoginForm = {
   data() {
     return {
-      email: "test@example.com", // Pre-filled for testing
-      password: "testpass123", // Pre-filled for testing
+      email: "",
+      password: "",
       loading: false,
       error: null,
       showRegister: false,
@@ -77,6 +77,7 @@ const LoginForm = {
                         required 
                         class="form-control"
                         :disabled="loading"
+                        placeholder="test@example.com"
                     />
                 </div>
                 
@@ -89,6 +90,7 @@ const LoginForm = {
                         required 
                         class="form-control"
                         :disabled="loading"
+                        placeholder="testpass123"
                     />
                 </div>
                 

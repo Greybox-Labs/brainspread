@@ -26,6 +26,12 @@ class User(UUIDModelMixin,
         _('staff status'),
         default=False,
         help_text=_('Designates whether the user can log into this admin site.'))
+    
+    timezone = models.CharField(
+        _('timezone'),
+        max_length=50,
+        default='UTC',
+        help_text=_('User\'s preferred timezone (e.g., America/New_York, UTC, etc.)'))
 
     def __str__(self):
         return self.email

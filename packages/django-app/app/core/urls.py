@@ -8,4 +8,5 @@ urlpatterns = [
     path('auth/register/', views.register, name='register'),
     path('auth/logout/', views.logout, name='logout'),
     path('auth/me/', views.me, name='me'),
+    path('auth/update-timezone/', views.update_timezone, name='update_timezone'),
 ]

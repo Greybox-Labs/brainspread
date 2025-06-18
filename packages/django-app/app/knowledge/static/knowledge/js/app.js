@@ -1,7 +1,7 @@
 const { createApp } = Vue;
 
-// Global Vue app for journals
-const JournalsApp = createApp({
+// Global Vue app for knowledge base
+const KnowledgeApp = createApp({
   data() {
     return {
       user: null,
@@ -13,12 +13,18 @@ const JournalsApp = createApp({
 
   components: {
     JournalEntry: window.JournalEntry,
+    DailyNote: window.DailyNote,
     LoginForm: window.LoginForm,
   },
 
   async mounted() {
-    console.log("Journals app mounted");
+    console.log("Knowledge app mounted");
     await this.checkAuth();
+    
+    // Check for timezone changes after authentication
+    if (this.isAuthenticated) {
+      this.checkTimezoneChange();
+    }
   },
 
   methods: {
@@ -50,6 +56,11 @@ const JournalsApp = createApp({
       this.user = user;
       this.isAuthenticated = true;
       this.currentView = "journal";
+      
+      // Check timezone after login (with a small delay to ensure user data is updated)
+      setTimeout(() => {
+        this.checkTimezoneChange();
+      }, 1000);
     },
 
     async handleLogout() {
@@ -67,13 +78,40 @@ const JournalsApp = createApp({
     switchView(view) {
       this.currentView = view;
     },
+
+    checkTimezoneChange() {
+      if (window.apiService.checkTimezoneChange()) {
+        const browserTimezone = window.apiService.getCurrentBrowserTimezone();
+        const currentUser = window.apiService.getCurrentUser();
+        
+        const message = `Your device's timezone appears to have changed from ${currentUser.timezone} to ${browserTimezone}. Would you like to update your timezone preference?`;
+        
+        if (confirm(message)) {
+          this.updateTimezone(browserTimezone);
+        }
+      }
+    },
+
+    async updateTimezone(newTimezone) {
+      try {
+        const result = await window.apiService.updateUserTimezone(newTimezone);
+        if (result.success) {
+          console.log('Timezone updated successfully');
+          // Optionally reload the page to refresh with new timezone
+          // window.location.reload();
+        }
+      } catch (error) {
+        console.error('Failed to update timezone:', error);
+        alert('Failed to update timezone. Please try again.');
+      }
+    },
   },
 
   template: `
         <div class="journals-app">
             <nav v-if="isAuthenticated" class="navbar">
                 <div class="nav-content">
-                    <h1>📔 Daily Journals</h1>
+                    <h1>🧠 Knowledge Base</h1>
                     <div class="nav-right">
                         <span class="user-info">Hello, {{ user?.email }}</span>
                         <button @click="handleLogout" class="btn btn-outline">Logout</button>
@@ -91,7 +129,7 @@ const JournalsApp = createApp({
                 </div>
                 
                 <div v-else class="journal-container">
-                    <JournalEntry />
+                    <DailyNote />
                 </div>
             </main>
         </div>
@@ -100,5 +138,5 @@ const JournalsApp = createApp({
 
 // Mount the app when DOM is ready
 document.addEventListener("DOMContentLoaded", function () {
-  JournalsApp.mount("#app");
+  KnowledgeApp.mount("#app");
 });

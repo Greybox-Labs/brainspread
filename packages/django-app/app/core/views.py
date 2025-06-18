@@ -15,6 +15,7 @@ def login(request):
     try:
         email = request.data.get('email')
         password = request.data.get('password')
+        timezone = request.data.get('timezone')
         
         if not email or not password:
             return Response({
@@ -25,6 +26,11 @@ def login(request):
         user = authenticate(request, username=email, password=password)
         
         if user and user.is_active:
+            # Update user's timezone if provided
+            if timezone:
+                user.timezone = timezone
+                user.save(update_fields=['timezone'])
+            
             token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'success': True,
@@ -33,6 +39,7 @@ def login(request):
                     'user': {
                         'id': str(user.uuid),
                         'email': user.email,
+                        'timezone': user.timezone,
                     }
                 }
             })
@@ -80,6 +87,7 @@ def register(request):
                 'user': {
                     'id': str(user.uuid),
                     'email': user.email,
+                    'timezone': user.timezone,
                 }
             }
         }, status=status.HTTP_201_CREATED)
@@ -124,9 +132,53 @@ def me(request):
                 'user': {
                     'id': str(request.user.uuid),
                     'email': request.user.email,
+                    'timezone': request.user.timezone,
                 }
             }
         })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'errors': {'non_field_errors': [str(e)]}
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def update_timezone(request):
+    """Update user's timezone preference"""
+    try:
+        timezone = request.data.get('timezone')
+        
+        if not timezone:
+            return Response({
+                'success': False,
+                'errors': {'timezone': ['Timezone is required']}
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate timezone (basic validation)
+        try:
+            import pytz
+            pytz.timezone(timezone)
+        except:
+            # If not a valid pytz timezone, still allow it (could be a browser-specific format)
+            pass
+        
+        # Update user's timezone
+        request.user.timezone = timezone
+        request.user.save(update_fields=['timezone'])
+        
+        return Response({
+            'success': True,
+            'data': {
+                'user': {
+                    'id': str(request.user.uuid),
+                    'email': request.user.email,
+                    'timezone': request.user.timezone,
+                }
+            },
+            'message': 'Timezone updated successfully'
+        })
+        
     except Exception as e:
         return Response({
             'success': False,

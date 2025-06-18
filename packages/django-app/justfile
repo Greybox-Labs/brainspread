@@ -143,6 +143,14 @@ logs SERVICE="":
     docker-compose logs -f {{SERVICE}}; \
   fi
 
+# Show last N lines of logs (defaults to 100)
+tail-logs SERVICE="" LINES="100":
+  @if [ -z "{{SERVICE}}" ]; then \
+    docker-compose logs --tail {{LINES}}; \
+  else \
+    docker-compose logs --tail {{LINES}} {{SERVICE}}; \
+  fi
+
 # Show container status
 ps:
   docker-compose ps

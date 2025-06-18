@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     # own
     'core',
     'tagging',
-    'journals',
+    'knowledge',
 ]
 
 MIDDLEWARE = [

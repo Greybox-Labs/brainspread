@@ -1,4 +1,4 @@
-// API Service for Journal App
+// API Service for Knowledge Base App
 class ApiService {
   constructor() {
     this.baseURL = window.location.origin;
@@ -62,9 +62,12 @@ class ApiService {
 
   // Auth methods
   async login(email, password) {
+    // Detect user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     const data = await this.request("/api/auth/login/", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, timezone }),
     });
 
     if (data.success) {
@@ -105,9 +108,9 @@ class ApiService {
     return await this.request("/api/auth/me/");
   }
 
-  // Journal methods
+  // Legacy journal methods
   async createOrUpdateEntry(entryDate, content) {
-    return await this.request("/journals/api/entries/", {
+    return await this.request("/knowledge/api/entries/", {
       method: "POST",
       body: JSON.stringify({
         entry_date: entryDate,
@@ -118,18 +121,18 @@ class ApiService {
 
   async getEntry(entryDate) {
     return await this.request(
-      `/journals/api/entries/get/?entry_date=${entryDate}`
+      `/knowledge/api/entries/get/?entry_date=${entryDate}`
     );
   }
 
   async getEntries(limit = 10, offset = 0) {
     return await this.request(
-      `/journals/api/entries/list/?limit=${limit}&offset=${offset}`
+      `/knowledge/api/entries/list/?limit=${limit}&offset=${offset}`
     );
   }
 
   async createPage(title, content, slug, isPublished = true) {
-    return await this.request("/journals/api/pages/", {
+    return await this.request("/knowledge/api/pages/", {
       method: "POST",
       body: JSON.stringify({
         title,
@@ -141,7 +144,7 @@ class ApiService {
   }
 
   async updatePage(pageId, updates) {
-    return await this.request("/journals/api/pages/update/", {
+    return await this.request("/knowledge/api/pages/update/", {
       method: "PUT",
       body: JSON.stringify({
         page_id: pageId,
@@ -151,7 +154,7 @@ class ApiService {
   }
 
   async deletePage(pageId) {
-    return await this.request("/journals/api/pages/delete/", {
+    return await this.request("/knowledge/api/pages/delete/", {
       method: "DELETE",
       body: JSON.stringify({ page_id: pageId }),
     });
@@ -159,8 +162,53 @@ class ApiService {
 
   async getPages(publishedOnly = true, limit = 10, offset = 0) {
     return await this.request(
-      `/journals/api/pages/list/?published_only=${publishedOnly}&limit=${limit}&offset=${offset}`
+      `/knowledge/api/pages/list/?published_only=${publishedOnly}&limit=${limit}&offset=${offset}`
     );
+  }
+
+  // New block-centric methods
+  async getPageWithBlocks(pageId = null, date = null) {
+    let params = '';
+    if (pageId) {
+      params = `?page_id=${pageId}`;
+    } else if (date) {
+      params = `?date=${date}`;
+    }
+    
+    return await this.request(`/knowledge/api/page/${params}`);
+  }
+
+  async createBlock(blockData) {
+    return await this.request("/knowledge/api/blocks/", {
+      method: "POST",
+      body: JSON.stringify(blockData),
+    });
+  }
+
+  async updateBlock(blockData) {
+    return await this.request("/knowledge/api/blocks/update/", {
+      method: "PUT",
+      body: JSON.stringify(blockData),
+    });
+  }
+
+  async deleteBlock(blockData) {
+    return await this.request("/knowledge/api/blocks/delete/", {
+      method: "DELETE",
+      body: JSON.stringify(blockData),
+    });
+  }
+
+  async toggleBlockTodo(blockId) {
+    return await this.request("/knowledge/api/blocks/toggle-todo/", {
+      method: "POST",
+      body: JSON.stringify({ block_id: blockId }),
+    });
+  }
+
+  // Legacy method for backward compatibility
+  async getDailyNote(date) {
+    return await this.getPageWithBlocks(null, date);
   }
 
   // Utility methods
@@ -171,6 +219,51 @@ class ApiService {
   getCurrentUser() {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
+  }
+
+  // Timezone detection and management
+  getCurrentBrowserTimezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (error) {
+      console.warn("Could not detect timezone:", error);
+      return 'UTC';
+    }
+  }
+
+  checkTimezoneChange() {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || !currentUser.timezone) {
+      return false;
+    }
+
+    const browserTimezone = this.getCurrentBrowserTimezone();
+    const storedTimezone = currentUser.timezone;
+
+    return browserTimezone !== storedTimezone;
+  }
+
+  async updateUserTimezone(newTimezone) {
+    try {
+      const result = await this.request("/api/auth/update-timezone/", {
+        method: "POST",
+        body: JSON.stringify({ timezone: newTimezone }),
+      });
+
+      if (result.success) {
+        // Update local storage
+        const currentUser = this.getCurrentUser();
+        if (currentUser) {
+          currentUser.timezone = newTimezone;
+          localStorage.setItem("user", JSON.stringify(currentUser));
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to update timezone:", error);
+      throw error;
+    }
   }
 }
 
