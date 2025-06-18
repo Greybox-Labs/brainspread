@@ -3,6 +3,23 @@
   box-sizing: border-box;
 }
 
+/* Hide login form during initial load to prevent flash */
+.journals-app.initial-load .auth-container {
+  display: none;
+}
+
+/* Show a loading message during initial auth check */
+.journals-app.initial-load::before {
+  content: "Loading...";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00ff00;
+  font-family: inherit;
+  font-size: 1.1rem;
+}
+
 body {
   font-family:
     "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro",

@@ -128,7 +128,7 @@ const KnowledgeApp = createApp({
   },
 
   template: `
-        <div class="journals-app">
+        <div class="journals-app" :class="{ 'initial-load': loading && !user }">
             <!-- Show loading during initial auth check to prevent login flash -->
             <div v-if="loading && !user" class="loading-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
                 <div class="loading">Loading...</div>

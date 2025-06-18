@@ -10,7 +10,7 @@
 - [x] refactor user views to use commands and repositories
 - [x] /knowledge page should show historical pages and blocks also
 - [x] there should be a sidebar with all tags, pages, and blocks
-- [ ] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
+- [x] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
 - [x] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [ ] should support nested blocks
 - [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
@@ -28,3 +28,4 @@
 - [x] is the management command to create a test user necessary?
 - [x] the auto save feature on the front end moves selection away from the input
       so it suddenly stops user input and is annoying
+- [x] shows login page between page clicks even when logged in
