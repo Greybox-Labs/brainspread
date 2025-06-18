@@ -15,6 +15,7 @@ const KnowledgeApp = createApp({
     DailyNote: window.DailyNote,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
+    HistoricalDailyNoteBlocks: window.HistoricalDailyNoteBlocks,
   },
 
   async mounted() {
@@ -105,16 +106,21 @@ const KnowledgeApp = createApp({
         alert("Failed to update timezone. Please try again.");
       }
     },
+
+    onNavigateToDate(date) {
+      // Navigate to the daily note URL
+      window.location.href = `/knowledge/daily/${date}/`;
+    },
   },
 
   template: `
         <div class="journals-app">
             <nav v-if="isAuthenticated" class="navbar">
                 <div class="nav-content">
-                    <h1>Knowledge Base</h1>
+                    <h1>brainspreader</h1>
                     <div class="nav-right">
                         <span class="user-info">Hello, {{ user?.email }}</span>
-                        <button @click="handleLogout" class="btn btn-outline">Logout</button>
+                        <button @click="handleLogout" class="btn btn-outline">logout</button>
                     </div>
                 </div>
             </nav>
@@ -129,9 +135,9 @@ const KnowledgeApp = createApp({
                 </div>
 
                 <div v-else class="content-layout">
-                    <HistoricalSidebar />
+                    <HistoricalSidebar @navigate-to-date="onNavigateToDate" />
                     <div class="main-content-area">
-                        <DailyNote />
+                        <DailyNote ref="dailyNote" />
                     </div>
                 </div>
             </main>

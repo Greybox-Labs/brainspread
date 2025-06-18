@@ -20,7 +20,7 @@ from .commands import (
 )
 
 
-def index(request):
+def index(request, date=None):
     return render(request, "knowledge/index.html")
 
 

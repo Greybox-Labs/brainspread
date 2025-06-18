@@ -17,10 +17,12 @@ window.HistoricalSidebar = {
   mounted() {
     this.loadHistoricalData();
     this.setupResizeListener();
+    this.setupClickOutsideListener();
   },
 
   beforeUnmount() {
     this.removeResizeListener();
+    this.removeClickOutsideListener();
   },
 
   methods: {
@@ -95,19 +97,19 @@ window.HistoricalSidebar = {
       this.isResizing = true;
       this.startX = e.clientX;
       this.startWidth = this.width;
-      
+
       document.addEventListener('mousemove', this.resizeHandler);
       document.addEventListener('mouseup', this.stopResizeHandler);
-      
+
       e.preventDefault();
     },
 
     handleMouseMove(e) {
       if (!this.isResizing) return;
-      
+
       const deltaX = e.clientX - this.startX;
       const newWidth = this.startWidth - deltaX; // Subtract because we're resizing from the left edge
-      
+
       if (newWidth >= this.minWidth && newWidth <= this.maxWidth) {
         this.width = newWidth;
       }
@@ -118,30 +120,51 @@ window.HistoricalSidebar = {
       document.removeEventListener('mousemove', this.resizeHandler);
       document.removeEventListener('mouseup', this.stopResizeHandler);
     },
+
+    openDailyNote(page) {
+      // Emit event to parent component to navigate to this date
+      this.$emit('navigate-to-date', page.date);
+    },
+
+    // Click outside to close sidebar
+    setupClickOutsideListener() {
+      this.clickOutsideHandler = (e) => {
+        if (this.isOpen && !this.$el.contains(e.target)) {
+          this.isOpen = false;
+        }
+      };
+      document.addEventListener('click', this.clickOutsideHandler);
+    },
+
+    removeClickOutsideListener() {
+      if (this.clickOutsideHandler) {
+        document.removeEventListener('click', this.clickOutsideHandler);
+      }
+    },
   },
 
   template: `
     <div class="historical-sidebar-container">
       <!-- Sidebar Toggle Button -->
-      <button 
-        @click="toggleSidebar" 
+      <button
+        @click="toggleSidebar"
         class="sidebar-toggle-btn"
         :class="{ active: isOpen }"
         title="Toggle History Sidebar"
       >
         <span v-if="isOpen">←</span>
         <span v-else>→</span>
-        History
+        history
       </button>
 
       <!-- Sidebar -->
-      <div 
+      <div
         v-if="isOpen"
         class="historical-sidebar"
         :style="{ width: width + 'px' }"
       >
         <!-- Resize Handle -->
-        <div 
+        <div
           class="sidebar-resize-handle"
           @mousedown="startResize"
           :class="{ resizing: isResizing }"
@@ -149,7 +172,7 @@ window.HistoricalSidebar = {
 
         <div class="sidebar-content">
           <div class="sidebar-header">
-            <h3>History</h3>
+            <h3>history</h3>
             <div class="filter-controls">
               <label>
                 Days:
@@ -180,7 +203,7 @@ window.HistoricalSidebar = {
 
           <div v-else-if="historicalData" class="sidebar-data">
             <div class="date-range">
-              {{ formatDate(historicalData.date_range.start) }} - 
+              {{ formatDate(historicalData.date_range.start) }} -
               {{ formatDate(historicalData.date_range.end) }}
             </div>
 
@@ -188,10 +211,12 @@ window.HistoricalSidebar = {
             <div v-if="historicalData.pages && historicalData.pages.length" class="sidebar-section">
               <h4>Recent Pages ({{ historicalData.pages.length }})</h4>
               <div class="sidebar-items">
-                <div 
-                  v-for="page in historicalData.pages" 
-                  :key="page.id" 
-                  class="sidebar-item page-item"
+                <div
+                  v-for="page in historicalData.pages"
+                  :key="page.id"
+                  class="sidebar-item page-item clickable"
+                  @click="openDailyNote(page)"
+                  :title="'Click to open ' + page.title"
                 >
                   <div class="item-header">
                     <span class="item-title">{{ page.title }}</span>
@@ -215,9 +240,9 @@ window.HistoricalSidebar = {
             <div v-if="historicalData.blocks && historicalData.blocks.length" class="sidebar-section">
               <h4>Recent Blocks ({{ historicalData.blocks.length }})</h4>
               <div class="sidebar-items">
-                <div 
-                  v-for="block in historicalData.blocks" 
-                  :key="block.id" 
+                <div
+                  v-for="block in historicalData.blocks"
+                  :key="block.id"
                   class="sidebar-item block-item"
                 >
                   <div class="item-header">
@@ -227,8 +252,8 @@ window.HistoricalSidebar = {
                   <div class="item-meta">{{ formatDate(block.modified_at) }}</div>
                   <div class="item-content">{{ truncateContent(block.content, 100) }}</div>
                   <div v-if="block.tags && block.tags.length" class="item-tags">
-                    <span 
-                      v-for="tag in getTagColors(block.tags)" 
+                    <span
+                      v-for="tag in getTagColors(block.tags)"
                       :key="tag.name"
                       class="sidebar-tag"
                       :style="{ backgroundColor: tag.color }"

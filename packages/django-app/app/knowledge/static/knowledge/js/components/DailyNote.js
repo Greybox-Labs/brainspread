@@ -2,10 +2,11 @@
 const DailyNote = {
   data() {
     return {
-      currentDate: this.getLocalDateString(),
+      currentDate: this.getDateFromURL() || this.getLocalDateString(),
       page: null,
       blocks: [],
       historicalData: null,
+      historicalBlocksCache: {},
       loading: false,
       error: null,
       successMessage: "",
@@ -14,6 +15,11 @@ const DailyNote = {
   },
 
   async mounted() {
+    // Register component when it's available
+    if (window.HistoricalDailyNoteBlocks) {
+      this.$options.components = this.$options.components || {};
+      this.$options.components.HistoricalDailyNoteBlocks = window.HistoricalDailyNoteBlocks;
+    }
     await this.loadPage();
     await this.loadHistoricalData();
   },
@@ -26,6 +32,28 @@ const DailyNote = {
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const day = String(now.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
+    },
+
+    getDateFromURL() {
+      // Extract date from URL like /knowledge/daily/2025-06-17/
+      const pathParts = window.location.pathname.split('/');
+      const dailyIndex = pathParts.indexOf('daily');
+      if (dailyIndex !== -1 && pathParts[dailyIndex + 1]) {
+        const dateStr = pathParts[dailyIndex + 1];
+        // Validate date format YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return dateStr;
+        }
+      }
+      return null;
+    },
+
+    updateURL(date) {
+      // Update URL without page reload
+      const newPath = `/knowledge/daily/${date}/`;
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
+      }
     },
 
     async loadPage() {
@@ -52,6 +80,7 @@ const DailyNote = {
     },
 
     async onDateChange() {
+      this.updateURL(this.currentDate);
       await this.loadPage();
     },
 
@@ -171,7 +200,7 @@ const DailyNote = {
         const textarea = event.target;
         const cursorPos = textarea.selectionStart;
         const value = textarea.value;
-        
+
         // For single line content, check if cursor is at end
         if (value.indexOf('\n') === -1) {
           // Single line - if cursor is at end, move to next block
@@ -184,7 +213,7 @@ const DailyNote = {
           const lines = value.substr(0, cursorPos).split('\n');
           const currentLine = lines.length - 1;
           const totalLines = value.split('\n').length;
-          
+
           // If cursor is on the last line, move to next block
           if (currentLine === totalLines - 1) {
             event.preventDefault();
@@ -195,7 +224,7 @@ const DailyNote = {
         const textarea = event.target;
         const cursorPos = textarea.selectionStart;
         const value = textarea.value;
-        
+
         // For single line content, check if cursor is at beginning
         if (value.indexOf('\n') === -1) {
           // Single line - if cursor is at beginning, move to previous block
@@ -207,7 +236,7 @@ const DailyNote = {
           // Multi-line content
           const lines = value.substr(0, cursorPos).split('\n');
           const currentLine = lines.length - 1;
-          
+
           // If cursor is on the first line, move to previous block
           if (currentLine === 0) {
             event.preventDefault();
@@ -240,7 +269,7 @@ const DailyNote = {
           b.isEditing = false;
         }
       });
-      
+
       block.isEditing = true;
       this.$nextTick(() => {
         // Focus the specific textarea for this block
@@ -257,7 +286,7 @@ const DailyNote = {
         this.isNavigating = false;
         return;
       }
-      
+
       // Save the block when user stops editing (blur event)
       await this.updateBlock(block, block.content);
       block.isEditing = false;
@@ -281,7 +310,7 @@ const DailyNote = {
     focusNextBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
       const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
-      
+
       if (currentIndex >= 0 && currentIndex < allBlocks.length - 1) {
         const nextBlock = allBlocks[currentIndex + 1];
         this.isNavigating = true;
@@ -292,7 +321,7 @@ const DailyNote = {
     focusPreviousBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
       const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
-      
+
       if (currentIndex > 0) {
         const previousBlock = allBlocks[currentIndex - 1];
         this.isNavigating = true;
@@ -344,17 +373,13 @@ const DailyNote = {
 
       try {
         const result = await window.apiService.deletePage(this.page.id);
-        
+
         if (result.success) {
           this.successMessage = "Daily note deleted successfully";
-          
-          // Clear the current page data
-          this.page = null;
-          this.blocks = [];
-          
-          // Reload to show empty state
+
+          // Redirect to knowledge base to avoid auto-creating the same page
           setTimeout(() => {
-            this.loadPage();
+            window.location.href = '/knowledge/';
           }, 1000);
         } else {
           this.error = "Failed to delete daily note";
@@ -364,19 +389,53 @@ const DailyNote = {
         this.error = "Failed to delete daily note";
       }
     },
+
+    getHistoricalBlocks(historicalPage) {
+      // Return cached blocks if available, otherwise return empty array
+      const cacheKey = historicalPage.id;
+      if (this.historicalBlocksCache[cacheKey]) {
+        return this.historicalBlocksCache[cacheKey];
+      }
+      
+      // Load blocks for this historical page asynchronously
+      this.loadHistoricalPageBlocks(historicalPage);
+      return [];
+    },
+
+    async loadHistoricalPageBlocks(historicalPage) {
+      const cacheKey = historicalPage.id;
+      
+      try {
+        const result = await window.apiService.getPageWithBlocks(null, historicalPage.date);
+        if (result.success) {
+          this.historicalBlocksCache[cacheKey] = result.data.blocks || [];
+          this.$forceUpdate(); // Force re-render to show the loaded blocks
+        }
+      } catch (error) {
+        console.error("Failed to load historical blocks:", error);
+      }
+    },
   },
 
   template: `
     <div class="daily-note">
       <header class="daily-note-header">
-        <h1>Daily Note</h1>
-        <div class="date-picker">
+        <h1>daily note</h1>
+        <div class="header-controls">
           <input
             v-model="currentDate"
             type="date"
             @change="onDateChange"
-            class="form-control"
+            class="form-control date-picker"
           />
+          <button
+            v-if="page && page.id && blocks.length === 0"
+            @click="deletePage"
+            class="btn btn-danger delete-page-btn"
+            title="Delete this daily note"
+          >
+            del
+          </button>
         </div>
       </header>
 
@@ -420,7 +479,7 @@ const DailyNote = {
                 @click="deleteBlock(block)"
                 class="block-delete"
                 title="Delete block"
-              >×</button>
+              >del</button>
             </div>
 
             <!-- Render children blocks recursively -->
@@ -459,48 +518,65 @@ const DailyNote = {
                     @click="deleteBlock(child)"
                     class="block-delete"
                     title="Delete block"
-                  >×</button>
+                  >del</button>
                 </div>
               </div>
             </div>
           </div>
 
           <button @click="addNewBlock" class="add-block-btn">
-            + Add new block
+            + add new block
           </button>
         </div>
       </div>
 
       <!-- Historical Daily Notes -->
       <div v-if="historicalData && historicalData.pages && historicalData.pages.length" class="historical-notes">
-        <div 
+        <div
           v-for="historicalPage in historicalData.pages
             .filter(p => p.page_type === 'daily' && p.date !== currentDate)
-            .sort((a, b) => new Date(b.date || b.modified_at) - new Date(a.date || a.modified_at))" 
-          :key="'historical-' + historicalPage.id" 
+            .sort((a, b) => new Date(b.date || b.modified_at) - new Date(a.date || a.modified_at))"
+          :key="'historical-' + historicalPage.id"
           class="historical-daily-note"
         >
-          <h3>{{ historicalPage.title }}</h3>
-          <div v-if="historicalPage.recent_blocks && historicalPage.recent_blocks.length" class="historical-blocks-container">
-            <div 
-              v-for="block in historicalPage.recent_blocks" 
-              :key="'hist-block-' + block.id" 
-              class="historical-block"
-            >
+          <h2>{{ formatDate(historicalPage.date) }}</h2>
+
+          <!-- Load full block data for this historical page -->
+          <div class="historical-blocks-container">
+            <div v-for="block in getHistoricalBlocks(historicalPage)" :key="block.id" class="block-wrapper" :data-block-id="block.id">
               <div class="block">
                 <div
                   class="block-bullet"
                   :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
+                  @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
                 >
                   <span v-if="block.block_type === 'todo'">☐</span>
                   <span v-else-if="block.block_type === 'done'">☑</span>
                   <span v-else>•</span>
                 </div>
                 <div
-                  class="block-content-display historical"
+                  v-if="!block.isEditing"
+                  class="block-content-display"
                   :class="{ 'completed': block.block_type === 'done' }"
+                  @click="startEditing(block)"
                   v-html="formatContentWithTags(block.content)"
                 ></div>
+                <textarea
+                  v-else
+                  :value="block.content"
+                  @input="onBlockContentChange(block, $event.target.value)"
+                  @keydown="onBlockKeyDown($event, block)"
+                  @blur="stopEditing(block)"
+                  class="block-content"
+                  :class="{ 'completed': block.block_type === 'done' }"
+                  rows="1"
+                  placeholder="Start writing..."
+                ></textarea>
+                <button
+                  @click="deleteBlock(block)"
+                  class="block-delete"
+                  title="Delete block"
+                >del</button>
               </div>
             </div>
           </div>

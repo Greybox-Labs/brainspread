@@ -5,6 +5,7 @@ app_name = "knowledge"
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("daily/<str:date>/", views.index, name="daily_note"),
     path("api/pages/", views.create_page, name="create_page"),
     path("api/pages/update/", views.update_page, name="update_page"),
     path("api/pages/delete/", views.delete_page, name="delete_page"),

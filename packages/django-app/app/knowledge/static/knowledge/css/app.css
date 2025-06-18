@@ -48,7 +48,6 @@ body {
   border: 1px solid #00ff00;
   cursor: pointer;
   font-family: inherit;
-  text-transform: uppercase;
   font-size: 0.8rem;
 }
 
@@ -67,7 +66,6 @@ body {
   color: #00ff00;
   font-size: 1.5rem;
   font-weight: normal;
-  text-transform: uppercase;
 }
 
 .nav-right {
@@ -80,7 +78,6 @@ body {
   color: #00ff00;
   font-size: 0.9rem;
   font-weight: normal;
-  text-transform: uppercase;
 }
 
 .main-content {
@@ -103,7 +100,7 @@ body {
   color: #00ff00;
   font-size: 1.1rem;
   font-weight: normal;
-  text-transform: uppercase;
+  
 }
 
 /* Auth Container */
@@ -134,7 +131,7 @@ body {
   margin-bottom: 0.5rem;
   font-weight: normal;
   color: #00ff00;
-  text-transform: uppercase;
+  
 }
 
 .form-control {
@@ -174,7 +171,7 @@ body {
   text-decoration: none;
   display: inline-block;
   font-family: inherit;
-  text-transform: uppercase;
+  
 }
 
 .btn:hover {
@@ -215,7 +212,7 @@ body {
   text-decoration: underline;
   padding: 0.5rem 0;
   font-weight: normal;
-  text-transform: uppercase;
+  
 }
 
 .btn-link:hover:not(:disabled) {
@@ -233,7 +230,7 @@ body {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
   color: #00ff00;
-  text-transform: uppercase;
+  
 }
 
 .tag {
@@ -281,7 +278,7 @@ body {
   margin: 0 0 2rem 0;
   color: #00ff00;
   font-size: 1.5rem;
-  text-transform: uppercase;
+  
 }
 
 /* Login Form Specific */
@@ -289,7 +286,7 @@ body {
   text-align: center;
   margin: 0 0 2rem 0;
   color: #00ff00;
-  text-transform: uppercase;
+  
 }
 
 .login-form .btn {
@@ -324,7 +321,32 @@ body {
   margin: 0;
   color: #00ff00;
   font-size: 2rem;
-  text-transform: uppercase;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.delete-page-btn {
+  background: #ff3333;
+  color: #fff;
+  border: 1px solid #ff3333;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-page-btn:hover {
+  background: #ff1111;
+  border-color: #ff1111;
 }
 
 .date-picker {
@@ -341,7 +363,6 @@ body {
   color: #00ff00;
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
-  text-transform: uppercase;
 }
 
 /* Block Styles */
@@ -455,10 +476,12 @@ body {
   border: none;
   color: #00ff00;
   cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
   transition: opacity 0.2s;
   margin-top: 0.1rem;
+  
+  font-family: inherit;
 }
 
 .block-delete:hover {
@@ -487,7 +510,7 @@ body {
   width: 100%;
   transition: none;
   font-family: inherit;
-  text-transform: uppercase;
+  
 }
 
 .add-block-btn:hover {
@@ -556,7 +579,7 @@ body {
 .historical-header h2 {
   margin: 0;
   color: #00ff00;
-  text-transform: uppercase;
+  
   font-size: 1.8rem;
   font-weight: normal;
 }
@@ -596,7 +619,7 @@ body {
 
 .section h3 {
   color: #00ff00;
-  text-transform: uppercase;
+  
   font-size: 1.3rem;
   margin: 0 0 1rem 0;
   border-bottom: 1px solid #333;
@@ -642,7 +665,7 @@ body {
 }
 
 .page-type {
-  text-transform: uppercase;
+  
   background: #333;
   padding: 0.2rem 0.5rem;
 }
@@ -658,7 +681,7 @@ body {
   color: #00ff00;
   margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
-  text-transform: uppercase;
+  
 }
 
 .block-preview {
@@ -670,7 +693,7 @@ body {
 
 .block-type {
   color: #888;
-  text-transform: uppercase;
+  
   min-width: 60px;
 }
 
@@ -700,7 +723,7 @@ body {
 
 .block-header .block-type {
   color: #00ff00;
-  text-transform: uppercase;
+  
   background: #003300;
   padding: 0.2rem 0.5rem;
 }
@@ -732,7 +755,7 @@ body {
   background: #00ff00;
   color: #000;
   font-size: 0.7rem;
-  text-transform: uppercase;
+  
   font-weight: bold;
 }
 
@@ -741,22 +764,22 @@ body {
   .historical-view {
     padding: 1rem;
   }
-  
+
   .historical-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .filter-controls {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .pages-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .block-header {
     flex-direction: column;
     gap: 0.3rem;
@@ -792,7 +815,7 @@ body {
   padding: 0.8rem 1rem;
   font-family: inherit;
   font-size: 0.8rem;
-  text-transform: uppercase;
+  
   cursor: pointer;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -850,7 +873,7 @@ body {
 .sidebar-header h3 {
   color: #00ff00;
   margin: 0 0 1rem 0;
-  text-transform: uppercase;
+  
   font-size: 1.2rem;
 }
 
@@ -904,7 +927,7 @@ body {
 .sidebar-section h4 {
   color: #00ff00;
   font-size: 0.9rem;
-  text-transform: uppercase;
+  
   margin: 0 0 0.8rem 0;
   border-bottom: 1px solid #333;
   padding-bottom: 0.3rem;
@@ -924,6 +947,17 @@ body {
 
 .sidebar-item:hover {
   border-color: #00ff00;
+}
+
+.sidebar-item.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-item.clickable:hover {
+  background: #001100;
+  border-color: #00ff00;
+  transform: translateX(2px);
 }
 
 .item-header {
@@ -947,7 +981,7 @@ body {
   color: #00ff00;
   padding: 0.1rem 0.3rem;
   font-size: 0.6rem;
-  text-transform: uppercase;
+  
 }
 
 .item-page {
@@ -980,7 +1014,7 @@ body {
   background: #00ff00;
   color: #000;
   font-size: 0.6rem;
-  text-transform: uppercase;
+  
   font-weight: bold;
 }
 
@@ -993,7 +1027,7 @@ body {
 .preview-label {
   color: #888;
   font-size: 0.7rem;
-  text-transform: uppercase;
+  
   display: block;
   margin-bottom: 0.3rem;
 }
@@ -1050,29 +1084,29 @@ body {
   .content-layout {
     flex-direction: column;
   }
-  
+
   .main-content-area {
     padding: 1rem;
   }
-  
+
   .sidebar-toggle-btn {
     position: static;
     writing-mode: initial;
     text-orientation: initial;
     margin-bottom: 1rem;
   }
-  
+
   .sidebar-toggle-btn.active {
     right: 20px;
   }
-  
+
   .historical-sidebar {
     position: static;
     height: auto;
     border-left: none;
     border-top: 1px solid #00ff00;
   }
-  
+
   .sidebar-resize-handle {
     display: none;
   }
