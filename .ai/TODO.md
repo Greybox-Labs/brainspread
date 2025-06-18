@@ -11,7 +11,7 @@
 - [x] /knowledge page should show historical pages and blocks also
 - [x] there should be a sidebar with all tags, pages, and blocks
 - [ ] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
-- [ ] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
+- [x] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [ ] should support nested blocks
 - [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 

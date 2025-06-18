@@ -85,7 +85,7 @@ const DailyNote = {
       await this.loadPage();
     },
 
-    async createBlock(content = "", parent = null, order = null) {
+    async createBlock(content = "", parent = null, order = null, autoFocus = true) {
       if (!this.page) return;
 
       try {
@@ -100,22 +100,65 @@ const DailyNote = {
         });
 
         if (result.success) {
-          await this.loadPage(); // Reload to get updated structure
-          // Find the newly created block and put it in edit mode if it's empty
-          if (content === "") {
+          // Add the new block to local state without full page reload
+          // Use the actual data returned from the API (includes auto-detected block_type)
+          const newBlock = {
+            id: result.data.uuid || result.data.id || `temp-${Date.now()}`,
+            content: result.data.content || content,
+            content_type: result.data.content_type || "text", 
+            block_type: result.data.block_type || "bullet", // This will include auto-detected types
+            order: result.data.order || blockOrder,
+            parent: parent,
+            children: [],
+            isEditing: false,
+            collapsed: result.data.collapsed || false,
+            properties: result.data.properties || {},
+            media_url: result.data.media_url || "",
+            media_metadata: result.data.media_metadata || {}
+          };
+          
+          // Insert the new block in the correct position
+          if (parent) {
+            if (!parent.children) parent.children = [];
+            parent.children.push(newBlock);
+            parent.children.sort((a, b) => a.order - b.order);
+          } else {
+            this.blocks.push(newBlock);
+            this.blocks.sort((a, b) => a.order - b.order);
+          }
+          
+          // Auto-focus the newly created block if requested
+          if (autoFocus) {
+            // Mark the block as editing immediately so Vue renders the textarea
+            newBlock.isEditing = true;
+            
+            // Wait for Vue to render the textarea, then focus it
             this.$nextTick(() => {
-              const newBlock = this.blocks.find(
-                (b) => b.content === content && b.order === blockOrder
-              );
-              if (newBlock) {
-                this.startEditing(newBlock);
-              }
+              this.$nextTick(() => {
+                const textarea = document.querySelector(`[data-block-id="${newBlock.id}"] textarea`);
+                if (textarea) {
+                  textarea.focus();
+                  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                } else {
+                  // If textarea still not found, try one more time after a short delay
+                  setTimeout(() => {
+                    const retryTextarea = document.querySelector(`[data-block-id="${newBlock.id}"] textarea`);
+                    if (retryTextarea) {
+                      retryTextarea.focus();
+                      retryTextarea.setSelectionRange(retryTextarea.value.length, retryTextarea.value.length);
+                    }
+                  }, 50);
+                }
+              });
             });
           }
         }
+        
+        return result;
       } catch (error) {
         console.error("Failed to create block:", error);
         this.error = "Failed to create block";
+        return { success: false };
       }
     },
 
@@ -127,9 +170,15 @@ const DailyNote = {
         });
 
         if (result.success) {
-          // Update local state
+          // Update local state with all returned data
           block.content = newContent;
-          // Only reload if explicitly requested (e.g., when user stops editing)
+          
+          // Update block type if it was auto-detected/changed on backend
+          if (result.data && result.data.block_type) {
+            block.block_type = result.data.block_type;
+          }
+          
+          // Only reload if explicitly requested (rare cases when tags need refresh)
           if (!skipReload) {
             await this.loadPage(); // Reload to get updated tags
           }
@@ -173,6 +222,30 @@ const DailyNote = {
       return siblings.length > 0
         ? Math.max(...siblings.map((b) => b.order)) + 1
         : 0;
+    },
+
+    async refreshTagsOnly() {
+      // Refresh page data but preserve current editing state
+      try {
+        const currentlyEditing = this.getAllBlocks().filter(b => b.isEditing);
+        await this.loadPage();
+        
+        // Restore editing state after reload
+        currentlyEditing.forEach(block => {
+          const refreshedBlock = this.getAllBlocks().find(b => b.id === block.id);
+          if (refreshedBlock) {
+            refreshedBlock.isEditing = true;
+            this.$nextTick(() => {
+              const textarea = document.querySelector(`[data-block-id="${refreshedBlock.id}"] textarea`);
+              if (textarea) {
+                textarea.focus();
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Failed to refresh tags:", error);
+      }
     },
 
     formatDate(dateString) {
@@ -291,7 +364,8 @@ const DailyNote = {
       }
 
       // Save the block when user stops editing (blur event)
-      await this.updateBlock(block, block.content);
+      // Skip reload to preserve cursor positions of other blocks
+      await this.updateBlock(block, block.content, true);
       block.isEditing = false;
     },
 
