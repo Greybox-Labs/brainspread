@@ -1,7 +1,46 @@
+# Dependency lock files
+Pipfile.lock
+package-lock.json
+yarn.lock
+
+# Django templates
+**/*.html
+
+# Python files (handled by black)
+**/*.py
+
+# Migration files
+**/migrations/**
+
+# Virtual environments
 .venv/
+venv/
+env/
+
+# Node modules
 node_modules/
-*.min.js
-*.min.css
+
+# Build directories
 dist/
 build/
+
+# Minified files
+*.min.js
+*.min.css
+
+# Data files
 dev_data.json
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

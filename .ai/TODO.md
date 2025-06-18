@@ -4,7 +4,7 @@
 - [x] remove journal entries model since it is no longer being used.
 - [ ] restyle in a brutalist style with thin lines,
       high contrast colors, and no border radii
-- [ ] implement python formatting with black. install in Pipfile,
+- [x] implement python formatting with black. install in Pipfile,
       ensure Pipfile.lock is updated, add a just command, and run it
 - [x] implement tests for the commands
 - [ ] refactor user views to use commands and repositories

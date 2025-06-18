@@ -217,12 +217,20 @@ create-json-backup location=default_backups_location:
   just dump-data > {{location}}/`date +%Y-%m-%d_%H-%M-%S`-brainspread-dump.json
 
 # Format Python code
-format:
+format-py:
   docker-compose run --rm -w /code/app web python -m black . --exclude="migrations/"
 
 # Format JavaScript code
 format-js:
-  npm run format
+  npx prettier --write .
+
+# Format all code (Python and JavaScript)
+format:
+  just format-py
+  just format-js
+
+# Format alias
+alias f := format
 
 # Initialize project - create volumes, build images, setup database
 init:
