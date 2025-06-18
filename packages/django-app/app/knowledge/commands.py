@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
-from .models import Page
+from .models import Page, Block
 
 
 
@@ -113,3 +113,121 @@ class GetUserPagesCommand(AbstractBaseCommand):
             'total_count': total_count,
             'has_more': (offset + limit) < total_count
         }
+
+
+class CreateBlockCommand(AbstractBaseCommand):
+    """Command to create a new block"""
+    
+    def __init__(self, user, page, content='', content_type='text', block_type='bullet', 
+                 order=0, parent=None, media_url='', media_metadata=None, properties=None):
+        self.user = user
+        self.page = page
+        self.content = content
+        self.content_type = content_type
+        self.block_type = block_type
+        self.order = order
+        self.parent = parent
+        self.media_url = media_url
+        self.media_metadata = media_metadata or {}
+        self.properties = properties or {}
+    
+    def execute(self) -> Block:
+        """Execute the command"""
+        # Create the block
+        block = Block.objects.create(
+            user=self.user,
+            page=self.page,
+            parent=self.parent,
+            content=self.content,
+            content_type=self.content_type,
+            block_type=self.block_type,
+            order=self.order,
+            media_url=self.media_url,
+            media_metadata=self.media_metadata,
+            properties=self.properties
+        )
+        
+        # Extract and set tags from content (business logic)
+        if block.content:
+            block.set_tags_from_content(block.content, self.user)
+            # Refresh block from database to get updated tag relationships
+            block.refresh_from_db()
+        
+        return block
+
+
+class UpdateBlockCommand(AbstractBaseCommand):
+    """Command to update an existing block"""
+    
+    def __init__(self, user, block_id, **updates):
+        self.user = user
+        self.block_id = block_id
+        self.updates = updates
+    
+    def execute(self) -> Block:
+        """Execute the command"""
+        try:
+            block = Block.objects.get(uuid=self.block_id, user=self.user)
+        except Block.DoesNotExist:
+            raise ValidationError("Block not found")
+        
+        # Update fields
+        content_updated = False
+        for field, value in self.updates.items():
+            if hasattr(block, field):
+                setattr(block, field, value)
+                if field == 'content':
+                    content_updated = True
+        
+        block.save()
+        
+        # Extract and set tags if content was updated (business logic)
+        if content_updated and block.content:
+            block.set_tags_from_content(block.content, self.user)
+            # Refresh block from database to get updated tag relationships
+            block.refresh_from_db()
+        
+        return block
+
+
+class DeleteBlockCommand(AbstractBaseCommand):
+    """Command to delete a block"""
+    
+    def __init__(self, user, block_id):
+        self.user = user
+        self.block_id = block_id
+    
+    def execute(self) -> bool:
+        """Execute the command"""
+        try:
+            block = Block.objects.get(uuid=self.block_id, user=self.user)
+            block.delete()
+            return True
+        except Block.DoesNotExist:
+            raise ValidationError("Block not found")
+
+
+class ToggleBlockTodoCommand(AbstractBaseCommand):
+    """Command to toggle a block's todo status"""
+    
+    def __init__(self, user, block_id):
+        self.user = user
+        self.block_id = block_id
+    
+    def execute(self) -> Block:
+        """Execute the command"""
+        try:
+            block = Block.objects.get(uuid=self.block_id, user=self.user)
+        except Block.DoesNotExist:
+            raise ValidationError("Block not found")
+        
+        # Toggle todo status (business logic)
+        if block.block_type == 'todo':
+            block.block_type = 'done'
+        elif block.block_type == 'done':
+            block.block_type = 'bullet'
+        else:
+            block.block_type = 'todo'
+        
+        block.save()
+        return block

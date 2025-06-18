@@ -65,6 +65,15 @@ const DailyNote = {
 
         if (result.success) {
           await this.loadPage(); // Reload to get updated structure
+          // Find the newly created block and put it in edit mode if it's empty
+          if (content === "") {
+            this.$nextTick(() => {
+              const newBlock = this.blocks.find(b => b.content === content && b.order === blockOrder);
+              if (newBlock) {
+                this.startEditing(newBlock);
+              }
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to create block:", error);
@@ -80,8 +89,9 @@ const DailyNote = {
         });
 
         if (result.success) {
-          // Update local state
+          // Update local state and reload page to refresh tags
           block.content = newContent;
+          await this.loadPage(); // Reload to get updated tags
         }
       } catch (error) {
         console.error("Failed to update block:", error);
@@ -150,6 +160,29 @@ const DailyNote = {
 
     addNewBlock() {
       this.createBlock("");
+    },
+
+    formatContentWithTags(content) {
+      if (!content) return '';
+      
+      // Replace hashtags with styled spans
+      return content.replace(/#([a-zA-Z0-9_-]+)/g, '<span class="inline-tag">#$1</span>');
+    },
+
+    startEditing(block) {
+      block.isEditing = true;
+      this.$nextTick(() => {
+        // Focus the textarea when editing starts
+        const textareas = this.$refs.blockTextarea;
+        if (textareas) {
+          const textarea = Array.isArray(textareas) ? textareas.find(t => t) : textareas;
+          if (textarea) textarea.focus();
+        }
+      });
+    },
+
+    stopEditing(block) {
+      block.isEditing = false;
     }
   },
 
@@ -184,14 +217,24 @@ const DailyNote = {
                 <span v-else-if="block.block_type === 'done'">☑</span>
                 <span v-else>•</span>
               </div>
+              <div 
+                v-if="!block.isEditing" 
+                class="block-content-display"
+                :class="{ 'completed': block.block_type === 'done' }"
+                @click="startEditing(block)"
+                v-html="formatContentWithTags(block.content)"
+              ></div>
               <textarea
+                v-else
                 :value="block.content"
                 @input="onBlockContentChange(block, $event.target.value)"
                 @keydown="onBlockKeyDown($event, block)"
+                @blur="stopEditing(block)"
                 class="block-content"
                 :class="{ 'completed': block.block_type === 'done' }"
                 rows="1"
                 placeholder="Start writing..."
+                ref="blockTextarea"
               ></textarea>
               <button
                 @click="deleteBlock(block)"
@@ -213,14 +256,24 @@ const DailyNote = {
                     <span v-else-if="child.block_type === 'done'">☑</span>
                     <span v-else>•</span>
                   </div>
+                  <div 
+                    v-if="!child.isEditing" 
+                    class="block-content-display"
+                    :class="{ 'completed': child.block_type === 'done' }"
+                    @click="startEditing(child)"
+                    v-html="formatContentWithTags(child.content)"
+                  ></div>
                   <textarea
+                    v-else
                     :value="child.content"
                     @input="onBlockContentChange(child, $event.target.value)"
                     @keydown="onBlockKeyDown($event, child)"
+                    @blur="stopEditing(child)"
                     class="block-content"
                     :class="{ 'completed': child.block_type === 'done' }"
                     rows="1"
                     placeholder="Start writing..."
+                    ref="blockTextarea"
                   ></textarea>
                   <button
                     @click="deleteBlock(child)"

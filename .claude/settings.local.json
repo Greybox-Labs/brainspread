@@ -16,7 +16,12 @@
       "Bash(npm install:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "mcp__sse-server__browser_type",
+      "mcp__sse-server__browser_click",
+      "mcp__sse-server__browser_console_messages",
+      "mcp__sse-server__browser_navigate",
+      "mcp__sse-server__browser_wait_for"
     ],
     "deny": []
   }

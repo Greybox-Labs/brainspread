@@ -16,7 +16,11 @@ from .commands import (
     CreatePageCommand,
     UpdatePageCommand,
     DeletePageCommand,
-    GetUserPagesCommand
+    GetUserPagesCommand,
+    CreateBlockCommand,
+    UpdateBlockCommand,
+    DeleteBlockCommand,
+    ToggleBlockTodoCommand
 )
 
 
@@ -343,18 +347,20 @@ def create_block(request):
                     'errors': {'parent_id': ['Parent block not found']}
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        block = Block.objects.create(
+        # Use command to create block (includes tag extraction)
+        command = CreateBlockCommand(
             user=request.user,
             page=page,
-            parent=parent,
             content=content,
             content_type=content_type,
             block_type=block_type,
             order=order,
+            parent=parent,
             media_url=media_url,
             media_metadata=media_metadata,
             properties=properties
         )
+        block = command.execute()
         
         return Response({
             'success': True,
@@ -384,38 +390,26 @@ def update_block(request):
                 'errors': {'block_id': ['Block ID is required']}
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            block = Block.objects.get(uuid=block_id, user=request.user)
-        except Block.DoesNotExist:
-            return Response({
-                'success': False,
-                'errors': {'block_id': ['Block not found']}
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Prepare updates dict
+        updates = {}
+        for field in ['content', 'block_type', 'content_type', 'order', 'collapsed', 'media_url', 'media_metadata', 'properties']:
+            if field in data:
+                updates[field] = data[field]
         
-        # Update fields
-        if 'content' in data:
-            block.content = data['content']
-        if 'block_type' in data:
-            block.block_type = data['block_type']
-        if 'content_type' in data:
-            block.content_type = data['content_type']
-        if 'order' in data:
-            block.order = data['order']
-        if 'collapsed' in data:
-            block.collapsed = data['collapsed']
-        if 'media_url' in data:
-            block.media_url = data['media_url']
-        if 'media_metadata' in data:
-            block.media_metadata = data['media_metadata']
-        if 'properties' in data:
-            block.properties = data['properties']
-        
-        block.save()
+        # Use command to update block (includes tag extraction)
+        command = UpdateBlockCommand(request.user, block_id, **updates)
+        block = command.execute()
         
         return Response({
             'success': True,
             'data': model_to_dict(block)
         })
+    
+    except ValidationError as e:
+        return Response({
+            'success': False,
+            'errors': {'non_field_errors': [str(e)]}
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
         return Response({
@@ -439,20 +433,20 @@ def delete_block(request):
                 'errors': {'block_id': ['Block ID is required']}
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            block = Block.objects.get(uuid=block_id, user=request.user)
-        except Block.DoesNotExist:
-            return Response({
-                'success': False,
-                'errors': {'block_id': ['Block not found']}
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        block.delete()
+        # Use command to delete block
+        command = DeleteBlockCommand(request.user, block_id)
+        result = command.execute()
         
         return Response({
             'success': True,
-            'data': {'deleted': True}
+            'data': {'deleted': result}
         })
+    
+    except ValidationError as e:
+        return Response({
+            'success': False,
+            'errors': {'non_field_errors': [str(e)]}
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
         return Response({
@@ -476,20 +470,20 @@ def toggle_block_todo(request):
                 'errors': {'block_id': ['Block ID is required']}
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            block = Block.objects.get(uuid=block_id, user=request.user)
-        except Block.DoesNotExist:
-            return Response({
-                'success': False,
-                'errors': {'block_id': ['Block not found']}
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        block.toggle_todo()
+        # Use command to toggle todo status
+        command = ToggleBlockTodoCommand(request.user, block_id)
+        block = command.execute()
         
         return Response({
             'success': True,
             'data': model_to_dict(block)
         })
+    
+    except ValidationError as e:
+        return Response({
+            'success': False,
+            'errors': {'non_field_errors': [str(e)]}
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
         return Response({

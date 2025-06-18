@@ -58,6 +58,11 @@ Navigate to `packages/django-app/` for most development tasks.
   - `forms/` - Form base classes and mixins
 
 ### Key Patterns
+- **Commands Pattern**: ALL business logic must be implemented in Commands, not in models, managers, or views
+  - Commands encapsulate business operations and workflows
+  - Models should only contain data validation and simple property methods
+  - Views should only handle HTTP concerns and delegate to Commands
+  - Managers should only contain data querying logic, no business rules
 - **Repository Pattern**: Use `BaseRepository` for data access
 - **Model Mixins**: UUID, timestamps, soft delete functionality
 - **Soft Delete**: Models can inherit `SoftDeleteTimestampMixin` for logical deletion

@@ -17,3 +17,4 @@
       how often?
 
 # Bugs
+- [x] tags not created when block created, maybe when block is updated too

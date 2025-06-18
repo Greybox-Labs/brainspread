@@ -228,16 +228,6 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             del self.properties[key]
             self.save(update_fields=['properties'])
     
-    def toggle_todo(self):
-        """Toggle between todo and done states"""
-        if self.block_type == 'todo':
-            self.block_type = 'done'
-        elif self.block_type == 'done':
-            self.block_type = 'todo'
-        else:
-            self.block_type = 'todo'
-        self.save()
-    
     def get_media_info(self):
         """Get media information for this block"""
         if self.content_type in ['image', 'video', 'audio', 'file']:

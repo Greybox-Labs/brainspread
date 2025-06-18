@@ -87,7 +87,7 @@ class TaggableMixin(models.Model):
     def set_tags_from_content(self, content, user):
         """Extract hashtags from content and set them as tags"""
         import re
-        hashtag_pattern = r'#([a-zA-Z0-9_]+)'
+        hashtag_pattern = r'#([a-zA-Z0-9_-]+)'
         hashtags = re.findall(hashtag_pattern, content)
         
         if hashtags:

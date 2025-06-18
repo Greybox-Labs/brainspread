@@ -5,13 +5,13 @@ default:
 django-admin +ARGS:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Check database environment
   DB_HOST_ENVAR=$(docker-compose run --rm -w /code/app web env | grep POSTGRES_HOST)
   DB_HOST=$(cut -d "=" -f2 <<< "$DB_HOST_ENVAR")
   # Trim newline
   DB_HOST=${DB_HOST//[$'\t\r\n']}
-  
+
   if [ "$DB_HOST" != 'db' ] && [ "$DB_HOST" != '0.0.0.0' ] && [ "$DB_HOST" != 'localhost' ]; then
     echo "You are running this command against the database at ${DB_HOST}!"
     read -r -p "Are you sure you want to continue? [y/N] " response
@@ -21,7 +21,7 @@ django-admin +ARGS:
   else
     echo "Running command against database at $DB_HOST..."
   fi
-  
+
   docker-compose run --rm -w /code/app web /code/app/manage.py {{ARGS}}
 
 # Execute shell commands in running web container
@@ -57,13 +57,13 @@ dump-data:
 reload-db DATA="dev_data.json":
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Check database environment
   DB_HOST_ENVAR=$(docker-compose run --rm -w /code/app web env | grep POSTGRES_HOST)
   DB_HOST=$(cut -d "=" -f2 <<< "$DB_HOST_ENVAR")
   # Trim newline
   DB_HOST=${DB_HOST//[$'\t\r\n']}
-  
+
   if [ "$DB_HOST" != 'db' ] && [ "$DB_HOST" != '0.0.0.0' ] && [ "$DB_HOST" != 'localhost' ]; then
     echo "You are trying to reload the database at ${DB_HOST}!"
     read -r -p "Are you sure you want to continue? [y/N] " response
@@ -73,27 +73,27 @@ reload-db DATA="dev_data.json":
   else
     echo "Reloading database at $DB_HOST"
   fi
-  
+
   echo "starting script ..."
   echo "Reloading $DB_HOST w/ {{DATA}} ..."
   echo ""
-  
+
   echo "recreating volume and container ..."
   # Stop and remove db container
   docker-compose stop db
   docker-compose rm -f db
-  
+
   # Remove and recreate postgres volume
   docker volume rm brainspread_postgres || true
   docker volume create --name=brainspread_postgres
-  
+
   # Bring container back up and wait for db
   docker-compose up -d db
   sleep 5
-  
+
   echo "running migrations ..."
   docker-compose run --rm -w /code/app web /code/app/manage.py migrate
-  
+
   echo "loading data from {{DATA}} ..."
   docker-compose run --rm -w /code/app web /code/app/manage.py loaddata {{DATA}}
 
@@ -207,3 +207,8 @@ init:
   sleep 5
   just migrate
   echo "Project initialized! Run 'just copy-env' and add your SECRET_KEY, then 'just create-superuser' to get started."
+
+# AI Tools
+# start playwright mcp server
+ai-start-playwright-mcp:
+  npx @playwright/mcp@latest --port 8931
