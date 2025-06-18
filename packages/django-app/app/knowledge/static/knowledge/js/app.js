@@ -3,11 +3,14 @@ const { createApp } = Vue;
 // Global Vue app for knowledge base
 const KnowledgeApp = createApp({
   data() {
+    const isAuth = window.apiService.isAuthenticated();
+    const cachedUser = window.apiService.getCurrentUser();
+    
     return {
-      user: null,
-      isAuthenticated: false,
-      currentView: "journal", // 'journal' or 'login'
-      loading: true,
+      user: cachedUser, // Load user immediately from cache
+      isAuthenticated: isAuth, // Check immediately
+      currentView: isAuth ? "journal" : "login", // Set view immediately
+      loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
     };
   },
 
@@ -20,6 +23,13 @@ const KnowledgeApp = createApp({
 
   async mounted() {
     console.log("Knowledge app mounted");
+    
+    // If we have cached user data, we can show the app immediately
+    if (this.isAuthenticated && this.user) {
+      this.loading = false;
+    }
+    
+    // Then verify with server (this happens in background)
     await this.checkAuth();
 
     // Check for timezone changes after authentication
@@ -30,7 +40,10 @@ const KnowledgeApp = createApp({
 
   methods: {
     async checkAuth() {
-      this.loading = true;
+      // Only set loading if we're not already authenticated
+      if (!this.isAuthenticated) {
+        this.loading = true;
+      }
 
       if (window.apiService.isAuthenticated()) {
         try {
@@ -48,6 +61,7 @@ const KnowledgeApp = createApp({
         }
       } else {
         this.currentView = "login";
+        this.isAuthenticated = false;
       }
 
       this.loading = false;
@@ -115,33 +129,37 @@ const KnowledgeApp = createApp({
 
   template: `
         <div class="journals-app">
-            <nav v-if="isAuthenticated" class="navbar">
-                <div class="nav-content">
-                    <h1>brainspreader</h1>
-                    <div class="nav-right">
-                        <span class="user-info">Hello, {{ user?.email }}</span>
-                        <button @click="handleLogout" class="btn btn-outline">logout</button>
+            <!-- Show loading during initial auth check to prevent login flash -->
+            <div v-if="loading && !user" class="loading-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+                <div class="loading">Loading...</div>
+            </div>
+            
+            <!-- Authenticated state -->
+            <div v-else-if="isAuthenticated">
+                <nav class="navbar">
+                    <div class="nav-content">
+                        <h1>brainspreader</h1>
+                        <div class="nav-right">
+                            <span class="user-info">Hello, {{ user?.email }}</span>
+                            <button @click="handleLogout" class="btn btn-outline">logout</button>
+                        </div>
                     </div>
-                </div>
-            </nav>
+                </nav>
 
-            <main v-if="isAuthenticated" class="main-content">
-                <div v-if="loading" class="loading-container">
-                    <div class="loading">Loading...</div>
-                </div>
-
-                <div v-else-if="!isAuthenticated" class="auth-container">
-                    <LoginForm @login-success="onLoginSuccess" />
-                </div>
-
-                <div v-else class="content-layout">
-                    <HistoricalSidebar @navigate-to-date="onNavigateToDate" />
-                    <div class="main-content-area">
-                        <DailyNote ref="dailyNote" />
+                <main class="main-content">
+                    <div v-if="loading" class="loading-container">
+                        <div class="loading">Loading...</div>
                     </div>
-                </div>
-            </main>
-
+                    <div v-else class="content-layout">
+                        <HistoricalSidebar @navigate-to-date="onNavigateToDate" />
+                        <div class="main-content-area">
+                            <DailyNote ref="dailyNote" />
+                        </div>
+                    </div>
+                </main>
+            </div>
+            
+            <!-- Login state -->
             <main v-else class="main-content">
                 <div class="auth-container">
                     <LoginForm @login-success="onLoginSuccess" />

@@ -18,9 +18,10 @@ from .commands import (
     ToggleBlockTodoCommand,
     GetHistoricalDataCommand,
 )
+from tagging.commands import GetTagContentCommand
 
 
-def index(request, date=None):
+def index(request, date=None, tag_name=None):
     return render(request, "knowledge/index.html")
 
 
@@ -132,6 +133,61 @@ def create_page(request):
         )
 
 
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_tag_content(request, tag_name):
+    """Get all content (blocks and pages) associated with a specific tag"""
+    try:
+        # Use command to get tag content
+        command = GetTagContentCommand(request.user, tag_name)
+        result = command.execute()
+        
+        if not result:
+            return Response(
+                {"success": False, "errors": {"tag": ["Tag not found"]}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+        # Format the response data
+        blocks_data = []
+        for block in result['blocks']:
+            block_dict = model_to_dict(block)
+            # Add page information for context
+            block_dict['page_title'] = block.page.title
+            block_dict['page_date'] = block.page.date.isoformat() if hasattr(block.page, 'date') and block.page.date else None
+            blocks_data.append(block_dict)
+        
+        pages_data = []
+        for page in result['pages']:
+            page_dict = model_to_dict(page)
+            pages_data.append(page_dict)
+        
+        tag_dict = {
+            'name': result['tag'].name,
+            'color': result['tag'].color,
+            'uuid': str(result['tag'].uuid),
+        }
+        
+        return Response({
+            "success": True,
+            "data": {
+                "tag": tag_dict,
+                "blocks": blocks_data,
+                "pages": pages_data,
+                "total_blocks": len(blocks_data),
+                "total_pages": len(pages_data),
+                "total_content": len(blocks_data) + len(pages_data),
+            }
+        })
+        
+    except Exception as e:
+        return Response(
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_page(request):
@@ -163,6 +219,7 @@ def update_page(request):
         )
 
 
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_page(request):
@@ -192,6 +249,7 @@ def delete_page(request):
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 
 @api_view(["GET"])
@@ -226,6 +284,7 @@ def get_pages(request):
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 
 # New block-centric API endpoints
@@ -298,6 +357,7 @@ def get_page_with_blocks(request):
         )
 
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_block(request):
@@ -363,6 +423,7 @@ def create_block(request):
         )
 
 
+
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_block(request):
@@ -413,6 +474,7 @@ def update_block(request):
         )
 
 
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_block(request):
@@ -447,6 +509,7 @@ def delete_block(request):
         )
 
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_block_todo(request):
@@ -479,6 +542,7 @@ def toggle_block_todo(request):
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 
 @api_view(["GET"])
@@ -531,3 +595,4 @@ def get_historical_data(request):
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+

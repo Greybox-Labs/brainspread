@@ -189,6 +189,10 @@ class ApiService {
     );
   }
 
+  async getTagContent(tagName) {
+    return await this.request(`/knowledge/api/tag/${encodeURIComponent(tagName)}/`);
+  }
+
   // Legacy method for backward compatibility
   async getDailyNote(date) {
     return await this.getPageWithBlocks(null, date);

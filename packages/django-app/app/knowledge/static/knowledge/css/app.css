@@ -257,6 +257,98 @@ body {
   color: #000000 !important;
 }
 
+/* Clickable tag styling */
+.clickable-tag {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.clickable-tag:hover {
+  background-color: #00cc00 !important;
+  text-decoration: underline;
+}
+
+/* Tag page styling */
+.tag-page-content {
+  margin-top: 2rem;
+}
+
+.tag-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #00ff00;
+}
+
+.tag-display {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.stats-text {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.block-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.page-title {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.page-date {
+  color: #666;
+}
+
+.block-text {
+  margin-left: 0;
+}
+
+.pages-container {
+  margin-top: 3rem;
+}
+
+.pages-container h3 {
+  color: #00ff00;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.page-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.page-link {
+  color: #00ff00;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.page-link:hover {
+  text-decoration: underline;
+}
+
+.no-content {
+  text-align: center;
+  color: #888;
+  margin: 3rem 0;
+  font-size: 1.1rem;
+}
+
 /* Alerts */
 .alert {
   padding: 1rem;
