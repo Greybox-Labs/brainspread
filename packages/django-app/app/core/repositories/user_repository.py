@@ -1,3 +1,4 @@
+from typing import Optional
 from common.repositories.base_repository import BaseRepository
 from core.models import User
 
@@ -14,9 +15,29 @@ class UserRepository(BaseRepository):
         return objects
 
     @classmethod
+    def get_by_email(cls, email: str) -> Optional[User]:
+        """Get user by email address"""
+        try:
+            return cls.get_queryset().get(email=email)
+        except User.DoesNotExist:
+            return None
+
+    @classmethod
+    def email_exists(cls, email: str) -> bool:
+        """Check if user with email exists"""
+        return cls.get_queryset().filter(email=email).exists()
+
+    @classmethod
     def create(cls, data: dict) -> "User":
         user = cls.model.objects.create(**data)
         return user
+
+    @classmethod
+    def create_user(cls, email: str, password: str, **extra_fields) -> "User":
+        """Create a new user with email and password"""
+        return cls.model.objects.create_user(
+            email=email, password=password, **extra_fields
+        )
 
     @classmethod
     def update(cls, *, pk=None, obj: "User" = None, data: dict) -> "User":
@@ -26,4 +47,11 @@ class UserRepository(BaseRepository):
             user.is_active = data["is_active"]
 
         user.save()
+        return user
+
+    @classmethod
+    def update_timezone(cls, user: User, timezone: str) -> User:
+        """Update user's timezone"""
+        user.timezone = timezone
+        user.save(update_fields=["timezone"])
         return user

@@ -63,7 +63,7 @@ Navigate to `packages/django-app/` for most development tasks.
   - Models should only contain data validation and simple property methods
   - Views should only handle HTTP concerns and delegate to Commands
   - Managers should only contain data querying logic, no business rules
-- **Tests**: All commands should be tested
+- **Tests**: All commands should be tested. Use factoryboy for model factories.
 - **Repository Pattern**: Use `BaseRepository` for data access
 - **Model Mixins**: UUID, timestamps, soft delete functionality
 - **Soft Delete**: Models can inherit `SoftDeleteTimestampMixin` for logical deletion
@@ -78,3 +78,8 @@ Navigate to `packages/django-app/` for most development tasks.
 - you can run `just tail-logs web 100` or `just tail-logs db 100`
   to get server logs or database logs to debug issues.
 - you can use browser mcp to debug issues also
+
+### Always load information from extra files in .ai/
+- .ai/DEBUGGING.md contains debugging tips and tricks
+- .ai/PROJECT_SETUP.md is a guide for setting up the project
+- .ai/TODO.md contains todos, feature requests, bugs, etc

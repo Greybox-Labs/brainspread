@@ -489,15 +489,13 @@ def get_historical_data(request):
         # Get query parameters
         days_back = int(request.query_params.get("days_back", 30))
         limit = int(request.query_params.get("limit", 50))
-        
+
         # Use command to get historical data
         command = GetHistoricalDataCommand(
-            user=request.user,
-            days_back=days_back,
-            limit=limit
+            user=request.user, days_back=days_back, limit=limit
         )
         result = command.execute()
-        
+
         # Format the data
         pages_data = []
         for page in result["pages"]:
@@ -506,25 +504,27 @@ def get_historical_data(request):
             page_blocks = command.repository.get_page_recent_blocks(page, 3)
             page_data["recent_blocks"] = [model_to_dict(block) for block in page_blocks]
             pages_data.append(page_data)
-        
+
         blocks_data = []
         for block in result["blocks"]:
             block_data = model_to_dict(block)
             block_data["page_title"] = block.page.title
             blocks_data.append(block_data)
-        
-        return Response({
-            "success": True,
-            "data": {
-                "pages": pages_data,
-                "blocks": blocks_data,
-                "date_range": {
-                    "start": result["date_range"]["start"].isoformat(),
-                    "end": result["date_range"]["end"].isoformat(),
-                    "days_back": result["date_range"]["days_back"]
-                }
+
+        return Response(
+            {
+                "success": True,
+                "data": {
+                    "pages": pages_data,
+                    "blocks": blocks_data,
+                    "date_range": {
+                        "start": result["date_range"]["start"].isoformat(),
+                        "end": result["date_range"]["end"].isoformat(),
+                        "days_back": result["date_range"]["days_back"],
+                    },
+                },
             }
-        })
+        )
 
     except Exception as e:
         return Response(

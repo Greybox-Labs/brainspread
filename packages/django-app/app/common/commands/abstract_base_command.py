@@ -10,9 +10,9 @@ class AbstractBaseCommand(ABC):
     The Command interface declares a method for executing a command.
     """
 
-    form: BaseForm
+    form: BaseForm | None
 
     @abstractmethod
     def execute(self) -> None:
-        if not self.form.is_valid():
+        if self.form and not self.form.is_valid():
             raise ValidationError(self.form.errors.as_json())

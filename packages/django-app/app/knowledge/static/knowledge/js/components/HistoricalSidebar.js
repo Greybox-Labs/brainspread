@@ -88,8 +88,8 @@ window.HistoricalSidebar = {
 
     removeResizeListener() {
       if (this.resizeHandler) {
-        document.removeEventListener('mousemove', this.resizeHandler);
-        document.removeEventListener('mouseup', this.stopResizeHandler);
+        document.removeEventListener("mousemove", this.resizeHandler);
+        document.removeEventListener("mouseup", this.stopResizeHandler);
       }
     },
 
@@ -98,8 +98,8 @@ window.HistoricalSidebar = {
       this.startX = e.clientX;
       this.startWidth = this.width;
 
-      document.addEventListener('mousemove', this.resizeHandler);
-      document.addEventListener('mouseup', this.stopResizeHandler);
+      document.addEventListener("mousemove", this.resizeHandler);
+      document.addEventListener("mouseup", this.stopResizeHandler);
 
       e.preventDefault();
     },
@@ -117,13 +117,13 @@ window.HistoricalSidebar = {
 
     stopResize() {
       this.isResizing = false;
-      document.removeEventListener('mousemove', this.resizeHandler);
-      document.removeEventListener('mouseup', this.stopResizeHandler);
+      document.removeEventListener("mousemove", this.resizeHandler);
+      document.removeEventListener("mouseup", this.stopResizeHandler);
     },
 
     openDailyNote(page) {
       // Emit event to parent component to navigate to this date
-      this.$emit('navigate-to-date', page.date);
+      this.$emit("navigate-to-date", page.date);
     },
 
     // Click outside to close sidebar
@@ -133,12 +133,12 @@ window.HistoricalSidebar = {
           this.isOpen = false;
         }
       };
-      document.addEventListener('click', this.clickOutsideHandler);
+      document.addEventListener("click", this.clickOutsideHandler);
     },
 
     removeClickOutsideListener() {
       if (this.clickOutsideHandler) {
-        document.removeEventListener('click', this.clickOutsideHandler);
+        document.removeEventListener("click", this.clickOutsideHandler);
       }
     },
   },

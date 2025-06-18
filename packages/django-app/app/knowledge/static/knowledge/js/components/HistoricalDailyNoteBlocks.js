@@ -1,5 +1,5 @@
 window.HistoricalDailyNoteBlocks = {
-  props: ['page'],
+  props: ["page"],
 
   data() {
     return {
@@ -18,7 +18,10 @@ window.HistoricalDailyNoteBlocks = {
 
       this.loading = true;
       try {
-        const result = await window.apiService.getPageWithBlocks(null, this.page.date);
+        const result = await window.apiService.getPageWithBlocks(
+          null,
+          this.page.date
+        );
         if (result.success) {
           this.blocks = result.data.blocks || [];
         }
@@ -34,7 +37,7 @@ window.HistoricalDailyNoteBlocks = {
       if (!content.trim()) return;
 
       if (order === null) {
-        order = parentId ? 0 : this.blocks.filter(b => !b.parent_id).length;
+        order = parentId ? 0 : this.blocks.filter((b) => !b.parent_id).length;
       }
 
       try {
@@ -109,7 +112,7 @@ window.HistoricalDailyNoteBlocks = {
 
     startEditing(block) {
       // Stop editing all other blocks first
-      this.getAllBlocks().forEach(b => {
+      this.getAllBlocks().forEach((b) => {
         if (b.id !== block.id && b.isEditing) {
           this.updateBlock(b, b.content, true);
           b.isEditing = false;
@@ -118,7 +121,9 @@ window.HistoricalDailyNoteBlocks = {
 
       block.isEditing = true;
       this.$nextTick(() => {
-        const blockElement = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+        const blockElement = document.querySelector(
+          `[data-block-id="${block.id}"] textarea`
+        );
         if (blockElement) {
           blockElement.focus();
         }
@@ -139,7 +144,7 @@ window.HistoricalDailyNoteBlocks = {
     getAllBlocks() {
       const flattenBlocks = (blocks) => {
         let result = [];
-        blocks.forEach(block => {
+        blocks.forEach((block) => {
           result.push(block);
           if (block.children) {
             result = result.concat(flattenBlocks(block.children));

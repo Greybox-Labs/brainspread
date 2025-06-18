@@ -4,7 +4,9 @@
 }
 
 body {
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", monospace;
+  font-family:
+    "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro",
+    monospace;
   margin: 0;
   padding: 0;
   background-color: #000000;
@@ -100,7 +102,6 @@ body {
   color: #00ff00;
   font-size: 1.1rem;
   font-weight: normal;
-  
 }
 
 /* Auth Container */
@@ -131,7 +132,6 @@ body {
   margin-bottom: 0.5rem;
   font-weight: normal;
   color: #00ff00;
-  
 }
 
 .form-control {
@@ -171,7 +171,6 @@ body {
   text-decoration: none;
   display: inline-block;
   font-family: inherit;
-  
 }
 
 .btn:hover {
@@ -212,7 +211,6 @@ body {
   text-decoration: underline;
   padding: 0.5rem 0;
   font-weight: normal;
-  
 }
 
 .btn-link:hover:not(:disabled) {
@@ -230,7 +228,6 @@ body {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
   color: #00ff00;
-  
 }
 
 .tag {
@@ -285,7 +282,6 @@ body {
   margin: 0 0 2rem 0;
   color: #00ff00;
   font-size: 1.5rem;
-  
 }
 
 /* Login Form Specific */
@@ -293,7 +289,6 @@ body {
   text-align: center;
   margin: 0 0 2rem 0;
   color: #00ff00;
-  
 }
 
 .login-form .btn {
@@ -487,7 +482,7 @@ body {
   padding: 0.15rem 0.3rem;
   transition: opacity 0.2s;
   margin-top: 0.1rem;
-  
+
   font-family: inherit;
 }
 
@@ -517,7 +512,6 @@ body {
   width: 100%;
   transition: none;
   font-family: inherit;
-  
 }
 
 .add-block-btn:hover {
@@ -586,7 +580,7 @@ body {
 .historical-header h2 {
   margin: 0;
   color: #00ff00;
-  
+
   font-size: 1.8rem;
   font-weight: normal;
 }
@@ -626,7 +620,7 @@ body {
 
 .section h3 {
   color: #00ff00;
-  
+
   font-size: 1.3rem;
   margin: 0 0 1rem 0;
   border-bottom: 1px solid #333;
@@ -672,7 +666,6 @@ body {
 }
 
 .page-type {
-  
   background: #333;
   padding: 0.2rem 0.5rem;
 }
@@ -688,7 +681,6 @@ body {
   color: #00ff00;
   margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
-  
 }
 
 .block-preview {
@@ -700,7 +692,7 @@ body {
 
 .block-type {
   color: #888;
-  
+
   min-width: 60px;
 }
 
@@ -730,7 +722,7 @@ body {
 
 .block-header .block-type {
   color: #00ff00;
-  
+
   background: #003300;
   padding: 0.2rem 0.5rem;
 }
@@ -762,7 +754,7 @@ body {
   background: #00ff00 !important;
   color: #000 !important;
   font-size: 0.7rem;
-  
+
   font-weight: bold;
 }
 
@@ -822,7 +814,7 @@ body {
   padding: 0.8rem 1rem;
   font-family: inherit;
   font-size: 0.8rem;
-  
+
   cursor: pointer;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -880,7 +872,7 @@ body {
 .sidebar-header h3 {
   color: #00ff00;
   margin: 0 0 1rem 0;
-  
+
   font-size: 1.2rem;
 }
 
@@ -934,7 +926,7 @@ body {
 .sidebar-section h4 {
   color: #00ff00;
   font-size: 0.9rem;
-  
+
   margin: 0 0 0.8rem 0;
   border-bottom: 1px solid #333;
   padding-bottom: 0.3rem;
@@ -988,7 +980,6 @@ body {
   color: #00ff00;
   padding: 0.1rem 0.3rem;
   font-size: 0.6rem;
-  
 }
 
 .item-page {
@@ -1021,7 +1012,7 @@ body {
   background: #00ff00 !important;
   color: #000 !important;
   font-size: 0.6rem;
-  
+
   font-weight: bold;
 }
 
@@ -1034,7 +1025,7 @@ body {
 .preview-label {
   color: #888;
   font-size: 0.7rem;
-  
+
   display: block;
   margin-bottom: 0.3rem;
 }

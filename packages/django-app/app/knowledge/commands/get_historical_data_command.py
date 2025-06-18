@@ -14,7 +14,5 @@ class GetHistoricalDataCommand(AbstractBaseCommand):
     def execute(self):
         """Execute the command and return historical data"""
         return self.repository.get_historical_data(
-            user=self.user,
-            days_back=self.days_back,
-            limit=self.limit
+            user=self.user, days_back=self.days_back, limit=self.limit
         )

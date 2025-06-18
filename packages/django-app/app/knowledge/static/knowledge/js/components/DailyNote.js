@@ -18,7 +18,8 @@ const DailyNote = {
     // Register component when it's available
     if (window.HistoricalDailyNoteBlocks) {
       this.$options.components = this.$options.components || {};
-      this.$options.components.HistoricalDailyNoteBlocks = window.HistoricalDailyNoteBlocks;
+      this.$options.components.HistoricalDailyNoteBlocks =
+        window.HistoricalDailyNoteBlocks;
     }
     await this.loadPage();
     await this.loadHistoricalData();
@@ -36,8 +37,8 @@ const DailyNote = {
 
     getDateFromURL() {
       // Extract date from URL like /knowledge/daily/2025-06-17/
-      const pathParts = window.location.pathname.split('/');
-      const dailyIndex = pathParts.indexOf('daily');
+      const pathParts = window.location.pathname.split("/");
+      const dailyIndex = pathParts.indexOf("daily");
       if (dailyIndex !== -1 && pathParts[dailyIndex + 1]) {
         const dateStr = pathParts[dailyIndex + 1];
         // Validate date format YYYY-MM-DD
@@ -52,7 +53,7 @@ const DailyNote = {
       // Update URL without page reload
       const newPath = `/knowledge/daily/${date}/`;
       if (window.location.pathname !== newPath) {
-        window.history.pushState({}, '', newPath);
+        window.history.pushState({}, "", newPath);
       }
     },
 
@@ -202,7 +203,7 @@ const DailyNote = {
         const value = textarea.value;
 
         // For single line content, check if cursor is at end
-        if (value.indexOf('\n') === -1) {
+        if (value.indexOf("\n") === -1) {
           // Single line - if cursor is at end, move to next block
           if (cursorPos === value.length) {
             event.preventDefault();
@@ -210,9 +211,9 @@ const DailyNote = {
           }
         } else {
           // Multi-line content
-          const lines = value.substr(0, cursorPos).split('\n');
+          const lines = value.substr(0, cursorPos).split("\n");
           const currentLine = lines.length - 1;
-          const totalLines = value.split('\n').length;
+          const totalLines = value.split("\n").length;
 
           // If cursor is on the last line, move to next block
           if (currentLine === totalLines - 1) {
@@ -226,7 +227,7 @@ const DailyNote = {
         const value = textarea.value;
 
         // For single line content, check if cursor is at beginning
-        if (value.indexOf('\n') === -1) {
+        if (value.indexOf("\n") === -1) {
           // Single line - if cursor is at beginning, move to previous block
           if (cursorPos === 0) {
             event.preventDefault();
@@ -234,7 +235,7 @@ const DailyNote = {
           }
         } else {
           // Multi-line content
-          const lines = value.substr(0, cursorPos).split('\n');
+          const lines = value.substr(0, cursorPos).split("\n");
           const currentLine = lines.length - 1;
 
           // If cursor is on the first line, move to previous block
@@ -263,7 +264,7 @@ const DailyNote = {
     startEditing(block) {
       // Stop editing all other blocks first (save them)
       const allBlocks = this.getAllBlocks();
-      allBlocks.forEach(b => {
+      allBlocks.forEach((b) => {
         if (b.id !== block.id && b.isEditing) {
           this.updateBlock(b, b.content, true); // Save without reload
           b.isEditing = false;
@@ -273,7 +274,9 @@ const DailyNote = {
       block.isEditing = true;
       this.$nextTick(() => {
         // Focus the specific textarea for this block
-        const blockElement = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+        const blockElement = document.querySelector(
+          `[data-block-id="${block.id}"] textarea`
+        );
         if (blockElement) {
           blockElement.focus();
         }
@@ -309,7 +312,7 @@ const DailyNote = {
 
     focusNextBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
 
       if (currentIndex >= 0 && currentIndex < allBlocks.length - 1) {
         const nextBlock = allBlocks[currentIndex + 1];
@@ -320,7 +323,7 @@ const DailyNote = {
 
     focusPreviousBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
 
       if (currentIndex > 0) {
         const previousBlock = allBlocks[currentIndex - 1];
@@ -342,10 +345,17 @@ const DailyNote = {
 
     formatDate(dateString) {
       // Handle date strings properly to avoid timezone issues
-      if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      if (
+        typeof dateString === "string" &&
+        dateString.match(/^\d{4}-\d{2}-\d{2}$/)
+      ) {
         // For YYYY-MM-DD format, parse manually to avoid timezone issues
-        const [year, month, day] = dateString.split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        const [year, month, day] = dateString.split("-");
+        const date = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day)
+        );
         return date.toLocaleDateString();
       }
       return new Date(dateString).toLocaleDateString();
@@ -379,7 +389,7 @@ const DailyNote = {
 
           // Redirect to knowledge base to avoid auto-creating the same page
           setTimeout(() => {
-            window.location.href = '/knowledge/';
+            window.location.href = "/knowledge/";
           }, 1000);
         } else {
           this.error = "Failed to delete daily note";
@@ -396,7 +406,7 @@ const DailyNote = {
       if (this.historicalBlocksCache[cacheKey]) {
         return this.historicalBlocksCache[cacheKey];
       }
-      
+
       // Load blocks for this historical page asynchronously
       this.loadHistoricalPageBlocks(historicalPage);
       return [];
@@ -404,9 +414,12 @@ const DailyNote = {
 
     async loadHistoricalPageBlocks(historicalPage) {
       const cacheKey = historicalPage.id;
-      
+
       try {
-        const result = await window.apiService.getPageWithBlocks(null, historicalPage.date);
+        const result = await window.apiService.getPageWithBlocks(
+          null,
+          historicalPage.date
+        );
         if (result.success) {
           this.historicalBlocksCache[cacheKey] = result.data.blocks || [];
           this.$forceUpdate(); // Force re-render to show the loaded blocks

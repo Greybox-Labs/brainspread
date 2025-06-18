@@ -2,17 +2,18 @@
 - [x] daily journal
 - [x] refactor into logseq clone
 - [x] remove journal entries model since it is no longer being used.
-- [ ] restyle in a brutalist style with thin lines,
+- [x] restyle in a brutalist style with thin lines,
       high contrast colors, and no border radii
 - [x] implement python formatting with black. install in Pipfile,
       ensure Pipfile.lock is updated, add a just command, and run it
 - [x] implement tests for the commands
-- [ ] refactor user views to use commands and repositories
+- [x] refactor user views to use commands and repositories
 - [x] /knowledge page should show historical pages and blocks also
 - [x] there should be a sidebar with all tags, pages, and blocks
 - [ ] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
 - [ ] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [ ] should support nested blocks
+- [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 
 # Questions
 - [ ] Filebase storage vs database? filebase storage could
