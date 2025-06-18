@@ -110,23 +110,23 @@ const KnowledgeApp = createApp({
         <div class="journals-app">
             <nav v-if="isAuthenticated" class="navbar">
                 <div class="nav-content">
-                    <h1>🧠 Knowledge Base</h1>
+                    <h1>Knowledge Base</h1>
                     <div class="nav-right">
                         <span class="user-info">Hello, {{ user?.email }}</span>
                         <button @click="handleLogout" class="btn btn-outline">Logout</button>
                     </div>
                 </div>
             </nav>
-            
+
             <main class="main-content">
                 <div v-if="loading" class="loading-container">
                     <div class="loading">Loading...</div>
                 </div>
-                
+
                 <div v-else-if="!isAuthenticated" class="auth-container">
                     <LoginForm @login-success="onLoginSuccess" />
                 </div>
-                
+
                 <div v-else class="journal-container">
                     <DailyNote />
                 </div>

@@ -201,7 +201,7 @@ const DailyNote = {
   template: `
     <div class="daily-note">
       <header class="daily-note-header">
-        <h1>📅 Daily Note</h1>
+        <h1>Daily Note</h1>
         <div class="date-picker">
           <input
             v-model="currentDate"
@@ -229,8 +229,8 @@ const DailyNote = {
                 <span v-else-if="block.block_type === 'done'">☑</span>
                 <span v-else>•</span>
               </div>
-              <div 
-                v-if="!block.isEditing" 
+              <div
+                v-if="!block.isEditing"
                 class="block-content-display"
                 :class="{ 'completed': block.block_type === 'done' }"
                 @click="startEditing(block)"
@@ -268,8 +268,8 @@ const DailyNote = {
                     <span v-else-if="child.block_type === 'done'">☑</span>
                     <span v-else>•</span>
                   </div>
-                  <div 
-                    v-if="!child.isEditing" 
+                  <div
+                    v-if="!child.isEditing"
                     class="block-content-display"
                     :class="{ 'completed': child.block_type === 'done' }"
                     @click="startEditing(child)"
