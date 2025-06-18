@@ -28,38 +28,30 @@ django-admin +ARGS:
 exec +ARGS:
   docker-compose exec web {{ARGS}}
 
-# Install pipenv package (dev or prod) - NOTE: Run this from host with pipenv installed
+# Install pipenv package (dev or prod) 
 install-package PACKAGE DEV="":
   #!/usr/bin/env bash
   set -euo pipefail
   
   if [ "{{DEV}}" = "--dev" ]; then
     echo "Installing {{PACKAGE}} as dev dependency..."
-    echo "Run: pipenv install --dev {{PACKAGE}}"
-    echo "Then: pipenv lock"
-    echo "Then: just build"
+    pipenv install --dev {{PACKAGE}}
   else
     echo "Installing {{PACKAGE}} as production dependency..."
-    echo "Run: pipenv install {{PACKAGE}}"
-    echo "Then: pipenv lock"
-    echo "Then: just build"
+    pipenv install {{PACKAGE}}
   fi
+  
+  echo "Rebuilding containers with new dependencies..."
+  docker-compose build web
 
-# Install dev package shorthand - NOTE: Run this from host with pipenv installed
+# Install dev package shorthand
 install-dev PACKAGE:
-  #!/usr/bin/env bash
-  echo "To install {{PACKAGE}} as dev dependency:"
-  echo "1. Run: pipenv install --dev {{PACKAGE}}"
-  echo "2. Run: pipenv lock" 
-  echo "3. Run: just build"
+  just install-package {{PACKAGE}} --dev
 
-# Update pipenv dependencies - NOTE: Run this from host with pipenv installed
+# Update pipenv dependencies
 update-deps:
-  #!/usr/bin/env bash
-  echo "To update dependencies:"
-  echo "1. Run: pipenv update"
-  echo "2. Run: pipenv lock"
-  echo "3. Run: just build"
+  pipenv update
+  docker-compose build web
 
 # Generate Django secret key
 generate-secret-key:
