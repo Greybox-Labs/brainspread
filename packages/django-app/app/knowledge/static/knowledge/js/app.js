@@ -14,6 +14,7 @@ const KnowledgeApp = createApp({
   components: {
     DailyNote: window.DailyNote,
     LoginForm: window.LoginForm,
+    HistoricalSidebar: window.HistoricalSidebar,
   },
 
   async mounted() {
@@ -118,7 +119,7 @@ const KnowledgeApp = createApp({
                 </div>
             </nav>
 
-            <main class="main-content">
+            <main v-if="isAuthenticated" class="main-content">
                 <div v-if="loading" class="loading-container">
                     <div class="loading">Loading...</div>
                 </div>
@@ -127,8 +128,17 @@ const KnowledgeApp = createApp({
                     <LoginForm @login-success="onLoginSuccess" />
                 </div>
 
-                <div v-else class="journal-container">
-                    <DailyNote />
+                <div v-else class="content-layout">
+                    <HistoricalSidebar />
+                    <div class="main-content-area">
+                        <DailyNote />
+                    </div>
+                </div>
+            </main>
+
+            <main v-else class="main-content">
+                <div class="auth-container">
+                    <LoginForm @login-success="onLoginSuccess" />
                 </div>
             </main>
         </div>

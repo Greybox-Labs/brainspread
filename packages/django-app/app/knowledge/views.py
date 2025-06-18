@@ -16,6 +16,7 @@ from .commands import (
     UpdateBlockCommand,
     DeleteBlockCommand,
     ToggleBlockTodoCommand,
+    GetHistoricalDataCommand,
 )
 
 
@@ -472,6 +473,58 @@ def toggle_block_todo(request):
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    except Exception as e:
+        return Response(
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_historical_data(request):
+    """Get historical pages and blocks"""
+    try:
+        # Get query parameters
+        days_back = int(request.query_params.get("days_back", 30))
+        limit = int(request.query_params.get("limit", 50))
+        
+        # Use command to get historical data
+        command = GetHistoricalDataCommand(
+            user=request.user,
+            days_back=days_back,
+            limit=limit
+        )
+        result = command.execute()
+        
+        # Format the data
+        pages_data = []
+        for page in result["pages"]:
+            page_data = model_to_dict(page)
+            # Get a few recent blocks from this page
+            page_blocks = command.repository.get_page_recent_blocks(page, 3)
+            page_data["recent_blocks"] = [model_to_dict(block) for block in page_blocks]
+            pages_data.append(page_data)
+        
+        blocks_data = []
+        for block in result["blocks"]:
+            block_data = model_to_dict(block)
+            block_data["page_title"] = block.page.title
+            blocks_data.append(block_data)
+        
+        return Response({
+            "success": True,
+            "data": {
+                "pages": pages_data,
+                "blocks": blocks_data,
+                "date_range": {
+                    "start": result["date_range"]["start"].isoformat(),
+                    "end": result["date_range"]["end"].isoformat(),
+                    "days_back": result["date_range"]["days_back"]
+                }
+            }
+        })
 
     except Exception as e:
         return Response(

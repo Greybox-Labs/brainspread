@@ -5,6 +5,7 @@ const DailyNote = {
       currentDate: this.getLocalDateString(),
       page: null,
       blocks: [],
+      historicalData: null,
       loading: false,
       error: null,
       successMessage: "",
@@ -14,6 +15,7 @@ const DailyNote = {
 
   async mounted() {
     await this.loadPage();
+    await this.loadHistoricalData();
   },
 
   methods: {
@@ -297,6 +299,71 @@ const DailyNote = {
         this.startEditing(previousBlock);
       }
     },
+
+    async loadHistoricalData() {
+      try {
+        const result = await window.apiService.getHistoricalData(7, 20);
+        if (result.success) {
+          this.historicalData = result.data;
+        }
+      } catch (error) {
+        console.error("Failed to load historical data:", error);
+      }
+    },
+
+    formatDate(dateString) {
+      // Handle date strings properly to avoid timezone issues
+      if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // For YYYY-MM-DD format, parse manually to avoid timezone issues
+        const [year, month, day] = dateString.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return date.toLocaleDateString();
+      }
+      return new Date(dateString).toLocaleDateString();
+    },
+
+    truncateContent(content, maxLength = 80) {
+      if (!content) return "";
+      return content.length > maxLength
+        ? content.substring(0, maxLength) + "..."
+        : content;
+    },
+
+    async deletePage() {
+      if (!this.page || !this.page.id) {
+        return;
+      }
+
+      const confirmed = confirm(
+        `Are you sure you want to delete this daily note for ${this.formatDate(this.currentDate)}? This will delete all blocks and cannot be undone.`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const result = await window.apiService.deletePage(this.page.id);
+        
+        if (result.success) {
+          this.successMessage = "Daily note deleted successfully";
+          
+          // Clear the current page data
+          this.page = null;
+          this.blocks = [];
+          
+          // Reload to show empty state
+          setTimeout(() => {
+            this.loadPage();
+          }, 1000);
+        } else {
+          this.error = "Failed to delete daily note";
+        }
+      } catch (error) {
+        console.error("Error deleting page:", error);
+        this.error = "Failed to delete daily note";
+      }
+    },
   },
 
   template: `
@@ -401,6 +468,42 @@ const DailyNote = {
           <button @click="addNewBlock" class="add-block-btn">
             + Add new block
           </button>
+        </div>
+      </div>
+
+      <!-- Historical Daily Notes -->
+      <div v-if="historicalData && historicalData.pages && historicalData.pages.length" class="historical-notes">
+        <div 
+          v-for="historicalPage in historicalData.pages
+            .filter(p => p.page_type === 'daily' && p.date !== currentDate)
+            .sort((a, b) => new Date(b.date || b.modified_at) - new Date(a.date || a.modified_at))" 
+          :key="'historical-' + historicalPage.id" 
+          class="historical-daily-note"
+        >
+          <h3>{{ historicalPage.title }}</h3>
+          <div v-if="historicalPage.recent_blocks && historicalPage.recent_blocks.length" class="historical-blocks-container">
+            <div 
+              v-for="block in historicalPage.recent_blocks" 
+              :key="'hist-block-' + block.id" 
+              class="historical-block"
+            >
+              <div class="block">
+                <div
+                  class="block-bullet"
+                  :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
+                >
+                  <span v-if="block.block_type === 'todo'">☐</span>
+                  <span v-else-if="block.block_type === 'done'">☑</span>
+                  <span v-else>•</span>
+                </div>
+                <div
+                  class="block-content-display historical"
+                  :class="{ 'completed': block.block_type === 'done' }"
+                  v-html="formatContentWithTags(block.content)"
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

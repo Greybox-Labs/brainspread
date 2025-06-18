@@ -100,6 +100,7 @@ class UserAdmin(DjangoUserAdmin):
                     "email",
                     "password1",
                     "password2",
+                    "timezone",
                     "is_superuser",
                     "is_staff",
                     "is_active",
@@ -115,6 +116,7 @@ class UserAdmin(DjangoUserAdmin):
                 "fields": (
                     "email",
                     "password",
+                    "timezone",
                 )
             },
         ),
@@ -127,7 +129,6 @@ class UserAdmin(DjangoUserAdmin):
             {
                 "fields": (
                     "is_active",
-                    "imported_at",
                     "created_at",
                     "modified_at",
                     "deleted_at",

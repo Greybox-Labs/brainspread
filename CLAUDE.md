@@ -73,3 +73,8 @@ Navigate to `packages/django-app/` for most development tasks.
 - Uses environment variables for sensitive data (SECRET_KEY, DEBUG, etc.)
 - Database safety checks prevent accidental production commands
 - Separate test settings in `app.test_settings`
+
+### Debugging
+- you can run `just tail-logs web 100` or `just tail-logs db 100`
+  to get server logs or database logs to debug issues.
+- you can use browser mcp to debug issues also

@@ -183,6 +183,10 @@ class ApiService {
     });
   }
 
+  async getHistoricalData(daysBack = 30, limit = 50) {
+    return await this.request(`/knowledge/api/historical/?days_back=${daysBack}&limit=${limit}`);
+  }
+
   // Legacy method for backward compatibility
   async getDailyNote(date) {
     return await this.getPageWithBlocks(null, date);
