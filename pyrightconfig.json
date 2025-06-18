@@ -1,0 +1,14 @@
+{
+  "venvPath": "packages/django-app",
+  "venv": ".venv",
+  "executionEnvironments": [
+    {
+      "root": "packages/django-app",
+      "extraPaths": ["packages/django-app"]
+    }
+  ],
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false
+}
