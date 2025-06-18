@@ -28,6 +28,31 @@ django-admin +ARGS:
 exec +ARGS:
   docker-compose exec web {{ARGS}}
 
+# Install pipenv package (dev or prod)
+install-package PACKAGE DEV="":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  if [ "{{DEV}}" = "--dev" ]; then
+    echo "Installing {{PACKAGE}} as dev dependency..."
+    docker-compose run --rm -w /code web pipenv install --dev {{PACKAGE}}
+  else
+    echo "Installing {{PACKAGE}} as production dependency..."
+    docker-compose run --rm -w /code web pipenv install {{PACKAGE}}
+  fi
+  
+  echo "Rebuilding containers with new dependencies..."
+  docker-compose build web
+
+# Install dev package shorthand
+install-dev PACKAGE:
+  just install-package {{PACKAGE}} --dev
+
+# Update pipenv dependencies
+update-deps:
+  docker-compose run --rm -w /code web pipenv update
+  docker-compose build web
+
 # Generate Django secret key
 generate-secret-key:
   docker-compose run --rm -w /code/app web python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'

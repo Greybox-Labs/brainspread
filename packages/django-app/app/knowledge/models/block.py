@@ -1,73 +1,10 @@
+import re
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
-import re
 
 from common.models.uuid_mixin import UUIDModelMixin
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from tagging.models import TaggableMixin
-
-
-class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
-    """
-    A page is simply a container/namespace for blocks.
-    Pages can be daily notes, regular pages, or any other type of content collection.
-    """
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='pages'
-    )
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200)
-    page_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('page', 'Regular Page'),
-            ('daily', 'Daily Note'),
-            ('template', 'Template'),
-        ],
-        default='page'
-    )
-    date = models.DateField(null=True, blank=True, help_text='Date for daily notes')
-    
-    class Meta:
-        db_table = 'pages'
-        unique_together = [('user', 'slug')]
-        ordering = ('title',)
-        indexes = [
-            models.Index(fields=['user', 'page_type', 'date']),
-        ]
-    
-    def __str__(self):
-        return f"{self.user.email} - {self.title}"
-    
-    def get_root_blocks(self):
-        """Get top-level blocks (no parent)"""
-        return self.blocks.filter(parent=None).order_by('order')
-    
-    def get_backlinks(self):
-        """Get all blocks that link to this page"""
-        pattern = r'\[\[' + re.escape(self.title) + r'\]\]'
-        return Block.objects.filter(
-            content__iregex=pattern,
-            user=self.user
-        ).exclude(page=self)
-    
-    @classmethod
-    def get_or_create_daily_note(cls, user, date):
-        """Get or create a daily note page for a specific date"""
-        date_str = date.strftime('%Y-%m-%d')
-        page, created = cls.objects.get_or_create(
-            user=user,
-            slug=date_str,
-            defaults={
-                'title': date_str,
-                'page_type': 'daily',
-                'date': date
-            }
-        )
-        return page, created
 
 
 class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
@@ -88,7 +25,7 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
         related_name='children'
     )
     page = models.ForeignKey(
-        Page,
+        'Page',
         on_delete=models.CASCADE,
         related_name='blocks'
     )
@@ -238,52 +175,3 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
                 'metadata': self.media_metadata
             }
         return None
-
-
-
-class PageLink(UUIDModelMixin, CRUDTimestampsMixin):
-    """
-    Track links between pages for bidirectional linking
-    """
-    source_block = models.ForeignKey(
-        Block,
-        on_delete=models.CASCADE,
-        related_name='outgoing_links'
-    )
-    target_page = models.ForeignKey(
-        Page,
-        on_delete=models.CASCADE,
-        related_name='incoming_links'
-    )
-    
-    class Meta:
-        db_table = 'page_links'
-        unique_together = [('source_block', 'target_page')]
-        indexes = [
-            models.Index(fields=['target_page']),
-        ]
-
-
-class BlockReference(UUIDModelMixin, CRUDTimestampsMixin):
-    """
-    Track references between blocks ((block-id))
-    """
-    source_block = models.ForeignKey(
-        Block,
-        on_delete=models.CASCADE,
-        related_name='outgoing_references'
-    )
-    target_block = models.ForeignKey(
-        Block,
-        on_delete=models.CASCADE,
-        related_name='incoming_references'
-    )
-    
-    class Meta:
-        db_table = 'block_references'
-        unique_together = [('source_block', 'target_block')]
-        indexes = [
-            models.Index(fields=['target_block']),
-        ]
-
-

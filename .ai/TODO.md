@@ -1,12 +1,12 @@
 # Features
 - [x] daily journal
 - [x] refactor into logseq clone
-- [ ] remove journal entries model since it is no longer being used.
+- [x] remove journal entries model since it is no longer being used.
 - [ ] restyle in a brutalist style with thin lines,
       high contrast colors, and no border radii
 - [ ] implement python formatting with black. install in Pipfile,
       ensure Pipfile.lock is updated, add a just command, and run it
-- [ ] implement tests for the commands
+- [x] implement tests for the commands
 
 # Questions
 - [ ] Filebase storage vs database? filebase storage could
@@ -18,3 +18,4 @@
 
 # Bugs
 - [x] tags not created when block created, maybe when block is updated too
+- [ ] is the management command to create a test user necessary?

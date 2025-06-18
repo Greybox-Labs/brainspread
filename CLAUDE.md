@@ -63,6 +63,7 @@ Navigate to `packages/django-app/` for most development tasks.
   - Models should only contain data validation and simple property methods
   - Views should only handle HTTP concerns and delegate to Commands
   - Managers should only contain data querying logic, no business rules
+- **Tests**: All commands should be tested
 - **Repository Pattern**: Use `BaseRepository` for data access
 - **Model Mixins**: UUID, timestamps, soft delete functionality
 - **Soft Delete**: Models can inherit `SoftDeleteTimestampMixin` for logical deletion
