@@ -6,14 +6,6 @@ from common.forms.base_form import BaseForm
 from .models import Page
 
 
-class CreateOrUpdateJournalEntryForm(BaseForm):
-    entry_date = forms.DateField(required=True)
-    content = forms.CharField(widget=forms.Textarea, required=False)
-
-
-class GetJournalEntryForm(BaseForm):
-    entry_date = forms.DateField(required=True)
-
 
 class CreatePageForm(BaseForm):
     title = forms.CharField(max_length=200, required=True)
@@ -106,9 +98,6 @@ class DeletePageForm(BaseForm):
         return page_id
 
 
-class GetUserJournalEntriesForm(BaseForm):
-    limit = forms.IntegerField(min_value=1, max_value=100, required=False, initial=10)
-    offset = forms.IntegerField(min_value=0, required=False, initial=0)
 
 
 class GetUserPagesForm(BaseForm):

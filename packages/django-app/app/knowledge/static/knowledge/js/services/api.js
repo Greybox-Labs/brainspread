@@ -108,28 +108,6 @@ class ApiService {
     return await this.request("/api/auth/me/");
   }
 
-  // Legacy journal methods
-  async createOrUpdateEntry(entryDate, content) {
-    return await this.request("/knowledge/api/entries/", {
-      method: "POST",
-      body: JSON.stringify({
-        entry_date: entryDate,
-        content: content,
-      }),
-    });
-  }
-
-  async getEntry(entryDate) {
-    return await this.request(
-      `/knowledge/api/entries/get/?entry_date=${entryDate}`
-    );
-  }
-
-  async getEntries(limit = 10, offset = 0) {
-    return await this.request(
-      `/knowledge/api/entries/list/?limit=${limit}&offset=${offset}`
-    );
-  }
 
   async createPage(title, content, slug, isPublished = true) {
     return await this.request("/knowledge/api/pages/", {

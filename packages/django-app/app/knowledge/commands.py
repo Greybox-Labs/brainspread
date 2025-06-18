@@ -4,51 +4,9 @@ from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
-from .models import JournalEntry, Page
+from .models import Page
 
 
-class CreateOrUpdateJournalEntryCommand(AbstractBaseCommand):
-    """Command to create or update a journal entry"""
-    
-    def __init__(self, form, user):
-        self.form = form
-        self.user = user
-    
-    def execute(self) -> JournalEntry:
-        """Execute the command"""
-        super().execute()  # This validates the form
-        
-        entry, created = JournalEntry.objects.update_or_create(
-            user=self.user,
-            date=self.form.cleaned_data['entry_date'],
-            defaults={'content': self.form.cleaned_data.get('content', '')}
-        )
-        
-        if entry.content:
-            entry.set_tags_from_content(entry.content, self.user)
-        
-        return entry
-
-
-class GetJournalEntryCommand(AbstractBaseCommand):
-    """Command to get a journal entry"""
-    
-    def __init__(self, form, user):
-        self.form = form
-        self.user = user
-    
-    def execute(self) -> Optional[JournalEntry]:
-        """Execute the command"""
-        super().execute()  # This validates the form
-        
-        try:
-            entry = JournalEntry.objects.get(
-                user=self.user,
-                date=self.form.cleaned_data['entry_date']
-            )
-            return entry
-        except JournalEntry.DoesNotExist:
-            return None
 
 
 class CreatePageCommand(AbstractBaseCommand):
@@ -126,28 +84,6 @@ class DeletePageCommand(AbstractBaseCommand):
         return True
 
 
-class GetUserJournalEntriesCommand(AbstractBaseCommand):
-    """Command to get user's journal entries"""
-    
-    def __init__(self, form, user):
-        self.form = form
-        self.user = user
-    
-    def execute(self) -> Dict[str, Any]:
-        """Execute the command"""
-        super().execute()  # This validates the form
-        
-        limit = self.form.cleaned_data.get('limit', 10)
-        offset = self.form.cleaned_data.get('offset', 0)
-        
-        entries = JournalEntry.objects.filter(user=self.user)[offset:offset + limit]
-        total_count = JournalEntry.objects.filter(user=self.user).count()
-        
-        return {
-            'entries': list(entries),
-            'total_count': total_count,
-            'has_more': (offset + limit) < total_count
-        }
 
 
 class GetUserPagesCommand(AbstractBaseCommand):

@@ -12,7 +12,6 @@ const KnowledgeApp = createApp({
   },
 
   components: {
-    JournalEntry: window.JournalEntry,
     DailyNote: window.DailyNote,
     LoginForm: window.LoginForm,
   },

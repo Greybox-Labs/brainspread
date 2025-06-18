@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import JournalEntry, Page, Block, PageLink, BlockReference
+from .models import Page, Block, PageLink, BlockReference
 
 
 @admin.register(Page)
@@ -79,29 +79,3 @@ class BlockReferenceAdmin(admin.ModelAdmin):
     raw_id_fields = ('source_block', 'target_block')
 
 
-# Legacy admin for migration purposes
-@admin.register(JournalEntry)
-class JournalEntryAdmin(admin.ModelAdmin):
-    list_display = ('user', 'date', 'migrated_to_blocks', 'created_at', 'modified_at')
-    list_filter = ('date', 'migrated_to_blocks', 'created_at', 'modified_at')
-    search_fields = ('user__email', 'content')
-    readonly_fields = ('uuid', 'created_at', 'modified_at')
-    raw_id_fields = ('user',)
-    date_hierarchy = 'date'
-    ordering = ('-date',)
-    
-    actions = ['migrate_to_blocks_action']
-    
-    def migrate_to_blocks_action(self, request, queryset):
-        migrated_count = 0
-        for entry in queryset:
-            if not entry.migrated_to_blocks:
-                entry.migrate_to_blocks()
-                migrated_count += 1
-        
-        self.message_user(request, f"Successfully migrated {migrated_count} journal entries to blocks.")
-    migrate_to_blocks_action.short_description = "Migrate selected entries to blocks"
-    
-    def get_tags(self, obj):
-        return ', '.join([f"#{tag.name}" for tag in obj.get_tags()])
-    get_tags.short_description = 'Tags'
