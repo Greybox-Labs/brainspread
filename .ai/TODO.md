@@ -9,7 +9,7 @@
 - [x] implement tests for the commands
 - [ ] refactor user views to use commands and repositories
 - [x] /knowledge page should show historical pages and blocks also
-- [ ] there should be a sidebar with all tags, pages, and blocks
+- [x] there should be a sidebar with all tags, pages, and blocks
 - [ ] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
 - [ ] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [ ] should support nested blocks

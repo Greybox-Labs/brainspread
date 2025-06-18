@@ -35,7 +35,9 @@
       "mcp__sse-server__browser_snapshot",
       "mcp__sse-server__browser_press_key",
       "mcp__sse-server__browser_take_screenshot",
-      "mcp__sse-server__browser_select_option"
+      "mcp__sse-server__browser_select_option",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

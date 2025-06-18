@@ -246,11 +246,18 @@ body {
 
 /* Inline tag styling within block content */
 .inline-tag {
-  background-color: #00ff00;
-  color: #000000;
+  background-color: #00ff00 !important;
+  color: #000000 !important;
   padding: 0.1rem 0.3rem;
   font-weight: normal;
   border: 1px solid #00ff00;
+}
+
+/* More specific selector for inline tags in block content */
+.block-content-display .inline-tag,
+.block-content .inline-tag {
+  background-color: #00ff00 !important;
+  color: #000000 !important;
 }
 
 /* Alerts */
@@ -752,8 +759,8 @@ body {
 
 .tag {
   padding: 0.2rem 0.5rem;
-  background: #00ff00;
-  color: #000;
+  background: #00ff00 !important;
+  color: #000 !important;
   font-size: 0.7rem;
   
   font-weight: bold;
@@ -1011,8 +1018,8 @@ body {
 .sidebar-tag,
 .historical-tag {
   padding: 0.1rem 0.3rem;
-  background: #00ff00;
-  color: #000;
+  background: #00ff00 !important;
+  color: #000 !important;
   font-size: 0.6rem;
   
   font-weight: bold;
