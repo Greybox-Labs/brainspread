@@ -19,7 +19,7 @@ const KnowledgeApp = createApp({
   async mounted() {
     console.log("Knowledge app mounted");
     await this.checkAuth();
-    
+
     // Check for timezone changes after authentication
     if (this.isAuthenticated) {
       this.checkTimezoneChange();
@@ -55,7 +55,7 @@ const KnowledgeApp = createApp({
       this.user = user;
       this.isAuthenticated = true;
       this.currentView = "journal";
-      
+
       // Check timezone after login (with a small delay to ensure user data is updated)
       setTimeout(() => {
         this.checkTimezoneChange();
@@ -82,9 +82,9 @@ const KnowledgeApp = createApp({
       if (window.apiService.checkTimezoneChange()) {
         const browserTimezone = window.apiService.getCurrentBrowserTimezone();
         const currentUser = window.apiService.getCurrentUser();
-        
+
         const message = `Your device's timezone appears to have changed from ${currentUser.timezone} to ${browserTimezone}. Would you like to update your timezone preference?`;
-        
+
         if (confirm(message)) {
           this.updateTimezone(browserTimezone);
         }
@@ -95,13 +95,13 @@ const KnowledgeApp = createApp({
       try {
         const result = await window.apiService.updateUserTimezone(newTimezone);
         if (result.success) {
-          console.log('Timezone updated successfully');
+          console.log("Timezone updated successfully");
           // Optionally reload the page to refresh with new timezone
           // window.location.reload();
         }
       } catch (error) {
-        console.error('Failed to update timezone:', error);
-        alert('Failed to update timezone. Please try again.');
+        console.error("Failed to update timezone:", error);
+        alert("Failed to update timezone. Please try again.");
       }
     },
   },

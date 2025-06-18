@@ -64,7 +64,7 @@ class ApiService {
   async login(email, password) {
     // Detect user's timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
+
     const data = await this.request("/api/auth/login/", {
       method: "POST",
       body: JSON.stringify({ email, password, timezone }),
@@ -108,7 +108,6 @@ class ApiService {
     return await this.request("/api/auth/me/");
   }
 
-
   async createPage(title, content, slug, isPublished = true) {
     return await this.request("/knowledge/api/pages/", {
       method: "POST",
@@ -146,13 +145,13 @@ class ApiService {
 
   // New block-centric methods
   async getPageWithBlocks(pageId = null, date = null) {
-    let params = '';
+    let params = "";
     if (pageId) {
       params = `?page_id=${pageId}`;
     } else if (date) {
       params = `?date=${date}`;
     }
-    
+
     return await this.request(`/knowledge/api/page/${params}`);
   }
 
@@ -205,7 +204,7 @@ class ApiService {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch (error) {
       console.warn("Could not detect timezone:", error);
-      return 'UTC';
+      return "UTC";
     }
   }
 

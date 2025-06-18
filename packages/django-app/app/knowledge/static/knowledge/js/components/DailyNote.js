@@ -20,8 +20,8 @@ const DailyNote = {
       // Get user's local date, not UTC date
       const now = new Date();
       const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     },
 
@@ -30,7 +30,10 @@ const DailyNote = {
       this.error = null;
 
       try {
-        const result = await window.apiService.getPageWithBlocks(null, this.currentDate);
+        const result = await window.apiService.getPageWithBlocks(
+          null,
+          this.currentDate
+        );
         if (result.success) {
           this.page = result.data.page;
           this.blocks = result.data.blocks || [];
@@ -58,9 +61,9 @@ const DailyNote = {
           page_id: this.page.id,
           content: content,
           parent_id: parent ? parent.id : null,
-          block_type: 'bullet',
-          content_type: 'text',
-          order: blockOrder
+          block_type: "bullet",
+          content_type: "text",
+          order: blockOrder,
         });
 
         if (result.success) {
@@ -68,7 +71,9 @@ const DailyNote = {
           // Find the newly created block and put it in edit mode if it's empty
           if (content === "") {
             this.$nextTick(() => {
-              const newBlock = this.blocks.find(b => b.content === content && b.order === blockOrder);
+              const newBlock = this.blocks.find(
+                (b) => b.content === content && b.order === blockOrder
+              );
               if (newBlock) {
                 this.startEditing(newBlock);
               }
@@ -85,7 +90,7 @@ const DailyNote = {
       try {
         const result = await window.apiService.updateBlock({
           block_id: block.id,
-          content: newContent
+          content: newContent,
         });
 
         if (result.success) {
@@ -102,7 +107,7 @@ const DailyNote = {
     async deleteBlock(block) {
       try {
         const result = await window.apiService.deleteBlock({
-          block_id: block.id
+          block_id: block.id,
         });
 
         if (result.success) {
@@ -129,13 +134,15 @@ const DailyNote = {
 
     getNextOrder(parent) {
       const siblings = parent ? parent.children : this.blocks;
-      return siblings.length > 0 ? Math.max(...siblings.map(b => b.order)) + 1 : 0;
+      return siblings.length > 0
+        ? Math.max(...siblings.map((b) => b.order)) + 1
+        : 0;
     },
 
     formatDate(dateString) {
       // Parse the date string manually to avoid timezone conversion issues
       // dateString format: "2025-06-17"
-      const [year, month, day] = dateString.split('-');
+      const [year, month, day] = dateString.split("-");
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       return date.toLocaleDateString();
     },
@@ -149,10 +156,10 @@ const DailyNote = {
     },
 
     onBlockKeyDown(event, block) {
-      if (event.key === 'Enter' && !event.shiftKey) {
+      if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         this.createBlock("", block.parent, block.order + 1);
-      } else if (event.key === 'Tab') {
+      } else if (event.key === "Tab") {
         event.preventDefault();
         // TODO: Implement indentation/outdentation
       }
@@ -163,10 +170,13 @@ const DailyNote = {
     },
 
     formatContentWithTags(content) {
-      if (!content) return '';
-      
+      if (!content) return "";
+
       // Replace hashtags with styled spans
-      return content.replace(/#([a-zA-Z0-9_-]+)/g, '<span class="inline-tag">#$1</span>');
+      return content.replace(
+        /#([a-zA-Z0-9_-]+)/g,
+        '<span class="inline-tag">#$1</span>'
+      );
     },
 
     startEditing(block) {
@@ -175,7 +185,9 @@ const DailyNote = {
         // Focus the textarea when editing starts
         const textareas = this.$refs.blockTextarea;
         if (textareas) {
-          const textarea = Array.isArray(textareas) ? textareas.find(t => t) : textareas;
+          const textarea = Array.isArray(textareas)
+            ? textareas.find((t) => t)
+            : textareas;
           if (textarea) textarea.focus();
         }
       });
@@ -183,7 +195,7 @@ const DailyNote = {
 
     stopEditing(block) {
       block.isEditing = false;
-    }
+    },
   },
 
   template: `

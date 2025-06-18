@@ -330,7 +330,8 @@ body {
   transition: color 0.2s;
 }
 
-.block-bullet.todo, .block-bullet.done {
+.block-bullet.todo,
+.block-bullet.done {
   cursor: pointer;
 }
 
@@ -409,7 +410,9 @@ body {
   font-size: 1.2rem;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
   margin-top: 0.1rem;
 }
 
@@ -472,17 +475,17 @@ body {
   .journal-container {
     padding: 1.5rem;
   }
-  
+
   .daily-note {
     padding: 1rem;
   }
-  
+
   .daily-note-header {
     flex-direction: column;
     gap: 1rem;
     align-items: flex-start;
   }
-  
+
   .child-block {
     margin-left: 1rem;
     padding-left: 0.5rem;
