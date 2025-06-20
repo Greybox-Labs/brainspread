@@ -602,8 +602,29 @@ body {
 
 .child-block {
   margin-left: 1.5rem;
-  border-left: 1px solid #00ff00;
+  border-left: 2px solid #00ff00;
   padding-left: 1rem;
+  position: relative;
+}
+
+.child-block::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #00ff00 0%, #00ff00 50%, transparent 50%);
+  background-size: 2px 8px;
+}
+
+.child-block:hover {
+  border-left-color: #00cc00;
+}
+
+.child-block:hover::before {
+  background: linear-gradient(to bottom, #00cc00 0%, #00cc00 50%, transparent 50%);
+  background-size: 2px 8px;
 }
 
 .block-children {
@@ -667,6 +688,10 @@ body {
   .child-block {
     margin-left: 1rem;
     padding-left: 0.5rem;
+  }
+
+  .child-block::before {
+    display: none;
   }
 }
 

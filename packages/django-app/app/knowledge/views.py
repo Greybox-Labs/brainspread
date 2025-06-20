@@ -451,6 +451,7 @@ def update_block(request):
             "media_url",
             "media_metadata",
             "properties",
+            "parent_id",
         ]:
             if field in data:
                 updates[field] = data[field]

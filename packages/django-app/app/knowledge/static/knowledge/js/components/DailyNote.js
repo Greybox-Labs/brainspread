@@ -1,5 +1,8 @@
 // Daily Note Component - Logseq-style daily notes with blocks
 const DailyNote = {
+  components: {
+    BlockComponent: window.BlockComponent || {}
+  },
   data() {
     return {
       currentDate: this.getDateFromURL() || this.getLocalDateString(),
@@ -321,7 +324,13 @@ const DailyNote = {
         this.createBlock("", block.parent, block.order + 1);
       } else if (event.key === "Tab") {
         event.preventDefault();
-        // TODO: Implement indentation/outdentation
+        if (event.shiftKey) {
+          // Outdent - move block to parent's level
+          await this.outdentBlock(block);
+        } else {
+          // Indent - make this block a child of the previous sibling
+          await this.indentBlock(block);
+        }
       } else if (event.key === "ArrowDown") {
         const textarea = event.target;
         const cursorPos = textarea.selectionStart;
@@ -374,6 +383,126 @@ const DailyNote = {
 
     addNewBlock() {
       this.createBlock("");
+    },
+
+    async indentBlock(block) {
+      // Find the previous sibling block to make it the parent
+      const previousSibling = this.findPreviousSibling(block);
+      if (!previousSibling) return; // Can't indent if no previous sibling
+
+      try {
+        // Save current content first
+        await this.updateBlock(block, block.content, true);
+        
+        // Update the block's parent and order
+        const newOrder = this.getNextChildOrder(previousSibling);
+        const result = await window.apiService.updateBlock(block.id, {
+          parent_id: previousSibling.id,
+          order: newOrder
+        });
+
+        if (result.success) {
+          // Update local state
+          this.removeBlockFromCurrentParent(block);
+          
+          // Add to new parent's children
+          if (!previousSibling.children) previousSibling.children = [];
+          block.parent = previousSibling;
+          block.order = newOrder;
+          previousSibling.children.push(block);
+          previousSibling.children.sort((a, b) => a.order - b.order);
+          
+          // Focus the block again
+          this.$nextTick(() => {
+            const textarea = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+            if (textarea) textarea.focus();
+          });
+        }
+      } catch (error) {
+        console.error("Failed to indent block:", error);
+      }
+    },
+
+    async outdentBlock(block) {
+      if (!block.parent) return; // Already at root level
+
+      try {
+        // Save current content first
+        await this.updateBlock(block, block.content, true);
+        
+        // Move to parent's level, right after parent
+        const grandparent = block.parent.parent;
+        const newOrder = block.parent.order + 1;
+        
+        // Update orders of siblings that come after the parent
+        this.updateSiblingOrders(grandparent, newOrder);
+        
+        const result = await window.apiService.updateBlock(block.id, {
+          parent_id: grandparent ? grandparent.id : null,
+          order: newOrder
+        });
+
+        if (result.success) {
+          // Update local state
+          this.removeBlockFromCurrentParent(block);
+          
+          // Add to new parent level
+          block.parent = grandparent;
+          block.order = newOrder;
+          
+          if (grandparent) {
+            if (!grandparent.children) grandparent.children = [];
+            grandparent.children.push(block);
+            grandparent.children.sort((a, b) => a.order - b.order);
+          } else {
+            this.blocks.push(block);
+            this.blocks.sort((a, b) => a.order - b.order);
+          }
+          
+          // Focus the block again
+          this.$nextTick(() => {
+            const textarea = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+            if (textarea) textarea.focus();
+          });
+        }
+      } catch (error) {
+        console.error("Failed to outdent block:", error);
+      }
+    },
+
+    findPreviousSibling(block) {
+      const siblings = block.parent ? block.parent.children : this.blocks;
+      const currentIndex = siblings.findIndex(b => b.id === block.id);
+      return currentIndex > 0 ? siblings[currentIndex - 1] : null;
+    },
+
+    getNextChildOrder(parentBlock) {
+      if (!parentBlock.children || parentBlock.children.length === 0) return 0;
+      return Math.max(...parentBlock.children.map(child => child.order)) + 1;
+    },
+
+    removeBlockFromCurrentParent(block) {
+      if (block.parent) {
+        const parentChildren = block.parent.children || [];
+        const index = parentChildren.findIndex(child => child.id === block.id);
+        if (index !== -1) {
+          parentChildren.splice(index, 1);
+        }
+      } else {
+        const index = this.blocks.findIndex(b => b.id === block.id);
+        if (index !== -1) {
+          this.blocks.splice(index, 1);
+        }
+      }
+    },
+
+    updateSiblingOrders(parent, fromOrder) {
+      const siblings = parent ? parent.children : this.blocks;
+      siblings.forEach(sibling => {
+        if (sibling.order >= fromOrder) {
+          sibling.order += 1;
+        }
+      });
     },
 
     formatContentWithTags(content) {
@@ -756,6 +885,47 @@ const DailyNote = {
                     class="block-delete"
                     title="Delete block"
                   >del</button>
+                </div>
+                
+                <!-- Render grandchildren -->
+                <div v-if="child.children && child.children.length" class="block-children">
+                  <div v-for="grandchild in child.children" :key="grandchild.id" class="block-wrapper child-block" :data-block-id="grandchild.id">
+                    <div class="block">
+                      <div
+                        class="block-bullet"
+                        :class="{ 'todo': grandchild.block_type === 'todo', 'done': grandchild.block_type === 'done' }"
+                        @click="grandchild.block_type === 'todo' || grandchild.block_type === 'done' ? toggleBlockTodo(grandchild) : null"
+                      >
+                        <span v-if="grandchild.block_type === 'todo'">☐</span>
+                        <span v-else-if="grandchild.block_type === 'done'">☑</span>
+                        <span v-else>•</span>
+                      </div>
+                      <div
+                        v-if="!grandchild.isEditing"
+                        class="block-content-display"
+                        :class="{ 'completed': grandchild.block_type === 'done' }"
+                        @click="startEditing(grandchild)"
+                        v-html="formatContentWithTags(grandchild.content)"
+                      ></div>
+                      <textarea
+                        v-else
+                        :value="grandchild.content"
+                        @input="onBlockContentChange(grandchild, $event.target.value)"
+                        @keydown="onBlockKeyDown($event, grandchild)"
+                        @blur="stopEditing(grandchild)"
+                        class="block-content"
+                        :class="{ 'completed': grandchild.block_type === 'done' }"
+                        rows="1"
+                        placeholder="Start writing..."
+                        ref="blockTextarea"
+                      ></textarea>
+                      <button
+                        @click="deleteBlock(grandchild)"
+                        class="block-delete"
+                        title="Delete block"
+                      >del</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

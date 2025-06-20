@@ -22,7 +22,22 @@ class UpdateBlockCommand(AbstractBaseCommand):
         # Update fields
         content_updated = False
         for field, value in self.updates.items():
-            if hasattr(block, field):
+            if field == "parent_id":
+                # Handle parent field specially
+                if value is None:
+                    block.parent = None
+                else:
+                    try:
+                        parent_block = Block.objects.get(uuid=value, user=self.user)
+                        
+                        # Check for circular references
+                        if self._would_create_circular_reference(block, parent_block):
+                            raise ValidationError("Cannot create circular reference: block cannot be its own ancestor")
+                        
+                        block.parent = parent_block
+                    except Block.DoesNotExist:
+                        raise ValidationError("Parent block not found")
+            elif hasattr(block, field):
                 setattr(block, field, value)
                 if field == "content":
                     content_updated = True
@@ -71,3 +86,13 @@ class UpdateBlockCommand(AbstractBaseCommand):
         
         # If none of the patterns match, keep current type
         return current_block_type
+
+    def _would_create_circular_reference(self, block, proposed_parent):
+        """Check if setting proposed_parent as parent would create a circular reference"""
+        # Walk up the proposed parent's ancestry to see if we find the block itself
+        current = proposed_parent
+        while current:
+            if current.uuid == block.uuid:
+                return True
+            current = current.parent
+        return False
