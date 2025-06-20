@@ -15,8 +15,8 @@
 - [x] should support nested blocks
 - [ ] hitting backspace on an empty block should delete the block
 - [ ] should be able to drag and move block ordering and nestings around
-- [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 - [ ] ui/ux for pages
+- [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 - [ ] reminders/notifications?
 
 

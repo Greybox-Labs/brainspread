@@ -18,6 +18,8 @@ const DailyNote = {
       currentTag: null,
       tagData: null,
       isTagPage: false,
+      // Track blocks being deleted to prevent save conflicts
+      deletingBlocks: new Set(),
     };
   },
 
@@ -259,6 +261,56 @@ const DailyNote = {
       }
     },
 
+    async deleteEmptyBlock(block) {
+      // Mark block as being deleted to prevent save conflicts
+      this.deletingBlocks.add(block.id);
+      
+      // Find the previous block to focus after deletion
+      const previousBlock = this.findPreviousBlock(block);
+      
+      try {
+        const result = await window.apiService.deleteBlock({
+          block_id: block.id,
+        });
+
+        if (result.success) {
+          // Remove from local state immediately for better UX
+          this.removeBlockFromCurrentParent(block);
+          
+          // Focus the previous block if it exists
+          if (previousBlock) {
+            this.$nextTick(() => {
+              this.startEditing(previousBlock);
+              // Position cursor at the end of the previous block
+              this.$nextTick(() => {
+                const textarea = document.querySelector(`[data-block-id="${previousBlock.id}"] textarea`);
+                if (textarea) {
+                  textarea.focus();
+                  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                }
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to delete empty block:", error);
+        this.error = "Failed to delete block";
+        // Remove from deleting set on error
+        this.deletingBlocks.delete(block.id);
+      } finally {
+        // Clean up tracking after a delay to ensure blur events have processed
+        setTimeout(() => {
+          this.deletingBlocks.delete(block.id);
+        }, 100);
+      }
+    },
+
+    findPreviousBlock(currentBlock) {
+      const allBlocks = this.getAllBlocks();
+      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      return currentIndex > 0 ? allBlocks[currentIndex - 1] : null;
+    },
+
     async toggleBlockTodo(block) {
       try {
         const result = await window.apiService.toggleBlockTodo(block.id);
@@ -322,6 +374,10 @@ const DailyNote = {
         // Save current block before creating new one
         await this.updateBlock(block, block.content, true);
         this.createBlock("", block.parent, block.order + 1);
+      } else if (event.key === "Backspace" && block.content.trim() === "" && event.target.selectionStart === 0) {
+        // Delete empty block when backspace is pressed at the beginning
+        event.preventDefault();
+        await this.deleteEmptyBlock(block);
       } else if (event.key === "Tab") {
         event.preventDefault();
         if (event.shiftKey) {
@@ -583,6 +639,12 @@ const DailyNote = {
       // Don't stop editing if we're navigating between blocks
       if (this.isNavigating) {
         this.isNavigating = false;
+        return;
+      }
+
+      // Don't try to save blocks that are being deleted
+      if (this.deletingBlocks.has(block.id)) {
+        block.isEditing = false;
         return;
       }
 
