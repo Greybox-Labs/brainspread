@@ -13,11 +13,21 @@
 - [x] when you click a tag it should take you to the tag page which shows all blocks and pages with that tag
 - [x] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [x] should support nested blocks
-- [ ] hitting backspace on an empty block should delete the block
+- [x] hitting backspace on an empty block should delete the block
+- [ ] toggleable light/dark mode
+- [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
+      and light/dark mode preference
 - [ ] should be able to drag and move block ordering and nestings around
 - [ ] ui/ux for pages
 - [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
-- [ ] reminders/notifications?
+- [ ] reminders/notifications? kinda useless without push notifications which require a mobile app i think?
+  - maybe can use something like Pusher? i still think you need APN details for that
+  - maybe can use Twilio? though Sam did say recently that you have to jump through some hoops to get a phone number now
+- [ ] clicking the "brainspreader" text in the navbar top left should take you to the homepage
+- [ ] when a user submits a web link, it should be accessed and summarized with tags auto-generated from the content
+- [ ] implement sentence-transformer and chromadb
+- [ ] when a user submits a web link use semantic search to find similar blocks and pages and show them in sidebar
+
 
 
 # Questions
@@ -34,6 +44,9 @@
 - [x] the auto save feature on the front end moves selection away from the input
       so it suddenly stops user input and is annoying
 - [x] shows login page between page clicks even when logged in
+- [ ] when hitting tab on a new block, it indents the block properly, but it does not keep focus on the block
+- [ ] hitting enter creates a new block at the bottom, but if you are focused on not-the-last block, it should create the next block
+      underneath the current block
 
 # Usage Notes
 

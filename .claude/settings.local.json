@@ -38,7 +38,11 @@
       "mcp__sse-server__browser_select_option",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "mcp__sse-server__browser_tab_list",
+      "mcp__sse-server__browser_close",
+      "mcp__sse-server__browser_network_requests",
+      "Bash(echo $SHELL)"
     ],
     "deny": []
   }
