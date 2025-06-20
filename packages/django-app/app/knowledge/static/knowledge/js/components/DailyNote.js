@@ -331,6 +331,31 @@ const DailyNote = {
         : 0;
     },
 
+    async createBlockAfter(currentBlock) {
+      const newOrder = currentBlock.order + 1;
+      const siblings = currentBlock.parent ? currentBlock.parent.children : this.blocks;
+      
+      // Find all blocks that need to be shifted (same parent, order >= newOrder)
+      const blocksToShift = siblings.filter(block => 
+        block.id !== currentBlock.id && block.order >= newOrder
+      );
+
+      // Shift existing blocks down by updating their orders
+      for (const block of blocksToShift) {
+        try {
+          await window.apiService.updateBlock(block.id, {
+            order: block.order + 1
+          });
+          block.order = block.order + 1;
+        } catch (error) {
+          console.error("Failed to shift block order:", error);
+        }
+      }
+
+      // Create the new block at the desired position
+      await this.createBlock("", currentBlock.parent, newOrder);
+    },
+
     async refreshTagsOnly() {
       // Refresh page data but preserve current editing state
       try {
@@ -373,7 +398,7 @@ const DailyNote = {
         event.preventDefault();
         // Save current block before creating new one
         await this.updateBlock(block, block.content, true);
-        this.createBlock("", block.parent, block.order + 1);
+        await this.createBlockAfter(block);
       } else if (event.key === "Backspace" && block.content.trim() === "" && event.target.selectionStart === 0) {
         // Delete empty block when backspace is pressed at the beginning
         event.preventDefault();
