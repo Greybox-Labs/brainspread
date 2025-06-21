@@ -1252,3 +1252,94 @@ body {
   font-style: italic;
   border: 1px dashed #333;
 }
+
+/* Drag and Drop Styles */
+.block-wrapper.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  z-index: 1000;
+}
+
+.block-wrapper.dragging .block {
+  background-color: #003300;
+  border: 1px dashed #00ff00;
+}
+
+.drag-handle {
+  cursor: grab;
+  transition: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle:hover {
+  background-color: #003300;
+}
+
+/* Drop zones */
+.drop-zone {
+  height: 2px;
+  background: transparent;
+  margin: 1px 0;
+  transition: all 0.2s ease;
+}
+
+.drop-zone:hover {
+  background: #00ff00;
+  height: 4px;
+}
+
+.drop-zone-before {
+  margin-top: 2px;
+}
+
+.drop-zone-after {
+  margin-bottom: 2px;
+}
+
+.drop-zone-inside {
+  height: 10px;
+  border: 2px dashed transparent;
+  margin: 2px 20px;
+  border-radius: 3px;
+}
+
+/* Drag over feedback */
+.block-wrapper.drag-over-before .drop-zone-before {
+  background: #00ff00;
+  height: 4px;
+  box-shadow: 0 0 4px #00ff00;
+}
+
+.block-wrapper.drag-over-after .drop-zone-after {
+  background: #00ff00;
+  height: 4px;
+  box-shadow: 0 0 4px #00ff00;
+}
+
+.block-wrapper.drag-over-inside {
+  background-color: #001100;
+  border: 1px dashed #00ff00;
+}
+
+.block-wrapper.drag-over-inside .drop-zone-inside {
+  border-color: #00ff00;
+  background: rgba(0, 255, 0, 0.1);
+  height: 15px;
+}
+
+/* Visual feedback during drag */
+.block-wrapper.dragging .block-content,
+.block-wrapper.dragging .block-content-display {
+  background-color: rgba(0, 255, 0, 0.1);
+}
+
+/* Prevent text selection during drag */
+.block-wrapper[draggable="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

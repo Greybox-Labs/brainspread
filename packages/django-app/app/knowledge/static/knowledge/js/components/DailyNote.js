@@ -20,6 +20,10 @@ const DailyNote = {
       isTagPage: false,
       // Track blocks being deleted to prevent save conflicts
       deletingBlocks: new Set(),
+      // Drag and drop state
+      draggedBlock: null,
+      dragOverTarget: null,
+      dragOverPosition: null, // 'before', 'after', 'inside'
     };
   },
 
@@ -830,6 +834,164 @@ const DailyNote = {
         console.error("Failed to load historical blocks:", error);
       }
     },
+
+    // Drag and drop methods
+    onDragStart(event, block) {
+      this.draggedBlock = block;
+      event.dataTransfer.setData('text/plain', block.id);
+      event.dataTransfer.effectAllowed = 'move';
+      
+      // Add visual feedback
+      setTimeout(() => {
+        if (this.draggedBlock) {
+          this.draggedBlock.isDragging = true;
+        }
+      }, 0);
+    },
+
+    onDragEnd(event, block) {
+      // Clear drag state
+      if (this.draggedBlock) {
+        this.draggedBlock.isDragging = false;
+      }
+      this.draggedBlock = null;
+      this.dragOverTarget = null;
+      this.dragOverPosition = null;
+      
+      // Clear all drag feedback
+      this.clearDragFeedback();
+    },
+
+    onDragOver(event, targetBlock, position) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      
+      // Don't allow dropping on self or descendants
+      if (!this.draggedBlock || 
+          this.draggedBlock.id === targetBlock.id || 
+          this.isDescendant(targetBlock, this.draggedBlock)) {
+        return;
+      }
+      
+      // Update drag over state
+      this.clearDragFeedback();
+      this.dragOverTarget = targetBlock;
+      this.dragOverPosition = position;
+      targetBlock.dragOverPosition = position;
+    },
+
+    async onDrop(event, targetBlock, position) {
+      event.preventDefault();
+      
+      if (!this.draggedBlock || this.draggedBlock.id === targetBlock.id) {
+        return;
+      }
+      
+      try {
+        await this.moveBlock(this.draggedBlock, targetBlock, position);
+        this.successMessage = "Block moved successfully";
+        setTimeout(() => this.successMessage = "", 2000);
+      } catch (error) {
+        console.error("Failed to move block:", error);
+        this.error = "Failed to move block";
+        setTimeout(() => this.error = "", 3000);
+      }
+      
+      // Clear drag state
+      this.onDragEnd(event, this.draggedBlock);
+    },
+
+    async moveBlock(sourceBlock, targetBlock, position) {
+      let newParent = null;
+      let newOrder = 0;
+      
+      if (position === 'before') {
+        // Insert before target block at same level
+        newParent = targetBlock.parent;
+        newOrder = targetBlock.order;
+        
+        // Shift subsequent blocks
+        await this.shiftBlocksOrder(newParent, newOrder, 1);
+        
+      } else if (position === 'after') {
+        // Insert after target block at same level
+        newParent = targetBlock.parent;
+        newOrder = targetBlock.order + 1;
+        
+        // Shift subsequent blocks
+        await this.shiftBlocksOrder(newParent, newOrder, 1);
+        
+      } else if (position === 'inside') {
+        // Make it a child of target block
+        newParent = targetBlock;
+        newOrder = this.getNextChildOrder(targetBlock);
+      }
+      
+      // Update the block's parent and order
+      const result = await window.apiService.updateBlock({
+        block_id: sourceBlock.id,
+        parent_id: newParent ? newParent.id : null,
+        order: newOrder
+      });
+      
+      if (result.success) {
+        // Update local state
+        this.removeBlockFromCurrentParent(sourceBlock);
+        
+        // Add to new parent/location
+        sourceBlock.parent = newParent;
+        sourceBlock.order = newOrder;
+        
+        if (newParent) {
+          if (!newParent.children) newParent.children = [];
+          newParent.children.push(sourceBlock);
+          newParent.children.sort((a, b) => a.order - b.order);
+        } else {
+          this.blocks.push(sourceBlock);
+          this.blocks.sort((a, b) => a.order - b.order);
+        }
+      }
+    },
+
+    async shiftBlocksOrder(parent, fromOrder, shift) {
+      const siblings = parent ? parent.children : this.blocks;
+      const blocksToShift = siblings.filter(block => block.order >= fromOrder);
+      
+      for (const block of blocksToShift) {
+        block.order += shift;
+        try {
+          await window.apiService.updateBlock({
+            block_id: block.id,
+            order: block.order
+          });
+        } catch (error) {
+          console.error("Failed to shift block order:", error);
+        }
+      }
+    },
+
+    isDescendant(potentialAncestor, block) {
+      let current = block.parent;
+      while (current) {
+        if (current.id === potentialAncestor.id) {
+          return true;
+        }
+        current = current.parent;
+      }
+      return false;
+    },
+
+    clearDragFeedback() {
+      // Clear drag feedback from all blocks
+      const clearBlock = (block) => {
+        block.dragOverPosition = null;
+        if (block.children) {
+          block.children.forEach(clearBlock);
+        }
+      };
+      
+      this.blocks.forEach(clearBlock);
+    },
   },
 
   template: `
@@ -916,125 +1078,24 @@ const DailyNote = {
         <h2>{{ formatDate(currentDate) }}</h2>
 
         <div class="blocks-container">
-          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :data-block-id="block.id">
-            <div class="block">
-              <div
-                class="block-bullet"
-                :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
-                @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
-              >
-                <span v-if="block.block_type === 'todo'">☐</span>
-                <span v-else-if="block.block_type === 'done'">☑</span>
-                <span v-else>•</span>
-              </div>
-              <div
-                v-if="!block.isEditing"
-                class="block-content-display"
-                :class="{ 'completed': block.block_type === 'done' }"
-                @click="startEditing(block)"
-                v-html="formatContentWithTags(block.content)"
-              ></div>
-              <textarea
-                v-else
-                :value="block.content"
-                @input="onBlockContentChange(block, $event.target.value)"
-                @keydown="onBlockKeyDown($event, block)"
-                @blur="stopEditing(block)"
-                class="block-content"
-                :class="{ 'completed': block.block_type === 'done' }"
-                rows="1"
-                placeholder="Start writing..."
-                ref="blockTextarea"
-              ></textarea>
-              <button
-                @click="deleteBlock(block)"
-                class="block-delete"
-                title="Delete block"
-              >del</button>
-            </div>
-
-            <!-- Render children blocks recursively -->
-            <div v-if="block.children && block.children.length" class="block-children">
-              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :data-block-id="child.id">
-                <div class="block">
-                  <div
-                    class="block-bullet"
-                    :class="{ 'todo': child.block_type === 'todo', 'done': child.block_type === 'done' }"
-                    @click="child.block_type === 'todo' || child.block_type === 'done' ? toggleBlockTodo(child) : null"
-                  >
-                    <span v-if="child.block_type === 'todo'">☐</span>
-                    <span v-else-if="child.block_type === 'done'">☑</span>
-                    <span v-else>•</span>
-                  </div>
-                  <div
-                    v-if="!child.isEditing"
-                    class="block-content-display"
-                    :class="{ 'completed': child.block_type === 'done' }"
-                    @click="startEditing(child)"
-                    v-html="formatContentWithTags(child.content)"
-                  ></div>
-                  <textarea
-                    v-else
-                    :value="child.content"
-                    @input="onBlockContentChange(child, $event.target.value)"
-                    @keydown="onBlockKeyDown($event, child)"
-                    @blur="stopEditing(child)"
-                    class="block-content"
-                    :class="{ 'completed': child.block_type === 'done' }"
-                    rows="1"
-                    placeholder="Start writing..."
-                    ref="blockTextarea"
-                  ></textarea>
-                  <button
-                    @click="deleteBlock(child)"
-                    class="block-delete"
-                    title="Delete block"
-                  >del</button>
-                </div>
-                
-                <!-- Render grandchildren -->
-                <div v-if="child.children && child.children.length" class="block-children">
-                  <div v-for="grandchild in child.children" :key="grandchild.id" class="block-wrapper child-block" :data-block-id="grandchild.id">
-                    <div class="block">
-                      <div
-                        class="block-bullet"
-                        :class="{ 'todo': grandchild.block_type === 'todo', 'done': grandchild.block_type === 'done' }"
-                        @click="grandchild.block_type === 'todo' || grandchild.block_type === 'done' ? toggleBlockTodo(grandchild) : null"
-                      >
-                        <span v-if="grandchild.block_type === 'todo'">☐</span>
-                        <span v-else-if="grandchild.block_type === 'done'">☑</span>
-                        <span v-else>•</span>
-                      </div>
-                      <div
-                        v-if="!grandchild.isEditing"
-                        class="block-content-display"
-                        :class="{ 'completed': grandchild.block_type === 'done' }"
-                        @click="startEditing(grandchild)"
-                        v-html="formatContentWithTags(grandchild.content)"
-                      ></div>
-                      <textarea
-                        v-else
-                        :value="grandchild.content"
-                        @input="onBlockContentChange(grandchild, $event.target.value)"
-                        @keydown="onBlockKeyDown($event, grandchild)"
-                        @blur="stopEditing(grandchild)"
-                        class="block-content"
-                        :class="{ 'completed': grandchild.block_type === 'done' }"
-                        rows="1"
-                        placeholder="Start writing..."
-                        ref="blockTextarea"
-                      ></textarea>
-                      <button
-                        @click="deleteBlock(grandchild)"
-                        class="block-delete"
-                        title="Delete block"
-                      >del</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BlockComponent
+            v-for="block in blocks"
+            :key="block.id"
+            :block="block"
+            :onBlockContentChange="onBlockContentChange"
+            :onBlockKeyDown="onBlockKeyDown"
+            :startEditing="startEditing"
+            :stopEditing="stopEditing"
+            :deleteBlock="deleteBlock"
+            :toggleBlockTodo="toggleBlockTodo"
+            :formatContentWithTags="formatContentWithTags"
+            :onDragStart="onDragStart"
+            :onDragEnd="onDragEnd"
+            :onDragOver="onDragOver"
+            :onDrop="onDrop"
+            :isDragging="draggedBlock && draggedBlock.id === block.id"
+            :dragOverPosition="dragOverTarget && dragOverTarget.id === block.id ? dragOverPosition : null"
+          />
 
           <button @click="addNewBlock" class="add-block-btn">
             + add new block
