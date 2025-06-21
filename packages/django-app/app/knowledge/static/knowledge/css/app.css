@@ -573,12 +573,26 @@ body {
 
 .block-content.completed {
   text-decoration: line-through;
-  opacity: 0.7;
+  text-decoration-color: #00ff00;
+  text-decoration-thickness: 2px;
+  opacity: 0.6;
+  color: #009900;
 }
 
 .block-content-display.completed {
   text-decoration: line-through;
-  opacity: 0.7;
+  text-decoration-color: #00ff00;
+  text-decoration-thickness: 2px;
+  opacity: 0.6;
+  color: #009900;
+}
+
+/* Additional styling for better visual hierarchy of completed blocks */
+.block-item .block-content.completed,
+.block-item .block-content-display.completed {
+  text-decoration: line-through !important;
+  text-decoration-color: #00ff00 !important;
+  text-decoration-thickness: 2px !important;
 }
 
 .block-delete {
