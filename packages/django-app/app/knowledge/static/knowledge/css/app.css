@@ -513,10 +513,18 @@ body {
 .block-bullet.todo,
 .block-bullet.done {
   cursor: pointer;
+  transition: color 0.1s ease, transform 0.1s ease;
+  position: relative;
+}
+
+.block-bullet.todo:active,
+.block-bullet.done:active {
+  transform: scale(0.95);
 }
 
 .block-bullet.todo:hover {
   color: #00ff00;
+  transform: scale(1.1);
 }
 
 .block-bullet.done {
@@ -524,7 +532,8 @@ body {
 }
 
 .block-bullet.done:hover {
-  color: #00ff00;
+  color: #00cc00;
+  transform: scale(1.1);
 }
 
 .block-content {

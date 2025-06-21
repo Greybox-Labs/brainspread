@@ -317,10 +317,18 @@ const DailyNote = {
         if (result.success) {
           // Update local state
           block.block_type = result.data.block_type;
+          
+          // Clear any previous error messages
+          this.error = null;
+          
+          // Provide subtle success feedback
+          this.successMessage = "";
+        } else {
+          this.error = result.errors?.non_field_errors?.[0] || "Failed to toggle todo";
         }
       } catch (error) {
         console.error("Failed to toggle block todo:", error);
-        this.error = "Failed to toggle todo";
+        this.error = "Failed to toggle todo. Please try again.";
       }
     },
 
