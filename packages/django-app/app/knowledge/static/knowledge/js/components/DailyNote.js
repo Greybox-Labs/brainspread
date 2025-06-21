@@ -104,7 +104,7 @@ const DailyNote = {
         );
         if (result.success) {
           this.page = result.data.page;
-          this.blocks = result.data.blocks || [];
+          this.blocks = this.setupParentReferences(result.data.blocks || []);
         } else {
           this.error = "Failed to load page";
         }
@@ -124,7 +124,7 @@ const DailyNote = {
         const result = await window.apiService.getTagContent(this.currentTag);
         if (result.success) {
           this.tagData = result.data;
-          this.blocks = result.data.blocks || [];
+          this.blocks = this.setupParentReferences(result.data.blocks || []);
           this.page = null; // No page for tag view
         } else {
           this.error = "Failed to load tag content";
@@ -678,6 +678,24 @@ const DailyNote = {
       await this.updateBlock(block, block.content, true);
       block.isEditing = false;
     },
+
+    setupParentReferences(blocks, parent = null) {
+      // Set up parent object references for hierarchical block data from backend
+      return blocks.map(blockData => {
+        const block = {
+          ...blockData,
+          parent: parent,
+          children: []
+        };
+        
+        if (blockData.children && blockData.children.length > 0) {
+          block.children = this.setupParentReferences(blockData.children, block);
+        }
+        
+        return block;
+      });
+    },
+
 
     getAllBlocks() {
       // Get all blocks in document order (flattened tree)

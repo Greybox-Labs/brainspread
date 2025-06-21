@@ -14,6 +14,8 @@
 - [x] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [x] should support nested blocks
 - [x] hitting backspace on an empty block should delete the block
+- [ ] clicking a TODOs checkbox should toggle the block to DONE and vice versa
+- [ ] should style DONE blocks with a strikethrough
 - [ ] toggleable light/dark mode
 - [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
       and light/dark mode preference
@@ -44,9 +46,12 @@
 - [x] the auto save feature on the front end moves selection away from the input
       so it suddenly stops user input and is annoying
 - [x] shows login page between page clicks even when logged in
-- [ ] when hitting tab on a new block, it indents the block properly, but it does not keep focus on the block
-- [ ] hitting enter creates a new block at the bottom, but if you are focused on not-the-last block, it should create the next block
+- [x] hitting enter creates a new block at the bottom, but if you are focused on not-the-last block, it should create the next block
       underneath the current block
+- [x] hitting enter now creates a block under the current block, but only at the top level. if you are in a nested block
+      and hit enter, it should create a new block as a next immediate sibling of the current nested block
+- [ ] when hitting tab on a new block, it indents the block properly, but it does not keep focus on the block
+
 
 # Usage Notes
 
