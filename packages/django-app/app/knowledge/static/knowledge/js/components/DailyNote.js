@@ -317,6 +317,7 @@ const DailyNote = {
         if (result.success) {
           // Update local state
           block.block_type = result.data.block_type;
+          block.content = result.data.content;
           
           // Clear any previous error messages
           this.error = null;

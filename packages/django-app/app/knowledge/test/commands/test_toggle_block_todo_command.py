@@ -55,8 +55,8 @@ class TestToggleBlockTodoCommand:
         block.refresh_from_db()
         assert block.block_type == "done"
 
-    def test_toggle_done_to_bullet(self):
-        """Test toggling a done block to bullet"""
+    def test_toggle_done_to_todo(self):
+        """Test toggling a done block to todo"""
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
@@ -70,14 +70,14 @@ class TestToggleBlockTodoCommand:
         command = ToggleBlockTodoCommand(user, block.uuid)
         result = command.execute()
 
-        assert result.block_type == "bullet"
+        assert result.block_type == "todo"
         
         # Verify in database
         block.refresh_from_db()
-        assert block.block_type == "bullet"
+        assert block.block_type == "todo"
 
     def test_full_cycle_toggle(self):
-        """Test the full cycle: bullet -> todo -> done -> bullet"""
+        """Test the full cycle: bullet -> todo -> done -> todo"""
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
@@ -98,17 +98,82 @@ class TestToggleBlockTodoCommand:
         result = command.execute()
         assert result.block_type == "done"
 
-        # done -> bullet
+        # done -> todo
         command = ToggleBlockTodoCommand(user, block.uuid)
         result = command.execute()
-        assert result.block_type == "bullet"
+        assert result.block_type == "todo"
+
+    def test_content_update_todo_to_done(self):
+        """Test that content is updated when toggling from todo to done"""
+        user = User.objects.create_user(email="test@example.com", password="password")
+        page = Page.objects.create(title="Test Page", user=user)
+        block = Block.objects.create(
+            page=page,
+            user=user,
+            content="TODO write documentation",
+            block_type="todo",
+            order=0
+        )
+
+        command = ToggleBlockTodoCommand(user, block.uuid)
+        result = command.execute()
+
+        assert result.block_type == "done"
+        assert result.content == "DONE write documentation"
+        
+        # Verify in database
+        block.refresh_from_db()
+        assert block.content == "DONE write documentation"
+
+    def test_content_update_done_to_todo(self):
+        """Test that content is updated when toggling from done to todo"""
+        user = User.objects.create_user(email="test@example.com", password="password")
+        page = Page.objects.create(title="Test Page", user=user)
+        block = Block.objects.create(
+            page=page,
+            user=user,
+            content="DONE write documentation",
+            block_type="done",
+            order=0
+        )
+
+        command = ToggleBlockTodoCommand(user, block.uuid)
+        result = command.execute()
+
+        assert result.block_type == "todo"
+        assert result.content == "TODO write documentation"
+        
+        # Verify in database
+        block.refresh_from_db()
+        assert block.content == "TODO write documentation"
+
+    def test_content_with_colon_todo_to_done(self):
+        """Test that content with colon is updated correctly"""
+        user = User.objects.create_user(email="test@example.com", password="password")
+        page = Page.objects.create(title="Test Page", user=user)
+        block = Block.objects.create(
+            page=page,
+            user=user,
+            content="TODO: write documentation",
+            block_type="todo",
+            order=0
+        )
+
+        command = ToggleBlockTodoCommand(user, block.uuid)
+        result = command.execute()
+
+        assert result.block_type == "done"
+        assert result.content == "DONE: write documentation"
 
     def test_toggle_nonexistent_block(self):
         """Test toggling a non-existent block raises ValidationError"""
+        import uuid
         user = User.objects.create_user(email="test@example.com", password="password")
         
         with pytest.raises(ValidationError, match="Block not found"):
-            command = ToggleBlockTodoCommand(user, "nonexistent-uuid")
+            # Use a valid UUID format that doesn't exist in the database
+            nonexistent_uuid = str(uuid.uuid4())
+            command = ToggleBlockTodoCommand(user, nonexistent_uuid)
             command.execute()
 
     def test_toggle_unauthorized_block(self):
