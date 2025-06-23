@@ -144,8 +144,8 @@ const BlockComponent = {
           :onDragEnd="onDragEnd"
           :onDragOver="onDragOver"
           :onDrop="onDrop"
-          :isDragging="child.id === block.id ? isDragging : false"
-          :dragOverPosition="child.id === block.id ? dragOverPosition : null"
+          :isDragging="false"
+          :dragOverPosition="null"
         />
       </div>
       

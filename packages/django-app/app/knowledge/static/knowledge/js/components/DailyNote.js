@@ -957,17 +957,21 @@ const DailyNote = {
       const siblings = parent ? parent.children : this.blocks;
       const blocksToShift = siblings.filter(block => block.order >= fromOrder);
       
-      for (const block of blocksToShift) {
-        block.order += shift;
+      // Update all blocks concurrently to avoid race conditions
+      await Promise.all(blocksToShift.map(async (block) => {
+        const newOrder = block.order + shift;
         try {
-          await window.apiService.updateBlock({
+          const result = await window.apiService.updateBlock({
             block_id: block.id,
-            order: block.order
+            order: newOrder
           });
+          if (result.success) {
+            block.order = newOrder;
+          }
         } catch (error) {
           console.error("Failed to shift block order:", error);
         }
-      }
+      }));
     },
 
     isDescendant(potentialAncestor, block) {
