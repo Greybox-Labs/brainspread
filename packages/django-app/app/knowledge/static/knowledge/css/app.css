@@ -644,7 +644,9 @@ body {
 .block-bullet.todo,
 .block-bullet.done {
   cursor: pointer;
-  transition: color 0.1s ease, transform 0.1s ease;
+  transition:
+    color 0.1s ease,
+    transform 0.1s ease;
   position: relative;
 }
 
@@ -761,13 +763,18 @@ body {
 }
 
 .child-block::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -2px;
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, var(--border-primary) 0%, var(--border-primary) 50%, transparent 50%);
+  background: linear-gradient(
+    to bottom,
+    var(--border-primary) 0%,
+    var(--border-primary) 50%,
+    transparent 50%
+  );
   background-size: 2px 8px;
 }
 
@@ -776,7 +783,12 @@ body {
 }
 
 .child-block:hover::before {
-  background: linear-gradient(to bottom, var(--tag-hover) 0%, var(--tag-hover) 50%, transparent 50%);
+  background: linear-gradient(
+    to bottom,
+    var(--tag-hover) 0%,
+    var(--tag-hover) 50%,
+    transparent 50%
+  );
   background-size: 2px 8px;
 }
 

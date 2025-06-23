@@ -5,7 +5,7 @@ const KnowledgeApp = createApp({
   data() {
     const isAuth = window.apiService.isAuthenticated();
     const cachedUser = window.apiService.getCurrentUser();
-    
+
     return {
       user: cachedUser, // Load user immediately from cache
       isAuthenticated: isAuth, // Check immediately
@@ -25,15 +25,15 @@ const KnowledgeApp = createApp({
 
   async mounted() {
     console.log("Knowledge app mounted");
-    
+
     // Apply initial theme
     this.applyTheme();
-    
+
     // If we have cached user data, we can show the app immediately
     if (this.isAuthenticated && this.user) {
       this.loading = false;
     }
-    
+
     // Then verify with server (this happens in background)
     await this.checkAuth();
 
@@ -146,7 +146,7 @@ const KnowledgeApp = createApp({
     onThemeUpdated(updatedUser) {
       // Update user data with new theme
       this.user = { ...this.user, ...updatedUser };
-      
+
       // Apply the new theme
       this.applyTheme();
     },

@@ -43,15 +43,17 @@ window.SettingsModal = {
         this.isUpdating = true;
 
         if (this.selectedTheme !== this.user.theme) {
-          const result = await window.apiService.updateUserTheme(this.selectedTheme);
-          
+          const result = await window.apiService.updateUserTheme(
+            this.selectedTheme
+          );
+
           if (result.success) {
             // Apply theme immediately
             this.applyTheme(this.selectedTheme);
-            
+
             // Emit theme update event
             this.$emit("theme-updated", result.data.user);
-            
+
             console.log("Theme updated successfully");
           } else {
             console.error("Failed to update theme:", result.errors);

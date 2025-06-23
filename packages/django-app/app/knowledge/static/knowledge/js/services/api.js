@@ -164,18 +164,18 @@ class ApiService {
 
   async updateBlock(blockIdOrData, updateData = null) {
     let requestData;
-    
+
     if (updateData) {
       // Called with updateBlock(blockId, updateData)
       requestData = {
         block_id: blockIdOrData,
-        ...updateData
+        ...updateData,
       };
     } else {
       // Called with updateBlock(blockData) - blockData should contain block_id
       requestData = blockIdOrData;
     }
-    
+
     return await this.request("/knowledge/api/blocks/update/", {
       method: "PUT",
       body: JSON.stringify(requestData),
@@ -203,7 +203,9 @@ class ApiService {
   }
 
   async getTagContent(tagName) {
-    return await this.request(`/knowledge/api/tag/${encodeURIComponent(tagName)}/`);
+    return await this.request(
+      `/knowledge/api/tag/${encodeURIComponent(tagName)}/`
+    );
   }
 
   // Legacy method for backward compatibility

@@ -20,7 +20,7 @@ class TestCreateBlockCommand(TestCase):
             content="TODO: Buy groceries",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "todo")
         self.assertEqual(block.content, "TODO: Buy groceries")
 
@@ -32,7 +32,7 @@ class TestCreateBlockCommand(TestCase):
             content="[ ] Complete project",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "todo")
 
     def test_should_auto_detect_done_from_checkbox_checked(self):
@@ -43,7 +43,7 @@ class TestCreateBlockCommand(TestCase):
             content="[x] Finished task",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "done")
 
     def test_should_auto_detect_todo_from_unicode_checkbox(self):
@@ -54,7 +54,7 @@ class TestCreateBlockCommand(TestCase):
             content="☐ Unicode todo item",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "todo")
 
     def test_should_auto_detect_done_from_unicode_checkbox(self):
@@ -65,7 +65,7 @@ class TestCreateBlockCommand(TestCase):
             content="☑ Unicode done item",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "done")
 
     def test_should_not_override_explicit_block_type(self):
@@ -77,7 +77,7 @@ class TestCreateBlockCommand(TestCase):
             block_type="heading",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "heading")
 
     def test_should_default_to_bullet_for_regular_content(self):
@@ -88,7 +88,7 @@ class TestCreateBlockCommand(TestCase):
             content="Just a regular block",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "bullet")
 
     def test_should_handle_empty_content(self):
@@ -99,7 +99,7 @@ class TestCreateBlockCommand(TestCase):
             content="",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "bullet")
 
     def test_should_handle_whitespace_only_content(self):
@@ -110,18 +110,18 @@ class TestCreateBlockCommand(TestCase):
             content="   \n\t  ",
         )
         block = command.execute()
-        
+
         self.assertEqual(block.block_type, "bullet")
 
     def test_should_be_case_insensitive_for_todo_detection(self):
         """Test that TODO detection is case insensitive"""
         test_cases = [
             "todo: lowercase",
-            "TODO: uppercase", 
+            "TODO: uppercase",
             "Todo: mixed case",
             "tOdO: weird case",
         ]
-        
+
         for content in test_cases:
             with self.subTest(content=content):
                 command = CreateBlockCommand(
@@ -141,8 +141,10 @@ class TestCreateBlockCommand(TestCase):
             content="TODO: Buy #groceries and #food",
         )
         block = command.execute()
-        
-        mock_set_tags.assert_called_once_with("TODO: Buy #groceries and #food", self.user)
+
+        mock_set_tags.assert_called_once_with(
+            "TODO: Buy #groceries and #food", self.user
+        )
 
     @patch.object(Block, "set_tags_from_content")
     def test_should_not_call_set_tags_from_content_when_no_content(self, mock_set_tags):
@@ -153,5 +155,5 @@ class TestCreateBlockCommand(TestCase):
             content="",
         )
         block = command.execute()
-        
+
         mock_set_tags.assert_not_called()

@@ -1,38 +1,38 @@
 const BlockComponent = {
-  name: 'BlockComponent',
+  name: "BlockComponent",
   props: {
     block: {
       type: Object,
-      required: true
+      required: true,
     },
     onBlockContentChange: {
       type: Function,
-      required: true
+      required: true,
     },
     onBlockKeyDown: {
       type: Function,
-      required: true
+      required: true,
     },
     startEditing: {
       type: Function,
-      required: true
+      required: true,
     },
     stopEditing: {
       type: Function,
-      required: true
+      required: true,
     },
     deleteBlock: {
       type: Function,
-      required: true
+      required: true,
     },
     toggleBlockTodo: {
       type: Function,
-      required: true
+      required: true,
     },
     formatContentWithTags: {
       type: Function,
-      required: true
-    }
+      required: true,
+    },
   },
   template: `
     <div class="block-wrapper" :class="{ 'child-block': block.parent }" :data-block-id="block.id">
@@ -88,7 +88,7 @@ const BlockComponent = {
         />
       </div>
     </div>
-  `
+  `,
 };
 
 // Make it available globally

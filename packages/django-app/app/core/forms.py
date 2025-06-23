@@ -54,7 +54,7 @@ class UpdateThemeForm(BaseForm):
         ("dark", "Dark"),
         ("light", "Light"),
     ]
-    
+
     theme = forms.ChoiceField(choices=THEME_CHOICES, required=True)
 
     def clean_theme(self):
