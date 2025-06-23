@@ -137,7 +137,15 @@ def update_theme(request):
         form = UpdateThemeForm(request.data)
         if form.is_valid():
             command = UpdateThemeCommand(form, request.user)
-            data = command.execute()
+            updated_user = command.execute()
+            data = {
+                "user": {
+                    "id": str(updated_user.uuid),
+                    "email": updated_user.email,
+                    "timezone": updated_user.timezone,
+                    "theme": updated_user.theme,
+                }
+            }
             return Response(
                 {
                     "success": True,

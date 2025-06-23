@@ -14,11 +14,4 @@ class UpdateThemeCommand(AbstractBaseCommand):
 
         updated_user = UserRepository.update_theme(self.user, theme)
 
-        return {
-            "user": {
-                "id": str(updated_user.uuid),
-                "email": updated_user.email,
-                "timezone": updated_user.timezone,
-                "theme": updated_user.theme,
-            }
-        }
+        return updated_user
