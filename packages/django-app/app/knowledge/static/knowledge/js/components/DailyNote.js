@@ -1,7 +1,7 @@
 // Daily Note Component - Logseq-style daily notes with blocks
 const DailyNote = {
   components: {
-    BlockComponent: window.BlockComponent || {}
+    BlockComponent: window.BlockComponent || {},
   },
   data() {
     return {
@@ -30,14 +30,14 @@ const DailyNote = {
       this.$options.components.HistoricalDailyNoteBlocks =
         window.HistoricalDailyNoteBlocks;
     }
-    
+
     // Add event delegation for clickable tags
-    document.addEventListener('click', this.handleTagClick);
-    
+    document.addEventListener("click", this.handleTagClick);
+
     // Check if we're on a tag page
     this.currentTag = this.getTagFromURL();
     this.isTagPage = !!this.currentTag;
-    
+
     if (this.isTagPage) {
       await this.loadTagContent();
     } else {
@@ -48,7 +48,7 @@ const DailyNote = {
 
   beforeUnmount() {
     // Clean up event listener
-    document.removeEventListener('click', this.handleTagClick);
+    document.removeEventListener("click", this.handleTagClick);
   },
 
   methods: {
@@ -142,7 +142,12 @@ const DailyNote = {
       await this.loadPage();
     },
 
-    async createBlock(content = "", parent = null, order = null, autoFocus = true) {
+    async createBlock(
+      content = "",
+      parent = null,
+      order = null,
+      autoFocus = true
+    ) {
       if (!this.page) return;
 
       try {
@@ -162,7 +167,7 @@ const DailyNote = {
           const newBlock = {
             id: result.data.uuid || result.data.id || `temp-${Date.now()}`,
             content: result.data.content || content,
-            content_type: result.data.content_type || "text", 
+            content_type: result.data.content_type || "text",
             block_type: result.data.block_type || "bullet", // This will include auto-detected types
             order: result.data.order || blockOrder,
             parent: parent,
@@ -171,9 +176,9 @@ const DailyNote = {
             collapsed: result.data.collapsed || false,
             properties: result.data.properties || {},
             media_url: result.data.media_url || "",
-            media_metadata: result.data.media_metadata || {}
+            media_metadata: result.data.media_metadata || {},
           };
-          
+
           // Insert the new block in the correct position
           if (parent) {
             if (!parent.children) parent.children = [];
@@ -183,26 +188,36 @@ const DailyNote = {
             this.blocks.push(newBlock);
             this.blocks.sort((a, b) => a.order - b.order);
           }
-          
+
           // Auto-focus the newly created block if requested
           if (autoFocus) {
             // Mark the block as editing immediately so Vue renders the textarea
             newBlock.isEditing = true;
-            
+
             // Wait for Vue to render the textarea, then focus it
             this.$nextTick(() => {
               this.$nextTick(() => {
-                const textarea = document.querySelector(`[data-block-id="${newBlock.id}"] textarea`);
+                const textarea = document.querySelector(
+                  `[data-block-id="${newBlock.id}"] textarea`
+                );
                 if (textarea) {
                   textarea.focus();
-                  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                  textarea.setSelectionRange(
+                    textarea.value.length,
+                    textarea.value.length
+                  );
                 } else {
                   // If textarea still not found, try one more time after a short delay
                   setTimeout(() => {
-                    const retryTextarea = document.querySelector(`[data-block-id="${newBlock.id}"] textarea`);
+                    const retryTextarea = document.querySelector(
+                      `[data-block-id="${newBlock.id}"] textarea`
+                    );
                     if (retryTextarea) {
                       retryTextarea.focus();
-                      retryTextarea.setSelectionRange(retryTextarea.value.length, retryTextarea.value.length);
+                      retryTextarea.setSelectionRange(
+                        retryTextarea.value.length,
+                        retryTextarea.value.length
+                      );
                     }
                   }, 50);
                 }
@@ -210,7 +225,7 @@ const DailyNote = {
             });
           }
         }
-        
+
         return result;
       } catch (error) {
         console.error("Failed to create block:", error);
@@ -229,12 +244,12 @@ const DailyNote = {
         if (result.success) {
           // Update local state with all returned data
           block.content = newContent;
-          
+
           // Update block type if it was auto-detected/changed on backend
           if (result.data && result.data.block_type) {
             block.block_type = result.data.block_type;
           }
-          
+
           // Only reload if explicitly requested (rare cases when tags need refresh)
           if (!skipReload) {
             await this.loadPage(); // Reload to get updated tags
@@ -264,10 +279,10 @@ const DailyNote = {
     async deleteEmptyBlock(block) {
       // Mark block as being deleted to prevent save conflicts
       this.deletingBlocks.add(block.id);
-      
+
       // Find the previous block to focus after deletion
       const previousBlock = this.findPreviousBlock(block);
-      
+
       try {
         const result = await window.apiService.deleteBlock({
           block_id: block.id,
@@ -276,17 +291,22 @@ const DailyNote = {
         if (result.success) {
           // Remove from local state immediately for better UX
           this.removeBlockFromCurrentParent(block);
-          
+
           // Focus the previous block if it exists
           if (previousBlock) {
             this.$nextTick(() => {
               this.startEditing(previousBlock);
               // Position cursor at the end of the previous block
               this.$nextTick(() => {
-                const textarea = document.querySelector(`[data-block-id="${previousBlock.id}"] textarea`);
+                const textarea = document.querySelector(
+                  `[data-block-id="${previousBlock.id}"] textarea`
+                );
                 if (textarea) {
                   textarea.focus();
-                  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                  textarea.setSelectionRange(
+                    textarea.value.length,
+                    textarea.value.length
+                  );
                 }
               });
             });
@@ -307,7 +327,7 @@ const DailyNote = {
 
     findPreviousBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex(b => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
       return currentIndex > 0 ? allBlocks[currentIndex - 1] : null;
     },
 
@@ -318,14 +338,15 @@ const DailyNote = {
           // Update local state
           block.block_type = result.data.block_type;
           block.content = result.data.content;
-          
+
           // Clear any previous error messages
           this.error = null;
-          
+
           // Provide subtle success feedback
           this.successMessage = "";
         } else {
-          this.error = result.errors?.non_field_errors?.[0] || "Failed to toggle todo";
+          this.error =
+            result.errors?.non_field_errors?.[0] || "Failed to toggle todo";
         }
       } catch (error) {
         console.error("Failed to toggle block todo:", error);
@@ -342,18 +363,20 @@ const DailyNote = {
 
     async createBlockAfter(currentBlock) {
       const newOrder = currentBlock.order + 1;
-      const siblings = currentBlock.parent ? currentBlock.parent.children : this.blocks;
-      
+      const siblings = currentBlock.parent
+        ? currentBlock.parent.children
+        : this.blocks;
+
       // Find all blocks that need to be shifted (same parent, order >= newOrder)
-      const blocksToShift = siblings.filter(block => 
-        block.id !== currentBlock.id && block.order >= newOrder
+      const blocksToShift = siblings.filter(
+        (block) => block.id !== currentBlock.id && block.order >= newOrder
       );
 
       // Shift existing blocks down by updating their orders
       for (const block of blocksToShift) {
         try {
           await window.apiService.updateBlock(block.id, {
-            order: block.order + 1
+            order: block.order + 1,
           });
           block.order = block.order + 1;
         } catch (error) {
@@ -368,16 +391,20 @@ const DailyNote = {
     async refreshTagsOnly() {
       // Refresh page data but preserve current editing state
       try {
-        const currentlyEditing = this.getAllBlocks().filter(b => b.isEditing);
+        const currentlyEditing = this.getAllBlocks().filter((b) => b.isEditing);
         await this.loadPage();
-        
+
         // Restore editing state after reload
-        currentlyEditing.forEach(block => {
-          const refreshedBlock = this.getAllBlocks().find(b => b.id === block.id);
+        currentlyEditing.forEach((block) => {
+          const refreshedBlock = this.getAllBlocks().find(
+            (b) => b.id === block.id
+          );
           if (refreshedBlock) {
             refreshedBlock.isEditing = true;
             this.$nextTick(() => {
-              const textarea = document.querySelector(`[data-block-id="${refreshedBlock.id}"] textarea`);
+              const textarea = document.querySelector(
+                `[data-block-id="${refreshedBlock.id}"] textarea`
+              );
               if (textarea) {
                 textarea.focus();
               }
@@ -408,7 +435,11 @@ const DailyNote = {
         // Save current block before creating new one
         await this.updateBlock(block, block.content, true);
         await this.createBlockAfter(block);
-      } else if (event.key === "Backspace" && block.content.trim() === "" && event.target.selectionStart === 0) {
+      } else if (
+        event.key === "Backspace" &&
+        block.content.trim() === "" &&
+        event.target.selectionStart === 0
+      ) {
         // Delete empty block when backspace is pressed at the beginning
         event.preventDefault();
         await this.deleteEmptyBlock(block);
@@ -483,28 +514,30 @@ const DailyNote = {
       try {
         // Save current content first
         await this.updateBlock(block, block.content, true);
-        
+
         // Update the block's parent and order
         const newOrder = this.getNextChildOrder(previousSibling);
         const result = await window.apiService.updateBlock(block.id, {
           parent_id: previousSibling.id,
-          order: newOrder
+          order: newOrder,
         });
 
         if (result.success) {
           // Update local state
           this.removeBlockFromCurrentParent(block);
-          
+
           // Add to new parent's children
           if (!previousSibling.children) previousSibling.children = [];
           block.parent = previousSibling;
           block.order = newOrder;
           previousSibling.children.push(block);
           previousSibling.children.sort((a, b) => a.order - b.order);
-          
+
           // Focus the block again
           this.$nextTick(() => {
-            const textarea = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+            const textarea = document.querySelector(
+              `[data-block-id="${block.id}"] textarea`
+            );
             if (textarea) textarea.focus();
           });
         }
@@ -519,27 +552,27 @@ const DailyNote = {
       try {
         // Save current content first
         await this.updateBlock(block, block.content, true);
-        
+
         // Move to parent's level, right after parent
         const grandparent = block.parent.parent;
         const newOrder = block.parent.order + 1;
-        
+
         // Update orders of siblings that come after the parent
         this.updateSiblingOrders(grandparent, newOrder);
-        
+
         const result = await window.apiService.updateBlock(block.id, {
           parent_id: grandparent ? grandparent.id : null,
-          order: newOrder
+          order: newOrder,
         });
 
         if (result.success) {
           // Update local state
           this.removeBlockFromCurrentParent(block);
-          
+
           // Add to new parent level
           block.parent = grandparent;
           block.order = newOrder;
-          
+
           if (grandparent) {
             if (!grandparent.children) grandparent.children = [];
             grandparent.children.push(block);
@@ -548,10 +581,12 @@ const DailyNote = {
             this.blocks.push(block);
             this.blocks.sort((a, b) => a.order - b.order);
           }
-          
+
           // Focus the block again
           this.$nextTick(() => {
-            const textarea = document.querySelector(`[data-block-id="${block.id}"] textarea`);
+            const textarea = document.querySelector(
+              `[data-block-id="${block.id}"] textarea`
+            );
             if (textarea) textarea.focus();
           });
         }
@@ -562,24 +597,26 @@ const DailyNote = {
 
     findPreviousSibling(block) {
       const siblings = block.parent ? block.parent.children : this.blocks;
-      const currentIndex = siblings.findIndex(b => b.id === block.id);
+      const currentIndex = siblings.findIndex((b) => b.id === block.id);
       return currentIndex > 0 ? siblings[currentIndex - 1] : null;
     },
 
     getNextChildOrder(parentBlock) {
       if (!parentBlock.children || parentBlock.children.length === 0) return 0;
-      return Math.max(...parentBlock.children.map(child => child.order)) + 1;
+      return Math.max(...parentBlock.children.map((child) => child.order)) + 1;
     },
 
     removeBlockFromCurrentParent(block) {
       if (block.parent) {
         const parentChildren = block.parent.children || [];
-        const index = parentChildren.findIndex(child => child.id === block.id);
+        const index = parentChildren.findIndex(
+          (child) => child.id === block.id
+        );
         if (index !== -1) {
           parentChildren.splice(index, 1);
         }
       } else {
-        const index = this.blocks.findIndex(b => b.id === block.id);
+        const index = this.blocks.findIndex((b) => b.id === block.id);
         if (index !== -1) {
           this.blocks.splice(index, 1);
         }
@@ -588,7 +625,7 @@ const DailyNote = {
 
     updateSiblingOrders(parent, fromOrder) {
       const siblings = parent ? parent.children : this.blocks;
-      siblings.forEach(sibling => {
+      siblings.forEach((sibling) => {
         if (sibling.order >= fromOrder) {
           sibling.order += 1;
         }
@@ -607,9 +644,9 @@ const DailyNote = {
 
     handleTagClick(event) {
       // Check if the clicked element is a clickable tag
-      if (event.target.classList.contains('clickable-tag')) {
+      if (event.target.classList.contains("clickable-tag")) {
         event.preventDefault();
-        const tagName = event.target.getAttribute('data-tag');
+        const tagName = event.target.getAttribute("data-tag");
         if (tagName) {
           this.goToTag(tagName);
         }
@@ -619,8 +656,8 @@ const DailyNote = {
     goToTag(tagName) {
       // Navigate to the tag page without full page reload
       const url = `/knowledge/tag/${encodeURIComponent(tagName)}/`;
-      window.history.pushState({}, '', url);
-      
+      window.history.pushState({}, "", url);
+
       // Update the current component state for tag page
       this.currentTag = tagName;
       this.isTagPage = true;
@@ -629,9 +666,9 @@ const DailyNote = {
 
     goBackToDailyNotes() {
       // Navigate back to daily notes without page reload
-      const url = '/knowledge/';
-      window.history.pushState({}, '', url);
-      
+      const url = "/knowledge/";
+      window.history.pushState({}, "", url);
+
       // Reset to daily note view
       this.isTagPage = false;
       this.currentTag = null;
@@ -690,21 +727,23 @@ const DailyNote = {
 
     setupParentReferences(blocks, parent = null) {
       // Set up parent object references for hierarchical block data from backend
-      return blocks.map(blockData => {
+      return blocks.map((blockData) => {
         const block = {
           ...blockData,
           parent: parent,
-          children: []
+          children: [],
         };
-        
+
         if (blockData.children && blockData.children.length > 0) {
-          block.children = this.setupParentReferences(blockData.children, block);
+          block.children = this.setupParentReferences(
+            blockData.children,
+            block
+          );
         }
-        
+
         return block;
       });
     },
-
 
     getAllBlocks() {
       // Get all blocks in document order (flattened tree)

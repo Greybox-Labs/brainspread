@@ -18,18 +18,14 @@ class TestToggleBlockTodoCommand:
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
-            page=page,
-            user=user,
-            content="Test block",
-            block_type="bullet",
-            order=0
+            page=page, user=user, content="Test block", block_type="bullet", order=0
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
         result = command.execute()
 
         assert result.block_type == "todo"
-        
+
         # Verify in database
         block.refresh_from_db()
         assert block.block_type == "todo"
@@ -39,18 +35,14 @@ class TestToggleBlockTodoCommand:
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
-            page=page,
-            user=user,
-            content="Test todo",
-            block_type="todo",
-            order=0
+            page=page, user=user, content="Test todo", block_type="todo", order=0
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
         result = command.execute()
 
         assert result.block_type == "done"
-        
+
         # Verify in database
         block.refresh_from_db()
         assert block.block_type == "done"
@@ -60,18 +52,14 @@ class TestToggleBlockTodoCommand:
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
-            page=page,
-            user=user,
-            content="Test done",
-            block_type="done",
-            order=0
+            page=page, user=user, content="Test done", block_type="done", order=0
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
         result = command.execute()
 
         assert result.block_type == "todo"
-        
+
         # Verify in database
         block.refresh_from_db()
         assert block.block_type == "todo"
@@ -81,11 +69,7 @@ class TestToggleBlockTodoCommand:
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
-            page=page,
-            user=user,
-            content="Test cycle",
-            block_type="bullet",
-            order=0
+            page=page, user=user, content="Test cycle", block_type="bullet", order=0
         )
 
         # bullet -> todo
@@ -112,7 +96,7 @@ class TestToggleBlockTodoCommand:
             user=user,
             content="TODO write documentation",
             block_type="todo",
-            order=0
+            order=0,
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
@@ -120,7 +104,7 @@ class TestToggleBlockTodoCommand:
 
         assert result.block_type == "done"
         assert result.content == "DONE write documentation"
-        
+
         # Verify in database
         block.refresh_from_db()
         assert block.content == "DONE write documentation"
@@ -134,7 +118,7 @@ class TestToggleBlockTodoCommand:
             user=user,
             content="DONE write documentation",
             block_type="done",
-            order=0
+            order=0,
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
@@ -142,7 +126,7 @@ class TestToggleBlockTodoCommand:
 
         assert result.block_type == "todo"
         assert result.content == "TODO write documentation"
-        
+
         # Verify in database
         block.refresh_from_db()
         assert block.content == "TODO write documentation"
@@ -156,7 +140,7 @@ class TestToggleBlockTodoCommand:
             user=user,
             content="TODO: write documentation",
             block_type="todo",
-            order=0
+            order=0,
         )
 
         command = ToggleBlockTodoCommand(user, block.uuid)
@@ -168,8 +152,9 @@ class TestToggleBlockTodoCommand:
     def test_toggle_nonexistent_block(self):
         """Test toggling a non-existent block raises ValidationError"""
         import uuid
+
         user = User.objects.create_user(email="test@example.com", password="password")
-        
+
         with pytest.raises(ValidationError, match="Block not found"):
             # Use a valid UUID format that doesn't exist in the database
             nonexistent_uuid = str(uuid.uuid4())
@@ -180,14 +165,10 @@ class TestToggleBlockTodoCommand:
         """Test toggling a block owned by another user raises ValidationError"""
         user1 = User.objects.create_user(email="test1@example.com", password="password")
         user2 = User.objects.create_user(email="test2@example.com", password="password")
-        
+
         page = Page.objects.create(title="Test Page", user=user1)
         block = Block.objects.create(
-            page=page,
-            user=user1,
-            content="Test block",
-            block_type="todo",
-            order=0
+            page=page, user=user1, content="Test block", block_type="todo", order=0
         )
 
         with pytest.raises(ValidationError, match="Block not found"):

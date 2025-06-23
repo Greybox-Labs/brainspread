@@ -33,7 +33,7 @@ class CreateBlockCommand(AbstractBaseCommand):
         """Execute the command"""
         # Auto-detect block type from content if not explicitly set
         final_block_type = self._detect_block_type_from_content()
-        
+
         # Create the block
         block = Block.objects.create(
             user=self.user,
@@ -61,25 +61,25 @@ class CreateBlockCommand(AbstractBaseCommand):
         # If block_type was explicitly provided and isn't default, use it
         if self.block_type != "bullet":
             return self.block_type
-            
+
         # Only auto-detect if we have content
         if not self.content:
             return self.block_type
-            
+
         content_stripped = self.content.strip()
         content_lower = content_stripped.lower()
-        
+
         # Check for TODO patterns
-        if content_lower.startswith('todo'):
+        if content_lower.startswith("todo"):
             return "todo"
-        elif content_lower.startswith('[ ]'):
+        elif content_lower.startswith("[ ]"):
             return "todo"
-        elif content_lower.startswith('[x]'):
+        elif content_lower.startswith("[x]"):
             return "done"
-        elif content_lower.startswith('☐'):
+        elif content_lower.startswith("☐"):
             return "todo"
-        elif content_lower.startswith('☑'):
+        elif content_lower.startswith("☑"):
             return "done"
-        
+
         # Default to original block_type
         return self.block_type

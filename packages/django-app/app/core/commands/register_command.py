@@ -22,5 +22,6 @@ class RegisterCommand(AbstractBaseCommand):
                 "id": str(user.uuid),
                 "email": user.email,
                 "timezone": user.timezone,
+                "theme": user.theme,
             },
         }

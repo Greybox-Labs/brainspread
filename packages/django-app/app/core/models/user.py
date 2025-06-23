@@ -37,6 +37,19 @@ class User(
         help_text=_("User's preferred timezone (e.g., America/New_York, UTC, etc.)"),
     )
 
+    THEME_CHOICES = [
+        ("dark", "Dark"),
+        ("light", "Light"),
+    ]
+
+    theme = models.CharField(
+        _("theme"),
+        max_length=10,
+        choices=THEME_CHOICES,
+        default="dark",
+        help_text=_("User's preferred theme (dark or light)"),
+    )
+
     def __str__(self):
         return self.email
 

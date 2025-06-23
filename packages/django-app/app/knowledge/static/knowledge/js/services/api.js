@@ -164,18 +164,18 @@ class ApiService {
 
   async updateBlock(blockIdOrData, updateData = null) {
     let requestData;
-    
+
     if (updateData) {
       // Called with updateBlock(blockId, updateData)
       requestData = {
         block_id: blockIdOrData,
-        ...updateData
+        ...updateData,
       };
     } else {
       // Called with updateBlock(blockData) - blockData should contain block_id
       requestData = blockIdOrData;
     }
-    
+
     return await this.request("/knowledge/api/blocks/update/", {
       method: "PUT",
       body: JSON.stringify(requestData),
@@ -203,7 +203,9 @@ class ApiService {
   }
 
   async getTagContent(tagName) {
-    return await this.request(`/knowledge/api/tag/${encodeURIComponent(tagName)}/`);
+    return await this.request(
+      `/knowledge/api/tag/${encodeURIComponent(tagName)}/`
+    );
   }
 
   // Legacy method for backward compatibility
@@ -262,6 +264,29 @@ class ApiService {
       return result;
     } catch (error) {
       console.error("Failed to update timezone:", error);
+      throw error;
+    }
+  }
+
+  async updateUserTheme(newTheme) {
+    try {
+      const result = await this.request("/api/auth/update-theme/", {
+        method: "POST",
+        body: JSON.stringify({ theme: newTheme }),
+      });
+
+      if (result.success) {
+        // Update local storage
+        const currentUser = this.getCurrentUser();
+        if (currentUser) {
+          currentUser.theme = newTheme;
+          localStorage.setItem("user", JSON.stringify(currentUser));
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to update theme:", error);
       throw error;
     }
   }

@@ -29,11 +29,13 @@ class UpdateBlockCommand(AbstractBaseCommand):
                 else:
                     try:
                         parent_block = Block.objects.get(uuid=value, user=self.user)
-                        
+
                         # Check for circular references
                         if self._would_create_circular_reference(block, parent_block):
-                            raise ValidationError("Cannot create circular reference: block cannot be its own ancestor")
-                        
+                            raise ValidationError(
+                                "Cannot create circular reference: block cannot be its own ancestor"
+                            )
+
                         block.parent = parent_block
                     except Block.DoesNotExist:
                         raise ValidationError("Parent block not found")
@@ -44,7 +46,9 @@ class UpdateBlockCommand(AbstractBaseCommand):
 
         # Auto-detect block type from content if content was updated
         if content_updated:
-            auto_detected_type = self._detect_block_type_from_content(block.content, block.block_type)
+            auto_detected_type = self._detect_block_type_from_content(
+                block.content, block.block_type
+            )
             if auto_detected_type != block.block_type:
                 block.block_type = auto_detected_type
 
@@ -58,32 +62,34 @@ class UpdateBlockCommand(AbstractBaseCommand):
 
         return block
 
-    def _detect_block_type_from_content(self, content: str, current_block_type: str) -> str:
+    def _detect_block_type_from_content(
+        self, content: str, current_block_type: str
+    ) -> str:
         """Auto-detect block type from content patterns"""
         # Only auto-detect for bullet, todo, and done types
         # Don't override other explicit types like heading, code, etc.
         if current_block_type not in ["bullet", "todo", "done"]:
             return current_block_type
-            
+
         # Only auto-detect if we have content
         if not content:
             return current_block_type
-            
+
         content_stripped = content.strip()
         content_lower = content_stripped.lower()
-        
+
         # Check for TODO patterns
-        if content_lower.startswith('todo'):
+        if content_lower.startswith("todo"):
             return "todo"
-        elif content_lower.startswith('[ ]'):
+        elif content_lower.startswith("[ ]"):
             return "todo"
-        elif content_lower.startswith('[x]'):
+        elif content_lower.startswith("[x]"):
             return "done"
-        elif content_lower.startswith('☐'):
+        elif content_lower.startswith("☐"):
             return "todo"
-        elif content_lower.startswith('☑'):
+        elif content_lower.startswith("☑"):
             return "done"
-        
+
         # If none of the patterns match, keep current type
         return current_block_type
 

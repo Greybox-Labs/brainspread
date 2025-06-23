@@ -47,3 +47,18 @@ class UpdateTimezoneForm(BaseForm):
         except pytz.UnknownTimeZoneError:
             pass
         return timezone
+
+
+class UpdateThemeForm(BaseForm):
+    THEME_CHOICES = [
+        ("dark", "Dark"),
+        ("light", "Light"),
+    ]
+
+    theme = forms.ChoiceField(choices=THEME_CHOICES, required=True)
+
+    def clean_theme(self):
+        theme = self.cleaned_data.get("theme")
+        if theme not in ["dark", "light"]:
+            raise ValidationError("Invalid theme choice")
+        return theme

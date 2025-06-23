@@ -4,11 +4,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from .forms import LoginForm, RegisterForm, UpdateTimezoneForm
+from .forms import LoginForm, RegisterForm, UpdateTimezoneForm, UpdateThemeForm
 from .commands.login_command import LoginCommand
 from .commands.register_command import RegisterCommand
 from .commands.logout_command import LogoutCommand
 from .commands.update_timezone_command import UpdateTimezoneCommand
+from .commands.update_theme_command import UpdateThemeCommand
 from .commands.get_user_profile_command import GetUserProfileCommand
 
 
@@ -110,6 +111,46 @@ def update_timezone(request):
                     "success": True,
                     "data": data,
                     "message": "Timezone updated successfully",
+                }
+            )
+        else:
+            return Response(
+                {"success": False, "errors": form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    except ValidationError as e:
+        return Response(
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+def update_theme(request):
+    """Update user's theme preference"""
+    try:
+        form = UpdateThemeForm(request.data)
+        if form.is_valid():
+            command = UpdateThemeCommand(form, request.user)
+            updated_user = command.execute()
+            data = {
+                "user": {
+                    "id": str(updated_user.uuid),
+                    "email": updated_user.email,
+                    "timezone": updated_user.timezone,
+                    "theme": updated_user.theme,
+                }
+            }
+            return Response(
+                {
+                    "success": True,
+                    "data": data,
+                    "message": "Theme updated successfully",
                 }
             )
         else:

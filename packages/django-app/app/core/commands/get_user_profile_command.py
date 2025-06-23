@@ -12,5 +12,6 @@ class GetUserProfileCommand(AbstractBaseCommand):
                 "id": str(self.user.uuid),
                 "email": self.user.email,
                 "timezone": self.user.timezone,
+                "theme": self.user.theme,
             }
         }
