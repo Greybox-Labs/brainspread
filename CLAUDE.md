@@ -48,6 +48,8 @@ Navigate to `packages/django-app/` for most development tasks.
 - **Django App**: Main application in `packages/django-app/app/`
 - **Custom User Model**: Uses `core.User` as AUTH_USER_MODEL
 - **Docker Compose**: PostgreSQL database + Django web service
+- .ai/TODO.md - Contains todos, feature requests, bugs, etc. Update this file 
+  with any new tasks or issues you complete.
 
 ### Code Organization
 - `app/` - Main Django project
@@ -69,6 +71,7 @@ Navigate to `packages/django-app/` for most development tasks.
 - **Model Mixins**: UUID, timestamps, soft delete functionality
 - **Soft Delete**: Models can inherit `SoftDeleteTimestampMixin` for logical deletion
 - **Custom Managers**: Extend Django's model managers for complex queries
+- Always use typehints in Python code for clarity and type safety
 
 ### Environment Configuration
 - Uses environment variables for sensitive data (SECRET_KEY, DEBUG, etc.)
