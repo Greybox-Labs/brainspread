@@ -265,6 +265,29 @@ class ApiService {
       throw error;
     }
   }
+
+  async updateUserTheme(newTheme) {
+    try {
+      const result = await this.request("/api/auth/update-theme/", {
+        method: "POST",
+        body: JSON.stringify({ theme: newTheme }),
+      });
+
+      if (result.success) {
+        // Update local storage
+        const currentUser = this.getCurrentUser();
+        if (currentUser) {
+          currentUser.theme = newTheme;
+          localStorage.setItem("user", JSON.stringify(currentUser));
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to update theme:", error);
+      throw error;
+    }
+  }
 }
 
 // Export for use in other files

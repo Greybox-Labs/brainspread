@@ -11,6 +11,7 @@ const KnowledgeApp = createApp({
       isAuthenticated: isAuth, // Check immediately
       currentView: isAuth ? "journal" : "login", // Set view immediately
       loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
+      showSettings: false, // Settings modal state
     };
   },
 
@@ -19,10 +20,14 @@ const KnowledgeApp = createApp({
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
     HistoricalDailyNoteBlocks: window.HistoricalDailyNoteBlocks,
+    SettingsModal: window.SettingsModal,
   },
 
   async mounted() {
     console.log("Knowledge app mounted");
+    
+    // Apply initial theme
+    this.applyTheme();
     
     // If we have cached user data, we can show the app immediately
     if (this.isAuthenticated && this.user) {
@@ -36,6 +41,9 @@ const KnowledgeApp = createApp({
     if (this.isAuthenticated) {
       this.checkTimezoneChange();
     }
+
+    // Reapply theme after auth check in case user data was updated
+    this.applyTheme();
   },
 
   methods: {
@@ -125,6 +133,28 @@ const KnowledgeApp = createApp({
       // Navigate to the daily note URL
       window.location.href = `/knowledge/daily/${date}/`;
     },
+
+    // Theme and settings methods
+    openSettings() {
+      this.showSettings = true;
+    },
+
+    closeSettings() {
+      this.showSettings = false;
+    },
+
+    onThemeUpdated(updatedUser) {
+      // Update user data with new theme
+      this.user = { ...this.user, ...updatedUser };
+      
+      // Apply the new theme
+      this.applyTheme();
+    },
+
+    applyTheme() {
+      const theme = this.user?.theme || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    },
   },
 
   template: `
@@ -141,6 +171,7 @@ const KnowledgeApp = createApp({
                         <h1>brainspreader</h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
+                            <button @click="openSettings" class="settings-btn">settings</button>
                             <button @click="handleLogout" class="btn btn-outline">logout</button>
                         </div>
                     </div>
@@ -166,6 +197,14 @@ const KnowledgeApp = createApp({
                 </div>
             </main>
         </div>
+
+        <!-- Settings Modal -->
+        <SettingsModal 
+            :is-open="showSettings"
+            :user="user"
+            @close="closeSettings"
+            @theme-updated="onThemeUpdated"
+        />
     `,
 });
 

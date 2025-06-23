@@ -55,3 +55,10 @@ class UserRepository(BaseRepository):
         user.timezone = timezone
         user.save(update_fields=["timezone"])
         return user
+
+    @classmethod
+    def update_theme(cls, user: User, theme: str) -> User:
+        """Update user's theme preference"""
+        user.theme = theme
+        user.save(update_fields=["theme"])
+        return user
