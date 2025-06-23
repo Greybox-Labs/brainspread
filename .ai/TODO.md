@@ -14,12 +14,13 @@
 - [x] when saving a block should parse the text for TODO or similar keywords like DONE to create or update the block as the correct type
 - [x] should support nested blocks
 - [x] hitting backspace on an empty block should delete the block
-- [ ] clicking a TODOs checkbox should toggle the block to DONE and vice versa
-- [ ] should style DONE blocks with a strikethrough
+- [x] clicking a TODOs checkbox should toggle the block to DONE and vice versa
+- [x] should style DONE blocks with a strikethrough
 - [ ] toggleable light/dark mode
 - [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
       and light/dark mode preference
 - [ ] should be able to drag and move block ordering and nestings around
+- [ ] should always use typehints in python code
 - [ ] ui/ux for pages
 - [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 - [ ] reminders/notifications? kinda useless without push notifications which require a mobile app i think?
@@ -46,10 +47,12 @@
 - [x] the auto save feature on the front end moves selection away from the input
       so it suddenly stops user input and is annoying
 - [x] shows login page between page clicks even when logged in
-- [x] hitting enter creates a new block at the bottom, but if you are focused on not-the-last block, it should create the next block
+- [x] hitting "enter" creates a new block at the bottom, but if you are focused on not-the-last block, it should create the next block
       underneath the current block
-- [x] hitting enter now creates a block under the current block, but only at the top level. if you are in a nested block
+- [x] hitting "enter" now creates a block under the current block, but only at the top level. if you are in a nested block
       and hit enter, it should create a new block as a next immediate sibling of the current nested block
+- [ ] hitting "enter" to create a new block when on a note from a previous day, it
+-     incorrectly creates a new block for the current day instead of under the active block
 - [ ] when hitting tab on a new block, it indents the block properly, but it does not keep focus on the block
 
 
