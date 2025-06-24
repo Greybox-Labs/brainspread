@@ -108,7 +108,7 @@ window.HistoricalSidebar = {
       if (!this.isResizing) return;
 
       const deltaX = e.clientX - this.startX;
-      const newWidth = this.startWidth - deltaX; // Subtract because we're resizing from the left edge
+      const newWidth = this.startWidth + deltaX; // Add because dragging right should make left sidebar wider
 
       if (newWidth >= this.minWidth && newWidth <= this.maxWidth) {
         this.width = newWidth;
@@ -246,7 +246,7 @@ window.HistoricalSidebar = {
                   class="sidebar-item block-item"
                 >
                   <div class="item-header">
-                    <span class="item-type block-type">{{ block.block_type }}</span>
+                    <span v-if="block.block_type === 'todo'" class="item-type block-type">{{ block.block_type }}</span>
                     <span class="item-page">{{ block.page_title }}</span>
                   </div>
                   <div class="item-meta">{{ formatDate(block.modified_at) }}</div>

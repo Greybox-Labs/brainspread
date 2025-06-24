@@ -135,6 +135,16 @@ body {
   font-weight: normal;
 }
 
+.brand-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.brand-link:hover {
+  color: var(--tag-hover);
+}
+
 .nav-right {
   display: flex;
   align-items: center;
@@ -356,6 +366,30 @@ body {
 .theme-option.active {
   background: var(--text-primary);
   color: var(--bg-primary);
+}
+
+.timezone-selector {
+  width: 100%;
+}
+
+.timezone-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.timezone-select:hover {
+  background: var(--hover-bg);
+}
+
+.timezone-select:focus {
+  outline: none;
+  border-color: var(--text-primary);
 }
 
 .modal-actions {
@@ -1100,7 +1134,7 @@ body {
 .sidebar-toggle-btn {
   position: fixed;
   top: 50%;
-  right: 20px;
+  left: 20px;
   transform: translateY(-50%);
   background: var(--text-primary);
   color: var(--bg-primary);
@@ -1119,24 +1153,24 @@ body {
 }
 
 .sidebar-toggle-btn.active {
-  right: 420px;
-  transition: right 0.3s ease;
+  left: 420px;
+  transition: left 0.3s ease;
 }
 
 .historical-sidebar {
   position: fixed;
   top: 80px;
-  right: 0;
+  left: 0;
   height: calc(100vh - 80px);
   background: var(--sidebar-bg);
-  border-left: 1px solid var(--border-primary);
+  border-right: 1px solid var(--border-primary);
   overflow-y: auto;
   z-index: 999;
 }
 
 .sidebar-resize-handle {
   position: absolute;
-  left: 0;
+  right: 0;
   top: 0;
   width: 4px;
   height: 100%;
@@ -1384,13 +1418,13 @@ body {
   }
 
   .sidebar-toggle-btn.active {
-    right: 20px;
+    left: 20px;
   }
 
   .historical-sidebar {
     position: static;
     height: auto;
-    border-left: none;
+    border-right: none;
     border-top: 1px solid var(--border-primary);
   }
 

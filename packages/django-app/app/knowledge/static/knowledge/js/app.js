@@ -98,10 +98,6 @@ const KnowledgeApp = createApp({
       }
     },
 
-    switchView(view) {
-      this.currentView = view;
-    },
-
     checkTimezoneChange() {
       if (window.apiService.checkTimezoneChange()) {
         const browserTimezone = window.apiService.getCurrentBrowserTimezone();
@@ -168,7 +164,7 @@ const KnowledgeApp = createApp({
             <div v-else-if="isAuthenticated">
                 <nav class="navbar">
                     <div class="nav-content">
-                        <h1>brainspreader</h1>
+                        <h1><a href="/knowledge/" class="brand-link">brainspreader</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
                             <button @click="openSettings" class="settings-btn">settings</button>
@@ -182,7 +178,7 @@ const KnowledgeApp = createApp({
                         <div class="loading">Loading...</div>
                     </div>
                     <div v-else class="content-layout">
-                        <HistoricalSidebar @navigate-to-date="onNavigateToDate" />
+                        <HistoricalSidebar v-if="!$refs.dailyNote?.isTagPage" @navigate-to-date="onNavigateToDate" />
                         <div class="main-content-area">
                             <DailyNote ref="dailyNote" />
                         </div>

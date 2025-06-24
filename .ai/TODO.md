@@ -17,7 +17,7 @@
 - [x] clicking a TODOs checkbox should toggle the block to DONE and vice versa
 - [x] should style DONE blocks with a strikethrough
 - [x] toggleable light/dark mode
-- [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
+- [x] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
       and light/dark mode preference
 - [ ] should be able to drag and move block ordering and nestings around
 - [x] should always use typehints in python code
@@ -30,7 +30,6 @@
 - [ ] when a user submits a web link, it should be accessed and summarized with tags auto-generated from the content
 - [ ] implement sentence-transformer and chromadb
 - [ ] when a user submits a web link use semantic search to find similar blocks and pages and show them in sidebar
-
 
 
 # Questions
@@ -54,6 +53,7 @@
 - [ ] hitting "enter" to create a new block when on a note from a previous day, it
 -     incorrectly creates a new block for the current day instead of under the active block
 - [ ] when hitting tab on a new block, it indents the block properly, but it does not keep focus on the block
+- [ ] can't see nested blocks for past daily notes in list view
 
 
 # Usage Notes
