@@ -1,11 +1,13 @@
-from django.test import TestCase
-from django.core.exceptions import ValidationError
 from unittest.mock import Mock, patch
+
+from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from knowledge.commands import CreatePageCommand
 from knowledge.forms import CreatePageForm
 from knowledge.models import Page
-from ..helpers import UserFactory, PageFactory
+
+from ..helpers import PageFactory, UserFactory
 
 
 class TestCreatePageCommand(TestCase):

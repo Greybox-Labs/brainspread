@@ -1,10 +1,9 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
-from knowledge.test.helpers import UserFactory, PageFactory, BlockFactory
-
+from knowledge.test.helpers import PageFactory, UserFactory
 
 User = get_user_model()
 
@@ -202,8 +201,9 @@ class TestNestedBlocks(TestCase):
         block = block_command.execute()
 
         # Try to update with invalid parent_id (valid UUID format but non-existent)
-        from django.core.exceptions import ValidationError
         import uuid
+
+        from django.core.exceptions import ValidationError
 
         non_existent_uuid = str(uuid.uuid4())
         update_command = UpdateBlockCommand(

@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from knowledge.commands.toggle_block_todo_command import ToggleBlockTodoCommand
-from knowledge.test.helpers import UserFactory, PageFactory, BlockFactory
+from knowledge.test.helpers import BlockFactory, PageFactory, UserFactory
 
 
 class TestTodoContentIntegration(TestCase):

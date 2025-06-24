@@ -1,9 +1,10 @@
 from typing import Any, Dict
 
 from common.commands.abstract_base_command import AbstractBaseCommand
-from ..repositories.user_repository import UserRepository
+
 from ..forms import UpdateTimezoneForm
 from ..models import User
+from ..repositories.user_repository import UserRepository
 
 
 class UpdateTimezoneCommand(AbstractBaseCommand):

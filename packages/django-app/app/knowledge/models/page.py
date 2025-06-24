@@ -1,9 +1,10 @@
 import re
-from django.db import models
-from django.conf import settings
 
-from common.models.uuid_mixin import UUIDModelMixin
+from django.conf import settings
+from django.db import models
+
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
+from common.models.uuid_mixin import UUIDModelMixin
 from tagging.models import TaggableMixin
 
 

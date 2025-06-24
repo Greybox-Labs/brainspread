@@ -1,4 +1,5 @@
 from typing import Any, Dict, Iterable, Optional
+
 from common.repositories.base_repository import BaseRepository
 from core.models import User
 

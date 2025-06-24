@@ -1,9 +1,11 @@
 from typing import Any, Dict
 
 from rest_framework.authtoken.models import Token
+
 from common.commands.abstract_base_command import AbstractBaseCommand
-from ..repositories.user_repository import UserRepository
+
 from ..forms import RegisterForm
+from ..repositories.user_repository import UserRepository
 
 
 class RegisterCommand(AbstractBaseCommand):

@@ -1,9 +1,8 @@
 from django.test import TestCase
-from django.core.exceptions import ValidationError
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
-from knowledge.test.helpers import UserFactory, PageFactory
+from knowledge.test.helpers import PageFactory, UserFactory
 
 
 class TestNestedBlocksIntegration(TestCase):

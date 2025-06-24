@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Page, Block, PageLink, BlockReference
+
+from .models import Block, BlockReference, Page, PageLink
 
 
 @admin.register(Page)

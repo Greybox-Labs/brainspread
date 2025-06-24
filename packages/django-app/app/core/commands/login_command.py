@@ -1,7 +1,9 @@
 from typing import Any, Dict
 
 from rest_framework.authtoken.models import Token
+
 from common.commands.abstract_base_command import AbstractBaseCommand
+
 from ..forms import LoginForm
 
 

@@ -1,4 +1,5 @@
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Type
+
 from django.db import models
 from django.db.models import QuerySet
 

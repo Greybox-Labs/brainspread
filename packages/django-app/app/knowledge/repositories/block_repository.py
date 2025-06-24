@@ -1,7 +1,9 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from django.db.models import QuerySet
 
 from common.repositories.base_repository import BaseRepository
+
 from ..models import Block, Page
 
 
