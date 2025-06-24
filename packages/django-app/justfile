@@ -234,11 +234,20 @@ alias f := format
 
 # Lint Python code with ruff
 lint-py:
-  docker-compose run --rm -w /code/app web ruff check . --exclude="**/migrations/**" --exclude="migrations/" --exclude=".venv/" --exclude="__pycache__/"
+  docker-compose run --rm -w /code/app web ruff check . \
+    --exclude="**/migrations/**" \
+    --exclude="migrations/" \
+    --exclude=".venv/" \
+    --exclude="__pycache__/"
 
 # Fix Python linting issues automatically
 lint-py-fix:
-  docker-compose run --rm -w /code/app web ruff check . --exclude="**/migrations/**" --exclude="migrations/" --exclude=".venv/" --exclude="__pycache__/" --fix
+  docker-compose run --rm -w /code/app web ruff check . \
+    --exclude="**/migrations/**" \
+    --exclude="migrations/" \
+    --exclude=".venv/" \
+    --exclude="__pycache__/" \
+    --fix
 
 # Lint all code
 lint:
