@@ -1,9 +1,7 @@
-import json
 from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 from core.test.helpers import UserFactory
 
@@ -158,5 +156,47 @@ class UserAPITestCase(TestCase):
         """Test timezone update without authentication"""
         data = {"timezone": "Europe/London"}
         response = self.client.post("/api/auth/update-timezone/", data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_theme_success(self):
+        """Test successful theme update"""
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        data = {"theme": "light"}
+        response = self.client.post("/api/auth/update-theme/", data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["success"])
+        self.assertEqual(response.data["data"]["user"]["theme"], "light")
+        self.assertEqual(response.data["message"], "Theme updated successfully")
+
+        # Verify theme was updated in database
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.theme, "light")
+
+    def test_update_theme_invalid_choice(self):
+        """Test theme update with invalid theme choice"""
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        data = {"theme": "rainbow"}  # Invalid choice
+        response = self.client.post("/api/auth/update-theme/", data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(response.data["success"])
+        self.assertIn("theme", response.data["errors"])
+
+    def test_update_theme_missing_field(self):
+        """Test theme update with missing theme"""
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        data = {}
+        response = self.client.post("/api/auth/update-theme/", data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(response.data["success"])
+        self.assertIn("theme", response.data["errors"])
+
+    def test_update_theme_unauthenticated(self):
+        """Test theme update without authentication"""
+        data = {"theme": "light"}
+        response = self.client.post("/api/auth/update-theme/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

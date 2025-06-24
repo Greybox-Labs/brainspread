@@ -3,9 +3,10 @@ from datetime import date
 
 from django.test import TestCase
 
-from knowledge.repositories import PageRepository
 from knowledge.models import Page
-from ..helpers import UserFactory, PageFactory
+from knowledge.repositories import PageRepository
+
+from ..helpers import PageFactory, UserFactory
 
 
 class TestPageRepository(TestCase):

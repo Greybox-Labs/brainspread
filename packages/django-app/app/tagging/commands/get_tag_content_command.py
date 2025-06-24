@@ -1,4 +1,5 @@
 from common.commands.abstract_base_command import AbstractBaseCommand
+
 from ..repositories import TagRepository
 
 

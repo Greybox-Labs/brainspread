@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from common.forms.base_form import BaseForm
+
 from ..models import Page
 
 

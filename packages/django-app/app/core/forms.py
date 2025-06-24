@@ -1,9 +1,10 @@
+import pytz
 from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
-import pytz
 
 from common.forms.base_form import BaseForm
+
 from .repositories.user_repository import UserRepository
 
 

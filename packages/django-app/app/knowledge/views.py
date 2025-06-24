@@ -1,24 +1,68 @@
-from django.shortcuts import render
+from typing import Any, Dict, List, TypedDict
+
 from django.core.exceptions import ValidationError
+from django.shortcuts import render
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
-from .forms import CreatePageForm, UpdatePageForm, DeletePageForm, GetUserPagesForm
-from .commands import (
-    CreatePageCommand,
-    UpdatePageCommand,
-    DeletePageCommand,
-    GetUserPagesCommand,
-    CreateBlockCommand,
-    UpdateBlockCommand,
-    DeleteBlockCommand,
-    ToggleBlockTodoCommand,
-    GetHistoricalDataCommand,
-)
 from tagging.commands import GetTagContentCommand
+
+from .commands import (
+    CreateBlockCommand,
+    CreatePageCommand,
+    DeleteBlockCommand,
+    DeletePageCommand,
+    GetHistoricalDataCommand,
+    GetUserPagesCommand,
+    ToggleBlockTodoCommand,
+    UpdateBlockCommand,
+    UpdatePageCommand,
+)
+from .forms import CreatePageForm, DeletePageForm, GetUserPagesForm, UpdatePageForm
+from .models.block import BlockData
+from .models.page import PageData
+
+
+# API Response Types for this view
+class CreatePageResponse(TypedDict):
+    page: PageData
+
+
+class UpdatePageResponse(TypedDict):
+    page: PageData
+
+
+class GetUserPagesResponse(TypedDict):
+    pages: List[PageData]
+
+
+class DeletePageResponse(TypedDict):
+    success: bool
+    message: str
+
+
+class CreateBlockResponse(TypedDict):
+    block: BlockData
+
+
+class UpdateBlockResponse(TypedDict):
+    block: BlockData
+
+
+class ToggleBlockTodoResponse(TypedDict):
+    block: BlockData
+
+
+class DeleteBlockResponse(TypedDict):
+    success: bool
+    message: str
+
+
+class GetHistoricalDataResponse(TypedDict):
+    data: List[Dict[str, Any]]
 
 
 def index(request, date=None, tag_name=None):
@@ -295,8 +339,9 @@ def get_pages(request):
 def get_page_with_blocks(request):
     """Get a page with all its blocks"""
     try:
-        from .models import Page
         from datetime import datetime
+
+        from .models import Page
 
         # Support both page_id and date parameters
         page_id = request.query_params.get("page_id")
@@ -327,8 +372,9 @@ def get_page_with_blocks(request):
             # Default to today's daily note (should not happen in normal flow)
             # Frontend should always pass a date, but fallback to user's timezone
             try:
-                import pytz
                 from datetime import datetime
+
+                import pytz
 
                 # Use user's stored timezone
                 if request.user.timezone and request.user.timezone != "UTC":
@@ -429,7 +475,6 @@ def create_block(request):
 def update_block(request):
     """Update a block"""
     try:
-        from .models import Block
 
         data = request.data
         block_id = data.get("block_id")
@@ -480,7 +525,6 @@ def update_block(request):
 def delete_block(request):
     """Delete a block"""
     try:
-        from .models import Block
 
         block_id = request.data.get("block_id")
 
@@ -514,7 +558,6 @@ def delete_block(request):
 def toggle_block_todo(request):
     """Toggle a block's todo status"""
     try:
-        from .models import Block
 
         block_id = request.data.get("block_id")
 

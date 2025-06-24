@@ -1,7 +1,8 @@
 from common.commands.abstract_base_command import AbstractBaseCommand
-from ..repositories.user_repository import UserRepository
-from ..models.user import User
+
 from ..forms import UpdateThemeForm
+from ..models.user import User
+from ..repositories.user_repository import UserRepository
 
 
 class UpdateThemeCommand(AbstractBaseCommand):

@@ -16,11 +16,11 @@
 - [x] hitting backspace on an empty block should delete the block
 - [x] clicking a TODOs checkbox should toggle the block to DONE and vice versa
 - [x] should style DONE blocks with a strikethrough
-- [ ] toggleable light/dark mode
+- [x] toggleable light/dark mode
 - [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
       and light/dark mode preference
 - [ ] should be able to drag and move block ordering and nestings around
-- [ ] should always use typehints in python code
+- [x] should always use typehints in python code
 - [ ] ui/ux for pages
 - [ ] should test at the api layer and not command. then we dont have to have command and form tests, etc.
 - [ ] reminders/notifications? kinda useless without push notifications which require a mobile app i think?

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
 
@@ -10,9 +11,9 @@ class AbstractBaseCommand(ABC):
     The Command interface declares a method for executing a command.
     """
 
-    form: BaseForm | None
+    form: Optional[BaseForm] = None
 
     @abstractmethod
-    def execute(self) -> None:
+    def execute(self) -> Any:
         if self.form and not self.form.is_valid():
             raise ValidationError(self.form.errors.as_json())

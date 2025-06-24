@@ -1,7 +1,7 @@
 from django.db import models
 
-from common.models.uuid_mixin import UUIDModelMixin
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
+from common.models.uuid_mixin import UUIDModelMixin
 
 
 class PageLink(UUIDModelMixin, CRUDTimestampsMixin):

@@ -1,7 +1,10 @@
 from datetime import timedelta
+
 from django.utils import timezone
+
 from common.repositories.base_repository import BaseRepository
-from ..models import Page, Block
+
+from ..models import Block, Page
 
 
 class HistoricalRepository(BaseRepository):

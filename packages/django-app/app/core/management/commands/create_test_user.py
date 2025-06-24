@@ -1,11 +1,14 @@
+from typing import Any
+
 from django.core.management.base import BaseCommand
+
 from core.models import User
 
 
 class Command(BaseCommand):
     help = "Create a test user"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         email = "test@example.com"
         password = "testpass123"
 
