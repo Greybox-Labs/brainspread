@@ -31,12 +31,12 @@ class UserRepository(BaseRepository):
         return cls.get_queryset().filter(email=email).exists()
 
     @classmethod
-    def create(cls, data: Dict[str, Any]) -> "User":
+    def create(cls, data: Dict[str, Any]) -> User:
         user = cls.model.objects.create(**data)
         return user
 
     @classmethod
-    def create_user(cls, email: str, password: str, **extra_fields: Any) -> "User":
+    def create_user(cls, email: str, password: str, **extra_fields: Any) -> User:
         """Create a new user with email and password"""
         return cls.model.objects.create_user(
             email=email, password=password, **extra_fields
@@ -44,8 +44,8 @@ class UserRepository(BaseRepository):
 
     @classmethod
     def update(
-        cls, *, pk: Any = None, obj: Optional["User"] = None, data: Dict[str, Any]
-    ) -> "User":
+        cls, *, pk: Any = None, obj: Optional[User] = None, data: Dict[str, Any]
+    ) -> User:
         user = obj or cls.get(pk=pk)
 
         if data.get("is_active"):
