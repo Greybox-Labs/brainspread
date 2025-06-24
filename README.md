@@ -27,4 +27,4 @@ The initial MVP focuses on:
 
 ## Development Setup
 
-See the `docs/` folder for detailed development instructions and setup guides.
+See `.ai/PROJECT_SETUP.md` for detailed development instructions and setup guides.
