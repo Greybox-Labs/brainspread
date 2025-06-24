@@ -7,7 +7,9 @@ class UserRepository(BaseRepository):
     model = User
 
     @classmethod
-    def get_by_filter(cls, filter_input: Optional[Dict[str, Any]] = None) -> Iterable[User]:
+    def get_by_filter(
+        cls, filter_input: Optional[Dict[str, Any]] = None
+    ) -> Iterable[User]:
         if filter_input:
             objects = cls.get_queryset().filter(**filter_input)
         else:
@@ -40,7 +42,9 @@ class UserRepository(BaseRepository):
         )
 
     @classmethod
-    def update(cls, *, pk: Any = None, obj: "User" | None = None, data: Dict[str, Any]) -> "User":
+    def update(
+        cls, *, pk: Any = None, obj: Optional["User"] = None, data: Dict[str, Any]
+    ) -> "User":
         user = obj or cls.get(pk=pk)
 
         if data.get("is_active"):
