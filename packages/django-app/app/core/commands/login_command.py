@@ -1,12 +1,15 @@
+from typing import Any, Dict
+
 from rest_framework.authtoken.models import Token
 from common.commands.abstract_base_command import AbstractBaseCommand
+from ..forms import LoginForm
 
 
 class LoginCommand(AbstractBaseCommand):
-    def __init__(self, form):
+    def __init__(self, form: LoginForm) -> None:
         self.form = form
 
-    def execute(self):
+    def execute(self) -> Dict[str, Any]:
         super().execute()
 
         user = self.form.cleaned_data["user"]

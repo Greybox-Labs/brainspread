@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Iterable, Optional
 from common.repositories.base_repository import BaseRepository
 from core.models import User
 
@@ -7,7 +7,7 @@ class UserRepository(BaseRepository):
     model = User
 
     @classmethod
-    def get_by_filter(cls, filter_input: dict = None):
+    def get_by_filter(cls, filter_input: Optional[Dict[str, Any]] = None) -> Iterable[User]:
         if filter_input:
             objects = cls.get_queryset().filter(**filter_input)
         else:
@@ -28,19 +28,19 @@ class UserRepository(BaseRepository):
         return cls.get_queryset().filter(email=email).exists()
 
     @classmethod
-    def create(cls, data: dict) -> "User":
+    def create(cls, data: Dict[str, Any]) -> "User":
         user = cls.model.objects.create(**data)
         return user
 
     @classmethod
-    def create_user(cls, email: str, password: str, **extra_fields) -> "User":
+    def create_user(cls, email: str, password: str, **extra_fields: Any) -> "User":
         """Create a new user with email and password"""
         return cls.model.objects.create_user(
             email=email, password=password, **extra_fields
         )
 
     @classmethod
-    def update(cls, *, pk=None, obj: "User" = None, data: dict) -> "User":
+    def update(cls, *, pk: Any = None, obj: "User" | None = None, data: Dict[str, Any]) -> "User":
         user = obj or cls.get(pk=pk)
 
         if data.get("is_active"):

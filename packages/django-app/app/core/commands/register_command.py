@@ -1,13 +1,16 @@
+from typing import Any, Dict
+
 from rest_framework.authtoken.models import Token
 from common.commands.abstract_base_command import AbstractBaseCommand
 from ..repositories.user_repository import UserRepository
+from ..forms import RegisterForm
 
 
 class RegisterCommand(AbstractBaseCommand):
-    def __init__(self, form):
+    def __init__(self, form: RegisterForm) -> None:
         self.form = form
 
-    def execute(self):
+    def execute(self) -> Dict[str, Any]:
         super().execute()
 
         email = self.form.cleaned_data["email"]
