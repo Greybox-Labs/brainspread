@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from django.core.exceptions import ValidationError
 
@@ -14,6 +14,6 @@ class AbstractBaseCommand(ABC):
     form: Optional[BaseForm] = None
 
     @abstractmethod
-    def execute(self) -> None:
+    def execute(self) -> Dict[str, Any]:
         if self.form and not self.form.is_valid():
             raise ValidationError(self.form.errors.as_json())

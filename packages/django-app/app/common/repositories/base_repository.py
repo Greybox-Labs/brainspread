@@ -1,13 +1,17 @@
+from typing import Any, Optional, Type, Union
+from django.db import models
+from django.db.models import QuerySet
+
 from common.models.soft_delete_timestamp_mixin import SoftDeleteTimestampMixin
 
 NOT_IMPLEMENTED_ERROR_MESSAGE = "You must define a `model` on the inheriting Repository"
 
 
 class BaseRepository:
-    model = None
+    model: Optional[Type[models.Model]] = None
 
     @classmethod
-    def get(cls, *, pk):
+    def get(cls, *, pk: Any) -> Optional[models.Model]:
         if not cls.model:
             raise NotImplementedError(NOT_IMPLEMENTED_ERROR_MESSAGE)
 
@@ -19,7 +23,7 @@ class BaseRepository:
         return instance
 
     @classmethod
-    def get_queryset(cls, queryset=None):
+    def get_queryset(cls, queryset: Optional[QuerySet] = None) -> QuerySet:
         if queryset is None:
             if cls.model is None:
                 raise NotImplementedError(NOT_IMPLEMENTED_ERROR_MESSAGE)
