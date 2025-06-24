@@ -39,7 +39,7 @@ Navigate to `packages/django-app/` for most development tasks.
 - `just up-d` - Start services in background
 - `just down` - Stop services
 - `just build` - Build Docker images
-- `just logs [service]` - View logs
+- `just tail-logs [service] 250` - View logs
 
 ## Architecture
 

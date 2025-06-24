@@ -42,7 +42,8 @@
       "mcp__sse-server__browser_tab_list",
       "mcp__sse-server__browser_close",
       "mcp__sse-server__browser_network_requests",
-      "Bash(echo $SHELL)"
+      "Bash(echo $SHELL)",
+      "Bash(docker system:*)"
     ],
     "deny": []
   }
