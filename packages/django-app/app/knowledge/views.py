@@ -1,3 +1,5 @@
+from typing import Any, Dict, List, TypedDict
+
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.utils import timezone
@@ -20,6 +22,47 @@ from .commands import (
     UpdatePageCommand,
 )
 from .forms import CreatePageForm, DeletePageForm, GetUserPagesForm, UpdatePageForm
+from .models.block import BlockData
+from .models.page import PageData
+
+
+# API Response Types for this view
+class CreatePageResponse(TypedDict):
+    page: PageData
+
+
+class UpdatePageResponse(TypedDict):
+    page: PageData
+
+
+class GetUserPagesResponse(TypedDict):
+    pages: List[PageData]
+
+
+class DeletePageResponse(TypedDict):
+    success: bool
+    message: str
+
+
+class CreateBlockResponse(TypedDict):
+    block: BlockData
+
+
+class UpdateBlockResponse(TypedDict):
+    block: BlockData
+
+
+class ToggleBlockTodoResponse(TypedDict):
+    block: BlockData
+
+
+class DeleteBlockResponse(TypedDict):
+    success: bool
+    message: str
+
+
+class GetHistoricalDataResponse(TypedDict):
+    data: List[Dict[str, Any]]
 
 
 def index(request, date=None, tag_name=None):

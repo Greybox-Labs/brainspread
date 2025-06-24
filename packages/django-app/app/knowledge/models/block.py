@@ -1,4 +1,5 @@
 import re
+from typing import TypedDict
 
 from django.conf import settings
 from django.db import models
@@ -175,3 +176,20 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
                 "metadata": self.media_metadata,
             }
         return None
+
+
+# API response type for Block data
+class BlockData(TypedDict):
+    uuid: str
+    content: str
+    content_type: str
+    block_type: str
+    order: int
+    collapsed: bool
+    parent_block_uuid: str | None
+    page_uuid: str
+    user_uuid: str
+    created_at: str
+    updated_at: str
+    media_url: str
+    properties: dict

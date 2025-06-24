@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +13,34 @@ from .commands.register_command import RegisterCommand
 from .commands.update_theme_command import UpdateThemeCommand
 from .commands.update_timezone_command import UpdateTimezoneCommand
 from .forms import LoginForm, RegisterForm, UpdateThemeForm, UpdateTimezoneForm
+from .models.user import UserData
+
+
+# API Response Types for this view
+class LoginResponse(TypedDict):
+    token: str
+    user: UserData
+
+
+class RegisterResponse(TypedDict):
+    token: str
+    user: UserData
+
+
+class UpdateThemeResponse(TypedDict):
+    user: UserData
+
+
+class UpdateTimezoneResponse(TypedDict):
+    user: UserData
+
+
+class GetUserProfileResponse(TypedDict):
+    user: UserData
+
+
+class LogoutResponse(TypedDict):
+    message: str
 
 
 @api_view(["POST"])
