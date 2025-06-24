@@ -14,6 +14,6 @@ class AbstractBaseCommand(ABC):
     form: Optional[BaseForm] = None
 
     @abstractmethod
-    def execute(self) -> Dict[str, Any]:
+    def execute(self) -> Any:
         if self.form and not self.form.is_valid():
             raise ValidationError(self.form.errors.as_json())
