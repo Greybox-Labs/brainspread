@@ -16,7 +16,7 @@
 - [x] hitting backspace on an empty block should delete the block
 - [x] clicking a TODOs checkbox should toggle the block to DONE and vice versa
 - [x] should style DONE blocks with a strikethrough
-- [ ] toggleable light/dark mode
+- [x] toggleable light/dark mode
 - [ ] given the previous todo and the user timezone setting, let's add a settings page where the user can set their timezone
       and light/dark mode preference
 - [ ] should be able to drag and move block ordering and nestings around
