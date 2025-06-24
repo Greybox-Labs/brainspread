@@ -1,9 +1,11 @@
 import re
-from django.db import models
-from django.conf import settings
+from typing import TypedDict
 
-from common.models.uuid_mixin import UUIDModelMixin
+from django.conf import settings
+from django.db import models
+
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
+from common.models.uuid_mixin import UUIDModelMixin
 from tagging.models import TaggableMixin
 
 
@@ -67,3 +69,17 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             defaults={"title": date_str, "page_type": "daily", "date": date},
         )
         return page, created
+
+
+# API response type for Page data
+class PageData(TypedDict):
+    uuid: str
+    title: str
+    slug: str
+    content: str
+    is_published: bool
+    page_type: str
+    date: str | None
+    created_at: str
+    updated_at: str
+    user_uuid: str

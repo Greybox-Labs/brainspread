@@ -1,10 +1,10 @@
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
-from common.models.uuid_mixin import UUIDModelMixin
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
+from common.models.uuid_mixin import UUIDModelMixin
 
 
 class Tag(UUIDModelMixin, CRUDTimestampsMixin):

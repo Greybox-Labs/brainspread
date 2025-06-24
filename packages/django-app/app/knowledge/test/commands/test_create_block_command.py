@@ -1,9 +1,11 @@
-from django.test import TestCase
 from unittest.mock import patch
+
+from django.test import TestCase
 
 from knowledge.commands import CreateBlockCommand
 from knowledge.models import Block
-from ..helpers import UserFactory, PageFactory
+
+from ..helpers import PageFactory, UserFactory
 
 
 class TestCreateBlockCommand(TestCase):

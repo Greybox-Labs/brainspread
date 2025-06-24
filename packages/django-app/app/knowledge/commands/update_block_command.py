@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
+
 from ..models import Block
 
 

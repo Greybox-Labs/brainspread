@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -58,3 +60,13 @@ class User(
         default_permissions = ()
         unique_together = []
         ordering = ("id",)
+
+
+# API response type for User data
+class UserData(TypedDict):
+    uuid: str
+    email: str
+    is_active: bool
+    timezone: str
+    theme: str
+    date_joined: str

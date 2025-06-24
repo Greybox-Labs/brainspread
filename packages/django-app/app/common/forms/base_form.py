@@ -1,8 +1,10 @@
+from typing import Any, Dict, Mapping
+
 from django import forms
 from stringcase import snakecase
 
 
-def snake_case_and_rename_id(key):
+def snake_case_and_rename_id(key: str) -> str:
     """
     snake cases key and renames to 'pk' if 'id', because 'id' shadows built in
     """
@@ -13,7 +15,7 @@ def snake_case_and_rename_id(key):
 
 
 class BaseForm(forms.Form):
-    def __init__(self, data):
+    def __init__(self, data: Mapping[str, Any]):
         """
         Snake cases all form keys.
         Ex: `createdBy` -> `created_by`
@@ -23,7 +25,7 @@ class BaseForm(forms.Form):
         }
         super().__init__(transformed_data)
 
-    def clean(self, *args, **kwargs):
+    def clean(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         cleaned_data = super().clean()
 
         # NOTE - Django forms will set non required fields to None or to an empty string if

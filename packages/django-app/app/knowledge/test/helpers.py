@@ -1,9 +1,9 @@
 import factory
-from factory.django import DjangoModelFactory
 from factory import Faker, SubFactory
+from factory.django import DjangoModelFactory
 
 from core.test.helpers import UserFactory
-from knowledge.models import Page, Block
+from knowledge.models import Block, Page
 
 
 class PageFactory(DjangoModelFactory):

@@ -232,6 +232,27 @@ format:
 # Format alias
 alias f := format
 
+# Lint Python code with ruff
+lint-py:
+  docker-compose run --rm -w /code/app web ruff check . \
+    --exclude="**/migrations/**" \
+    --exclude="migrations/" \
+    --exclude=".venv/" \
+    --exclude="__pycache__/"
+
+# Fix Python linting issues automatically
+lint-py-fix:
+  docker-compose run --rm -w /code/app web ruff check . \
+    --exclude="**/migrations/**" \
+    --exclude="migrations/" \
+    --exclude=".venv/" \
+    --exclude="__pycache__/" \
+    --fix
+
+# Lint all code
+lint:
+  just lint-py
+
 # Initialize project - create volumes, build images, setup database
 init:
   just create-volumes
@@ -240,6 +261,46 @@ init:
   sleep 5
   just migrate
   echo "Project initialized! Run 'just copy-env' and add your SECRET_KEY, then 'just create-superuser' to get started."
+
+# Pre-push checks - runs all tests, formatters, linters, and Django checks
+prepush:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  echo "🚀 Running pre-push checks..."
+  echo ""
+  
+  echo "1️⃣  Formatting Python code..."
+  just format-py
+  echo "✅ Python formatting complete"
+  echo ""
+  
+  echo "2️⃣  Formatting JavaScript code..."
+  just format-js
+  echo "✅ JavaScript formatting complete"
+  echo ""
+  
+  echo "3️⃣  Linting Python code..."
+  just lint-py
+  echo "✅ Python linting passed"
+  echo ""
+  
+  echo "4️⃣  Running Django system checks..."
+  docker-compose run --rm -w /code/app web python manage.py check --deploy
+  echo "✅ Django checks passed"
+  echo ""
+  
+  echo "5️⃣  Running tests with coverage..."
+  just test
+  echo "✅ All tests passed"
+  echo ""
+  
+  echo "6️⃣  Checking for missing migrations..."
+  docker-compose run --rm -w /code/app web python manage.py makemigrations --check --dry-run
+  echo "✅ No missing migrations"
+  echo ""
+  
+  echo "🎉 All pre-push checks passed! Ready to push! 🎉"
 
 # AI Tools
 # start playwright mcp server

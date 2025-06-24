@@ -1,0 +1,47 @@
+[tool.ruff]
+# Exclude migrations and other generated files
+exclude = [
+    "migrations",
+    "**/migrations/**",
+    ".venv",
+    "__pycache__",
+]
+
+# Line length to match Black
+line-length = 88
+
+[tool.ruff.lint]
+# Enable specific rules
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings  
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+]
+
+# Ignore specific rules that are common in Django projects
+ignore = [
+    "F403", # Star imports in settings files are common and acceptable
+    "F405", # Star imports may define undefined names (settings)
+    "E501", # Line too long (handled by Black)
+    "B904", # Exception chaining - not critical for Django projects
+]
+
+# Per-file ignores for specific patterns
+[tool.ruff.lint.per-file-ignores]
+# Allow star imports in settings files
+"**/settings.py" = ["F403", "F405"]
+"**/test_settings.py" = ["F403", "F405"]
+
+# Allow unused imports in __init__.py files (they're for re-exports)
+"**/__init__.py" = ["F401"]
+
+# Allow unused variables in tests (often used for setup)
+"**/test_*.py" = ["F841"]
+"**/*_test.py" = ["F841"]
+"**/tests.py" = ["F841"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "core", "common", "knowledge", "tagging"]

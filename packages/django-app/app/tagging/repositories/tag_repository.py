@@ -1,7 +1,9 @@
-from common.repositories.base_repository import BaseRepository
-from ..models import Tag, TaggedItem
-from knowledge.models import Block, Page
 from django.contrib.contenttypes.models import ContentType
+
+from common.repositories.base_repository import BaseRepository
+from knowledge.models import Block, Page
+
+from ..models import Tag, TaggedItem
 
 
 class TagRepository(BaseRepository):

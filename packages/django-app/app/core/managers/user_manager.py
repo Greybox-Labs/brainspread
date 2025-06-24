@@ -1,7 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
 
-from core.helpers import generate_signup_key
-
 
 class UserManager(BaseUserManager):
     """

@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from common.commands.abstract_base_command import AbstractBaseCommand
+
 from ..models import Page
 
 

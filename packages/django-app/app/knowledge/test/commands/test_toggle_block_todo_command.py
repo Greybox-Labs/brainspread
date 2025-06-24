@@ -3,8 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from knowledge.commands import ToggleBlockTodoCommand
-from knowledge.models import Page, Block
-
+from knowledge.models import Block, Page
 
 User = get_user_model()
 

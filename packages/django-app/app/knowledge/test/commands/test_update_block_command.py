@@ -1,10 +1,12 @@
-from django.test import TestCase
-from django.core.exceptions import ValidationError
 from unittest.mock import patch
 
-from knowledge.commands import UpdateBlockCommand, CreateBlockCommand
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+
+from knowledge.commands import CreateBlockCommand, UpdateBlockCommand
 from knowledge.models import Block
-from ..helpers import UserFactory, PageFactory
+
+from ..helpers import PageFactory, UserFactory
 
 
 class TestUpdateBlockCommand(TestCase):
