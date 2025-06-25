@@ -21,6 +21,7 @@ const KnowledgeApp = createApp({
     HistoricalSidebar: window.HistoricalSidebar,
     HistoricalDailyNoteBlocks: window.HistoricalDailyNoteBlocks,
     SettingsModal: window.SettingsModal,
+    ChatPanel: window.ChatPanel,
   },
 
   async mounted() {
@@ -195,12 +196,13 @@ const KnowledgeApp = createApp({
         </div>
 
         <!-- Settings Modal -->
-        <SettingsModal 
+        <SettingsModal
             :is-open="showSettings"
             :user="user"
             @close="closeSettings"
             @theme-updated="onThemeUpdated"
         />
+        <ChatPanel />
     `,
 });
 

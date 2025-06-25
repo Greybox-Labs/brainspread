@@ -290,6 +290,13 @@ class ApiService {
       throw error;
     }
   }
+
+  async sendAIMessage(payload) {
+    return await this.request("/api/ai-chat/send/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 // Export for use in other files
