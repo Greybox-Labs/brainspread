@@ -3,6 +3,17 @@ const ChatPanel = {
   components: {
     ChatHistory: window.ChatHistory,
   },
+  props: {
+    chatContextBlocks: {
+      type: Array,
+      default: () => []
+    },
+    visibleBlocks: {
+      type: Array,
+      default: () => []
+    }
+  },
+  emits: ["open-settings", "remove-context-block", "clear-context"],
   data() {
     return {
       isOpen: this.loadOpenState(),
@@ -17,6 +28,7 @@ const ChatPanel = {
       showModelSelector: false,
       aiSettings: null,
       selectedModel: null,
+      showContextArea: false,
     };
   },
   mounted() {
@@ -61,6 +73,7 @@ const ChatPanel = {
       const payload = {
         message: this.message,
         session_id: this.currentSessionId,
+        context_blocks: this.chatContextBlocks,
       };
       this.message = "";
       this.loading = true;
@@ -257,9 +270,34 @@ const ChatPanel = {
       // Emit event to parent to open settings modal with AI tab
       this.$emit("open-settings", "ai");
     },
+
+    // Context management methods
+    toggleContextArea() {
+      this.showContextArea = !this.showContextArea;
+    },
+
+    removeContextBlock(blockId) {
+      this.$emit("remove-context-block", blockId);
+    },
+
+    clearAllContext() {
+      this.$emit("clear-context");
+    },
+
+    getContextPreview(block) {
+      return block.content.length > 50 ? block.content.substring(0, 50) + "..." : block.content;
+    },
+
+    getContextCount() {
+      return this.chatContextBlocks.length;
+    },
+
+    hasContext() {
+      return this.chatContextBlocks.length > 0;
+    },
   },
   template: `
-    <div class="chat-panel" :class="{ open: isOpen }" :style="{ width: width + 'px' }">
+    <div class="chat-panel" :class="{ open: isOpen }" :style="isOpen ? { width: width + 'px' } : {}">
       <div class="chat-resize-handle" 
            :class="{ resizing: isResizing }"
            @mousedown="startResize">
@@ -285,6 +323,44 @@ const ChatPanel = {
             </div>
           </div>
         </div>
+        
+        <!-- Context Area -->
+        <div class="context-area" v-if="hasContext() || showContextArea">
+          <div class="context-header">
+            <span class="context-title">
+              Context ({{ getContextCount() }})
+            </span>
+            <div class="context-actions">
+              <button 
+                v-if="hasContext()" 
+                @click="clearAllContext" 
+                class="context-clear-btn" 
+                title="Clear all context"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div class="context-blocks" v-if="hasContext()">
+            <div 
+              v-for="block in chatContextBlocks" 
+              :key="block.id" 
+              class="context-block"
+            >
+              <div class="context-block-content">
+                {{ getContextPreview(block) }}
+              </div>
+              <button 
+                @click="removeContextBlock(block.id)" 
+                class="context-block-remove"
+                title="Remove from context"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <div class="input-area">
           <div class="chat-controls">
             <div class="model-selector" v-if="aiSettings">
@@ -308,6 +384,14 @@ const ChatPanel = {
                 </div>
               </div>
             </div>
+            <button 
+              class="context-btn" 
+              @click="toggleContextArea" 
+              :class="{ active: hasContext() }"
+              :title="hasContext() ? 'Context (' + getContextCount() + ')' : 'Add context'"
+            >
+              📎
+            </button>
             <button class="settings-btn" @click="openSettings" title="AI Settings">⚙️</button>
           </div>
           <div class="message-input">

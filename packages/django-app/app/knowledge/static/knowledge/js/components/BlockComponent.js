@@ -33,9 +33,36 @@ const BlockComponent = {
       type: Function,
       required: true,
     },
+    // Context-related props
+    isBlockInContext: {
+      type: Function,
+      default: () => () => false
+    },
+    onBlockAddToContext: {
+      type: Function,
+      default: () => () => {}
+    },
+    onBlockRemoveFromContext: {
+      type: Function,
+      default: () => () => {}
+    },
+  },
+  computed: {
+    blockInContext() {
+      return this.isBlockInContext(this.block.id);
+    }
+  },
+  methods: {
+    toggleBlockContext() {
+      if (this.blockInContext) {
+        this.onBlockRemoveFromContext(this.block.id);
+      } else {
+        this.onBlockAddToContext(this.block);
+      }
+    }
   },
   template: `
-    <div class="block-wrapper" :class="{ 'child-block': block.parent }" :data-block-id="block.id">
+    <div class="block-wrapper" :class="{ 'child-block': block.parent, 'in-context': blockInContext }" :data-block-id="block.id">
       <div class="block">
         <div
           class="block-bullet"
@@ -66,6 +93,12 @@ const BlockComponent = {
           ref="blockTextarea"
         ></textarea>
         <button
+          @click="toggleBlockContext"
+          class="block-context"
+          :class="{ active: blockInContext }"
+          :title="blockInContext ? 'Remove from chat context' : 'Add to chat context'"
+        >{{ blockInContext ? '📎' : '+' }}</button>
+        <button
           @click="deleteBlock(block)"
           class="block-delete"
           title="Delete block"
@@ -85,6 +118,9 @@ const BlockComponent = {
           :deleteBlock="deleteBlock"
           :toggleBlockTodo="toggleBlockTodo"
           :formatContentWithTags="formatContentWithTags"
+          :isBlockInContext="isBlockInContext"
+          :onBlockAddToContext="onBlockAddToContext"
+          :onBlockRemoveFromContext="onBlockRemoveFromContext"
         />
       </div>
     </div>

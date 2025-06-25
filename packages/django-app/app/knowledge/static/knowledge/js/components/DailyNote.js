@@ -3,6 +3,17 @@ const DailyNote = {
   components: {
     BlockComponent: window.BlockComponent || {},
   },
+  props: {
+    chatContextBlocks: {
+      type: Array,
+      default: () => []
+    },
+    isBlockInContext: {
+      type: Function,
+      default: () => () => false
+    }
+  },
+  emits: ["block-add-to-context", "block-remove-from-context", "visible-blocks-changed"],
   data() {
     return {
       currentDate: this.getDateFromURL() || this.getLocalDateString(),
@@ -878,6 +889,15 @@ const DailyNote = {
         console.error("Failed to load historical blocks:", error);
       }
     },
+
+    // Context management methods
+    onBlockAddToContext(block) {
+      this.$emit("block-add-to-context", block);
+    },
+
+    onBlockRemoveFromContext(blockId) {
+      this.$emit("block-remove-from-context", blockId);
+    },
   },
 
   template: `
@@ -964,7 +984,7 @@ const DailyNote = {
         <h2>{{ formatDate(currentDate) }}</h2>
 
         <div class="blocks-container">
-          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :data-block-id="block.id">
+          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :class="{ 'in-context': isBlockInContext(block.id) }" :data-block-id="block.id">
             <div class="block">
               <div
                 class="block-bullet"
@@ -995,6 +1015,11 @@ const DailyNote = {
                 ref="blockTextarea"
               ></textarea>
               <button
+                @click="onBlockAddToContext(block)"
+                class="block-context"
+                title="Add to chat context"
+              >+</button>
+              <button
                 @click="deleteBlock(block)"
                 class="block-delete"
                 title="Delete block"
@@ -1003,7 +1028,7 @@ const DailyNote = {
 
             <!-- Render children blocks recursively -->
             <div v-if="block.children && block.children.length" class="block-children">
-              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :data-block-id="child.id">
+              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(child.id) }" :data-block-id="child.id">
                 <div class="block">
                   <div
                     class="block-bullet"
@@ -1034,6 +1059,11 @@ const DailyNote = {
                     ref="blockTextarea"
                   ></textarea>
                   <button
+                    @click="onBlockAddToContext(child)"
+                    class="block-context"
+                    title="Add to chat context"
+                  >+</button>
+                  <button
                     @click="deleteBlock(child)"
                     class="block-delete"
                     title="Delete block"
@@ -1042,7 +1072,7 @@ const DailyNote = {
                 
                 <!-- Render grandchildren -->
                 <div v-if="child.children && child.children.length" class="block-children">
-                  <div v-for="grandchild in child.children" :key="grandchild.id" class="block-wrapper child-block" :data-block-id="grandchild.id">
+                  <div v-for="grandchild in child.children" :key="grandchild.id" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(grandchild.id) }" :data-block-id="grandchild.id">
                     <div class="block">
                       <div
                         class="block-bullet"
@@ -1072,6 +1102,11 @@ const DailyNote = {
                         placeholder="Start writing..."
                         ref="blockTextarea"
                       ></textarea>
+                      <button
+                        @click="onBlockAddToContext(grandchild)"
+                        class="block-context"
+                        title="Add to chat context"
+                      >+</button>
                       <button
                         @click="deleteBlock(grandchild)"
                         class="block-delete"

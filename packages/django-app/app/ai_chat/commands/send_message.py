@@ -17,10 +17,11 @@ class SendMessageCommandError(Exception):
 
 
 class SendMessageCommand(AbstractBaseCommand):
-    def __init__(self, user, session, message: str) -> None:
+    def __init__(self, user, session, message: str, context_blocks: List[Dict] = None) -> None:
         self.user = user
         self.session = session
         self.message = message
+        self.context_blocks = context_blocks or []
 
     def execute(self) -> Dict[str, str]:
         super().execute()
@@ -61,8 +62,11 @@ class SendMessageCommand(AbstractBaseCommand):
             if not self.session:
                 self.session = ChatRepository.create_session(self.user)
 
+            # Prepare the message with context blocks
+            formatted_message = self._format_message_with_context()
+            
             # Add user message to database
-            ChatRepository.add_message(self.session, "user", self.message)
+            ChatRepository.add_message(self.session, "user", formatted_message)
 
             # Get conversation history
             messages: List[Dict[str, str]] = [
@@ -105,3 +109,34 @@ class SendMessageCommand(AbstractBaseCommand):
             raise SendMessageCommandError(
                 f"An unexpected error occurred: {str(e)}"
             ) from e
+
+    def _format_message_with_context(self) -> str:
+        """Format the user message with context blocks if any are provided."""
+        if not self.context_blocks:
+            return self.message
+        
+        # Format context blocks
+        context_text_parts = []
+        for block in self.context_blocks:
+            content = block.get('content', '').strip()
+            if content:
+                block_type = block.get('block_type', 'bullet')
+                if block_type == 'todo':
+                    context_text_parts.append(f"☐ {content}")
+                elif block_type == 'done':
+                    context_text_parts.append(f"☑ {content}")
+                else:
+                    context_text_parts.append(f"• {content}")
+        
+        if not context_text_parts:
+            return self.message
+        
+        # Combine context and message
+        context_section = "\n".join(context_text_parts)
+        formatted_message = f"""**Context from my notes:**
+{context_section}
+
+**My question:**
+{self.message}"""
+        
+        return formatted_message

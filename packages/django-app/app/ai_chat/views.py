@@ -45,6 +45,7 @@ def send_message(request):
             )
 
         session_id = request.data.get("session_id")
+        context_blocks = request.data.get("context_blocks", [])
 
         session = None
         if session_id:
@@ -56,7 +57,7 @@ def send_message(request):
                 )
                 session = None
 
-        command = SendMessageCommand(request.user, session, message)
+        command = SendMessageCommand(request.user, session, message, context_blocks)
         result = command.execute()
         return Response({"success": True, "data": result})
 

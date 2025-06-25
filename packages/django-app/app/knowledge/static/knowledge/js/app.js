@@ -13,6 +13,9 @@ const KnowledgeApp = createApp({
       loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
       showSettings: false, // Settings modal state
       settingsActiveTab: "general", // Default tab for settings modal
+      // Chat context management
+      chatContextBlocks: [], // Array of blocks in chat context
+      visibleBlocks: [], // Array of currently visible blocks
     };
   },
 
@@ -159,6 +162,43 @@ const KnowledgeApp = createApp({
       const theme = this.user?.theme || "dark";
       document.documentElement.setAttribute("data-theme", theme);
     },
+
+    // Chat context management methods
+    addBlockToContext(block) {
+      // Don't add if already in context
+      if (!this.chatContextBlocks.find(b => b.id === block.id)) {
+        this.chatContextBlocks.push({
+          id: block.id,
+          content: block.content,
+          block_type: block.block_type,
+          created_at: block.created_at
+        });
+      }
+    },
+
+    removeBlockFromContext(blockId) {
+      this.chatContextBlocks = this.chatContextBlocks.filter(b => b.id !== blockId);
+    },
+
+    isBlockInContext(blockId) {
+      return this.chatContextBlocks.some(b => b.id === blockId);
+    },
+
+    clearChatContext() {
+      this.chatContextBlocks = [];
+    },
+
+    updateVisibleBlocks(blocks) {
+      this.visibleBlocks = blocks;
+    },
+
+    onBlockAddToContext(block) {
+      this.addBlockToContext(block);
+    },
+
+    onBlockRemoveFromContext(blockId) {
+      this.removeBlockFromContext(blockId);
+    },
   },
 
   template: `
@@ -188,8 +228,22 @@ const KnowledgeApp = createApp({
                     <div v-else class="content-layout">
                         <HistoricalSidebar v-if="!$refs.dailyNote?.isTagPage" @navigate-to-date="onNavigateToDate" />
                         <div class="main-content-area">
-                            <DailyNote ref="dailyNote" />
+                            <DailyNote 
+                                ref="dailyNote"
+                                :chat-context-blocks="chatContextBlocks"
+                                :is-block-in-context="isBlockInContext"
+                                @block-add-to-context="onBlockAddToContext"
+                                @block-remove-from-context="onBlockRemoveFromContext"
+                                @visible-blocks-changed="updateVisibleBlocks"
+                            />
                         </div>
+                        <ChatPanel 
+                            :chat-context-blocks="chatContextBlocks"
+                            :visible-blocks="visibleBlocks"
+                            @open-settings="onChatPanelOpenSettings"
+                            @remove-context-block="onBlockRemoveFromContext"
+                            @clear-context="clearChatContext"
+                        />
                     </div>
                 </main>
             </div>
@@ -210,7 +264,6 @@ const KnowledgeApp = createApp({
             @close="closeSettings"
             @theme-updated="onThemeUpdated"
         />
-        <ChatPanel @open-settings="onChatPanelOpenSettings" />
     `,
 });
 

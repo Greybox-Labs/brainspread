@@ -46,7 +46,8 @@
       "Bash(docker system:*)",
       "mcp__sse-server__browser_tab_select",
       "Bash(docker exec:*)",
-      "mcp__sse-server__browser_tab_new"
+      "mcp__sse-server__browser_tab_new",
+      "Bash(node:*)"
     ],
     "deny": []
   }
