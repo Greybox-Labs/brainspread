@@ -2010,9 +2010,30 @@ body {
   background: var(--bg-primary);
   border: 1px solid var(--border-primary);
   border-top: none;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure dropdown opens upward if there's not enough space below */
+.model-selector {
+  position: relative;
+}
+
+.model-selector:has(.model-dropdown) {
+  /* If dropdown would be cut off at bottom, show it above */
+  bottom: auto;
+}
+
+@supports not selector(:has()) {
+  /* Fallback for browsers that don't support :has() */
+  .model-dropdown.show-above {
+    top: auto;
+    bottom: 100%;
+    border-top: 1px solid var(--border-primary);
+    border-bottom: none;
+  }
 }
 
 .model-option {

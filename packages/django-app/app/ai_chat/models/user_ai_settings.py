@@ -10,7 +10,6 @@ from .ai_provider import AIProvider
 class UserAISettings(UUIDModelMixin, CRUDTimestampsMixin):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     provider = models.ForeignKey(AIProvider, on_delete=models.SET_NULL, null=True)
-    api_key = models.CharField(max_length=255, blank=True)
     default_model = models.CharField(max_length=100, blank=True)
 
     class Meta:

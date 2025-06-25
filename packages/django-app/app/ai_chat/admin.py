@@ -117,7 +117,7 @@ class ChatMessageAdmin(admin.ModelAdmin):
 
 @admin.register(UserAISettings)
 class UserAISettingsAdmin(admin.ModelAdmin):
-    list_display = ["user", "provider", "default_model", "has_api_key", "created_at"]
+    list_display = ["user", "provider", "default_model", "created_at"]
     list_filter = ["provider", "created_at"]
     search_fields = [
         "user__email",
@@ -131,31 +131,10 @@ class UserAISettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("user", "provider", "default_model")}),
         (
-            "API Configuration",
-            {
-                "fields": ("api_key",),
-                "description": "API key is stored securely and masked in the admin interface.",
-            },
-        ),
-        (
             "Metadata",
             {"fields": ("id", "created_at", "modified_at"), "classes": ("collapse",)},
         ),
     )
-
-    def has_api_key(self, obj):
-        return bool(obj.api_key)
-
-    has_api_key.boolean = True
-    has_api_key.short_description = "Has API Key"
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if obj and obj.api_key:
-            form.base_fields["api_key"].widget.attrs[
-                "placeholder"
-            ] = "*** API Key Set ***"
-        return form
 
 
 @admin.register(UserProviderConfig)

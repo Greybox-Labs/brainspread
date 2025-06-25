@@ -182,39 +182,68 @@ const ChatPanel = {
 
     toggleModelSelector() {
       this.showModelSelector = !this.showModelSelector;
+      
+      if (this.showModelSelector) {
+        // Check if dropdown would be cut off and position accordingly
+        this.$nextTick(() => {
+          const dropdown = this.$el.querySelector('.model-dropdown');
+          const button = this.$el.querySelector('.model-selector-btn');
+          
+          if (dropdown && button) {
+            const buttonRect = button.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const dropdownHeight = Math.min(300, this.getAvailableModels().length * 40); // estimated height
+            
+            // If there's not enough space below, show above
+            if (buttonRect.bottom + dropdownHeight > viewportHeight - 20) {
+              dropdown.classList.add('show-above');
+            } else {
+              dropdown.classList.remove('show-above');
+            }
+          }
+        });
+      }
     },
 
     getAvailableModels() {
-      if (!this.aiSettings || !this.aiSettings.current_provider) return [];
+      if (!this.aiSettings) return [];
 
-      const currentProvider = this.aiSettings.providers.find(
-        (p) => p.name === this.aiSettings.current_provider
-      );
+      // Return all enabled models from providers with API keys
+      const allModels = [];
+      Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
+        const config = this.aiSettings.provider_configs[providerName];
+        if (config.has_api_key && config.enabled_models) {
+          config.enabled_models.forEach(model => {
+            allModels.push({
+              value: model,
+              label: `${providerName}: ${model}`,
+              provider: providerName
+            });
+          });
+        }
+      });
 
-      if (!currentProvider) return [];
-
-      const providerConfig =
-        this.aiSettings.provider_configs[this.aiSettings.current_provider];
-      if (
-        providerConfig &&
-        providerConfig.enabled_models &&
-        providerConfig.enabled_models.length > 0
-      ) {
-        return providerConfig.enabled_models;
-      }
-
-      return currentProvider.models;
+      return allModels;
     },
 
-    async selectModel(model) {
+    getCurrentModelLabel() {
+      if (!this.selectedModel || !this.aiSettings) return 'Model';
+      
+      const allModels = this.getAvailableModels();
+      const currentModel = allModels.find(model => model.value === this.selectedModel);
+      
+      return currentModel ? currentModel.label : this.selectedModel;
+    },
+
+    async selectModel(modelData) {
       try {
-        this.selectedModel = model;
+        this.selectedModel = modelData.value;
         this.showModelSelector = false;
 
-        // Update user's default model
+        // Update user's default model with the correct provider
         const updateData = {
-          provider: this.aiSettings.current_provider,
-          model: model,
+          provider: modelData.provider,
+          model: modelData.value,
         };
 
         await window.apiService.updateAISettings(updateData);
@@ -262,20 +291,20 @@ const ChatPanel = {
               <button 
                 class="model-selector-btn" 
                 @click="toggleModelSelector"
-                :title="selectedModel || 'Select Model'"
+                :title="getCurrentModelLabel()"
               >
-                {{ selectedModel || 'Model' }}
+                {{ getCurrentModelLabel() }}
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div v-if="showModelSelector" class="model-dropdown">
                 <div 
                   v-for="model in getAvailableModels()" 
-                  :key="model"
+                  :key="model.value"
                   class="model-option"
-                  :class="{ active: model === selectedModel }"
+                  :class="{ active: model.value === selectedModel }"
                   @click="selectModel(model)"
                 >
-                  {{ model }}
+                  {{ model.label }}
                 </div>
               </div>
             </div>

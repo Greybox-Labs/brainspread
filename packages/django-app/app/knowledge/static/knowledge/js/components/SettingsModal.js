@@ -235,10 +235,19 @@ window.SettingsModal = {
       try {
         this.isUpdating = true;
 
+        // Only include API keys that have been entered (not empty)
+        const apiKeys = {};
+        Object.keys(this.aiSettings.formData.apiKeys).forEach(providerName => {
+          const apiKey = this.aiSettings.formData.apiKeys[providerName];
+          if (apiKey && apiKey.trim() !== '') {
+            apiKeys[providerName] = apiKey;
+          }
+        });
+
         const updateData = {
           provider: this.aiSettings.formData.selectedProvider,
           model: this.aiSettings.formData.selectedModel,
-          api_keys: this.aiSettings.formData.apiKeys,
+          api_keys: apiKeys,
           provider_configs: {},
         };
 
@@ -272,6 +281,41 @@ window.SettingsModal = {
         (p) => p.name === providerName
       );
       return provider ? provider.models : [];
+    },
+
+    getAllEnabledModels() {
+      if (!this.aiSettings) return [];
+      
+      // Return all enabled models from providers with API keys
+      const allModels = [];
+      Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
+        const config = this.aiSettings.provider_configs[providerName];
+        if (config.has_api_key && config.enabled_models) {
+          config.enabled_models.forEach(model => {
+            allModels.push({
+              value: model,
+              label: `${providerName}: ${model}`,
+              provider: providerName
+            });
+          });
+        }
+      });
+      
+      return allModels;
+    },
+
+    onModelChange() {
+      // When a model is selected, automatically set the provider
+      if (this.aiSettings.formData.selectedModel) {
+        const selectedModelData = this.getAllEnabledModels().find(
+          model => model.value === this.aiSettings.formData.selectedModel
+        );
+        if (selectedModelData) {
+          this.aiSettings.formData.selectedProvider = selectedModelData.provider;
+        }
+      } else {
+        this.aiSettings.formData.selectedProvider = "";
+      }
     },
 
     toggleModel(providerName, model) {
@@ -379,31 +423,17 @@ window.SettingsModal = {
           
           <div v-else-if="aiSettings" class="ai-settings">
             <div class="settings-section">
-              <h3>Default Provider & Model</h3>
-              <div class="provider-selection">
-                <label>AI Provider:</label>
-                <select v-model="aiSettings.formData.selectedProvider">
-                  <option value="">Select Provider</option>
-                  <option 
-                    v-for="provider in aiSettings.providers" 
-                    :key="provider.name"
-                    :value="provider.name"
-                  >
-                    {{ provider.name }}
-                  </option>
-                </select>
-              </div>
-              
-              <div v-if="aiSettings.formData.selectedProvider" class="model-selection">
+              <h3>Default Model</h3>
+              <div class="model-selection">
                 <label>Default Model:</label>
-                <select v-model="aiSettings.formData.selectedModel">
+                <select v-model="aiSettings.formData.selectedModel" @change="onModelChange">
                   <option value="">Select Model</option>
                   <option 
-                    v-for="model in getAvailableModels(aiSettings.formData.selectedProvider)"
-                    :key="model"
-                    :value="model"
+                    v-for="model in getAllEnabledModels()"
+                    :key="model.value"
+                    :value="model.value"
                   >
-                    {{ model }}
+                    {{ model.label }}
                   </option>
                 </select>
               </div>
