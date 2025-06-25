@@ -26,7 +26,7 @@
 - [ ] should be able to drag and move block ordering and nestings around
 - [x] should always use typehints in python code
 - [ ] ui/ux for pages
-- [ ] should test at the api layer and not command. then we dont have to have
+- [x] should test at the api layer and not command. then we dont have to have
   command and form tests, etc.
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
@@ -34,7 +34,7 @@
     that
   - maybe can use Twilio? though Sam did say recently that you have to jump
     through some hoops to get a phone number now
-- [ ] clicking the "brainspreader" text in the navbar top left should take you
+- [x] clicking the "brainspreader" text in the navbar top left should take you
   to the homepage
 - [ ] when a user submits a web link, it should be accessed and summarized with
   tags auto-generated from the content
