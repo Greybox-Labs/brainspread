@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from .models import AIProvider, ChatSession, ChatMessage, UserAISettings
+from .models import AIProvider, ChatSession, ChatMessage, UserAISettings, UserProviderConfig
 
 
 @admin.register(AIProvider)
@@ -124,6 +124,48 @@ class UserAISettingsAdmin(admin.ModelAdmin):
         return bool(obj.api_key)
     has_api_key.boolean = True
     has_api_key.short_description = 'Has API Key'
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj and obj.api_key:
+            form.base_fields['api_key'].widget.attrs['placeholder'] = '*** API Key Set ***'
+        return form
+
+
+@admin.register(UserProviderConfig)
+class UserProviderConfigAdmin(admin.ModelAdmin):
+    list_display = ['user', 'provider', 'is_enabled', 'has_api_key', 'enabled_models_count', 'created_at']
+    list_filter = ['provider', 'is_enabled', 'created_at']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'provider__name']
+    readonly_fields = ['id', 'created_at', 'modified_at']
+    raw_id_fields = ['user', 'provider']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'provider', 'is_enabled')
+        }),
+        ('API Configuration', {
+            'fields': ('api_key',),
+            'description': 'API key is stored securely and masked in the admin interface.'
+        }),
+        ('Model Configuration', {
+            'fields': ('enabled_models',),
+            'description': 'JSON list of enabled models for this provider.'
+        }),
+        ('Metadata', {
+            'fields': ('id', 'created_at', 'modified_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_api_key(self, obj):
+        return bool(obj.api_key)
+    has_api_key.boolean = True
+    has_api_key.short_description = 'Has API Key'
+    
+    def enabled_models_count(self, obj):
+        return len(obj.enabled_models) if obj.enabled_models else 0
+    enabled_models_count.short_description = 'Enabled Models'
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

@@ -1825,3 +1825,237 @@ body {
 .session-count {
   font-style: italic;
 }
+
+/* Settings Modal Tabs */
+.settings-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.settings-tabs button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.settings-tabs button:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
+.settings-tabs button.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-primary);
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI Settings Specific Styles */
+.ai-settings .settings-section {
+  margin-bottom: 2rem;
+}
+
+.provider-selection,
+.model-selection {
+  margin-bottom: 1rem;
+}
+
+.provider-selection label,
+.model-selection label,
+.api-key-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.provider-selection select,
+.model-selection select {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.api-key-input {
+  margin-bottom: 1rem;
+}
+
+.api-key-input input {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.provider-models h4 {
+  margin: 1rem 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.model-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.model-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.model-checkbox input[type="checkbox"] {
+  width: auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+}
+
+/* Chat Panel Input Area */
+.input-area {
+  border-top: 1px solid var(--border-secondary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat Panel Controls Row */
+.chat-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-secondary);
+  background: var(--accent-bg);
+  order: 1;
+}
+
+/* Message Input Row */
+.message-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  order: 2;
+}
+
+.message-input textarea {
+  flex: 1;
+}
+
+.model-selector {
+  position: relative;
+}
+
+.model-selector-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 80px;
+}
+
+.model-selector-btn:hover {
+  background: var(--hover-bg);
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.model-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.model-option {
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.model-option:hover {
+  background: var(--hover-bg);
+}
+
+.model-option.active {
+  background: var(--selected-bg);
+  color: var(--text-primary);
+}
+
+.model-option:last-child {
+  border-bottom: none;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.settings-btn:hover {
+  color: var(--text-primary);
+}
+
+.new-chat-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.new-chat-btn:hover {
+  color: var(--text-primary);
+}

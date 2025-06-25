@@ -9,6 +9,10 @@ window.SettingsModal = {
       type: Object,
       required: true,
     },
+    activeTab: {
+      type: String,
+      default: "general",
+    },
   },
 
   emits: ["close", "theme-updated"],
@@ -18,6 +22,9 @@ window.SettingsModal = {
       selectedTheme: this.user?.theme || "dark",
       selectedTimezone: this.user?.timezone || "UTC",
       isUpdating: false,
+      aiSettings: null,
+      loadingAISettings: false,
+      currentTab: "general",
       commonTimezones: [
         "UTC",
         "America/New_York",
@@ -71,6 +78,27 @@ window.SettingsModal = {
       },
       deep: true,
     },
+    activeTab: {
+      handler(newTab) {
+        this.currentTab = newTab;
+      }
+    },
+  },
+
+  async mounted() {
+    if (this.isOpen) {
+      await this.loadAISettings();
+    }
+  },
+
+  watch: {
+    isOpen: {
+      async handler(newValue) {
+        if (newValue) {
+          await this.loadAISettings();
+        }
+      }
+    }
   },
 
   methods: {
@@ -89,45 +117,54 @@ window.SettingsModal = {
         this.isUpdating = true;
         let hasUpdates = false;
 
-        if (this.selectedTheme !== this.user.theme) {
-          const result = await window.apiService.updateUserTheme(
-            this.selectedTheme
-          );
+        // Save general settings
+        if (this.currentTab === "general") {
+          if (this.selectedTheme !== this.user.theme) {
+            const result = await window.apiService.updateUserTheme(
+              this.selectedTheme
+            );
 
-          if (result.success) {
-            // Apply theme immediately
-            this.applyTheme(this.selectedTheme);
+            if (result.success) {
+              // Apply theme immediately
+              this.applyTheme(this.selectedTheme);
 
-            // Emit theme update event
-            this.$emit("theme-updated", result.data.user);
+              // Emit theme update event
+              this.$emit("theme-updated", result.data.user);
 
-            console.log("Theme updated successfully");
-            hasUpdates = true;
-          } else {
-            console.error("Failed to update theme:", result.errors);
-            alert("Failed to update theme. Please try again.");
-            return;
+              console.log("Theme updated successfully");
+              hasUpdates = true;
+            } else {
+              console.error("Failed to update theme:", result.errors);
+              alert("Failed to update theme. Please try again.");
+              return;
+            }
+          }
+
+          if (this.selectedTimezone !== this.user.timezone) {
+            const result = await window.apiService.updateUserTimezone(
+              this.selectedTimezone
+            );
+
+            if (result.success) {
+              console.log("Timezone updated successfully");
+              hasUpdates = true;
+            } else {
+              console.error("Failed to update timezone:", result.errors);
+              alert("Failed to update timezone. Please try again.");
+              return;
+            }
+          }
+
+          if (hasUpdates) {
+            // Refresh user data to get updated values
+            await window.apiService.getCurrentUser();
           }
         }
 
-        if (this.selectedTimezone !== this.user.timezone) {
-          const result = await window.apiService.updateUserTimezone(
-            this.selectedTimezone
-          );
-
-          if (result.success) {
-            console.log("Timezone updated successfully");
-            hasUpdates = true;
-          } else {
-            console.error("Failed to update timezone:", result.errors);
-            alert("Failed to update timezone. Please try again.");
-            return;
-          }
-        }
-
-        if (hasUpdates) {
-          // Refresh user data to get updated values
-          await window.apiService.getCurrentUser();
+        // Save AI settings
+        if (this.currentTab === "ai") {
+          await this.saveAISettings();
+          hasUpdates = true;
         }
 
         this.closeModal();
@@ -154,6 +191,103 @@ window.SettingsModal = {
         this.closeModal();
       }
     },
+
+    switchTab(tab) {
+      this.currentTab = tab;
+    },
+
+    async loadAISettings() {
+      if (this.loadingAISettings || this.aiSettings) return;
+      
+      try {
+        this.loadingAISettings = true;
+        const result = await window.apiService.getAISettings();
+        if (result.success) {
+          this.aiSettings = result.data;
+          
+          // Initialize form data
+          this.aiSettings.formData = {
+            selectedProvider: this.aiSettings.current_provider || "",
+            selectedModel: this.aiSettings.current_model || "",
+            apiKeys: {},
+            enabledModels: {}
+          };
+          
+          // Initialize API keys and enabled models from provider configs
+          Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
+            const config = this.aiSettings.provider_configs[providerName];
+            this.aiSettings.formData.apiKeys[providerName] = "";
+            this.aiSettings.formData.enabledModels[providerName] = config.enabled_models || [];
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load AI settings:", error);
+      } finally {
+        this.loadingAISettings = false;
+      }
+    },
+
+    async saveAISettings() {
+      if (!this.aiSettings) return;
+      
+      try {
+        this.isUpdating = true;
+        
+        const updateData = {
+          provider: this.aiSettings.formData.selectedProvider,
+          model: this.aiSettings.formData.selectedModel,
+          api_keys: this.aiSettings.formData.apiKeys,
+          provider_configs: {}
+        };
+        
+        // Build provider configs
+        Object.keys(this.aiSettings.formData.enabledModels).forEach(providerName => {
+          updateData.provider_configs[providerName] = {
+            is_enabled: true,
+            enabled_models: this.aiSettings.formData.enabledModels[providerName]
+          };
+        });
+        
+        const result = await window.apiService.updateAISettings(updateData);
+        if (result.success) {
+          console.log("AI settings updated successfully");
+        } else {
+          console.error("Failed to update AI settings:", result.errors);
+          alert("Failed to update AI settings. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error updating AI settings:", error);
+        alert("Failed to update AI settings. Please try again.");
+      }
+    },
+
+    getAvailableModels(providerName) {
+      if (!this.aiSettings) return [];
+      const provider = this.aiSettings.providers.find(p => p.name === providerName);
+      return provider ? provider.models : [];
+    },
+
+    toggleModel(providerName, model) {
+      if (!this.aiSettings.formData.enabledModels[providerName]) {
+        this.aiSettings.formData.enabledModels[providerName] = [];
+      }
+      
+      const enabledModels = this.aiSettings.formData.enabledModels[providerName];
+      const index = enabledModels.indexOf(model);
+      
+      if (index > -1) {
+        enabledModels.splice(index, 1);
+      } else {
+        enabledModels.push(model);
+      }
+    },
+
+    isModelEnabled(providerName, model) {
+      if (!this.aiSettings || !this.aiSettings.formData.enabledModels[providerName]) {
+        return false;
+      }
+      return this.aiSettings.formData.enabledModels[providerName].includes(model);
+    },
   },
 
   template: `
@@ -165,8 +299,26 @@ window.SettingsModal = {
       <div class="settings-modal-content">
         <h2>Settings</h2>
         
-        <div class="settings-section">
-          <h3>Theme</h3>
+        <div class="settings-tabs">
+          <button 
+            :class="{ active: currentTab === 'general' }"
+            @click="switchTab('general')"
+            type="button"
+          >
+            General
+          </button>
+          <button 
+            :class="{ active: currentTab === 'ai' }"
+            @click="switchTab('ai')"
+            type="button"
+          >
+            AI Chat
+          </button>
+        </div>
+
+        <div v-if="currentTab === 'general'" class="tab-content">
+          <div class="settings-section">
+            <h3>Theme</h3>
           <div class="theme-options">
             <button 
               class="theme-option"
@@ -203,6 +355,75 @@ window.SettingsModal = {
                 {{ timezone.replace('_', ' ') }}
               </option>
             </select>
+          </div>
+        </div>
+        </div>
+
+        <div v-if="currentTab === 'ai'" class="tab-content">
+          <div v-if="loadingAISettings" class="loading">
+            Loading AI settings...
+          </div>
+          
+          <div v-else-if="aiSettings" class="ai-settings">
+            <div class="settings-section">
+              <h3>Default Provider & Model</h3>
+              <div class="provider-selection">
+                <label>AI Provider:</label>
+                <select v-model="aiSettings.formData.selectedProvider">
+                  <option value="">Select Provider</option>
+                  <option 
+                    v-for="provider in aiSettings.providers" 
+                    :key="provider.name"
+                    :value="provider.name"
+                  >
+                    {{ provider.name }}
+                  </option>
+                </select>
+              </div>
+              
+              <div v-if="aiSettings.formData.selectedProvider" class="model-selection">
+                <label>Default Model:</label>
+                <select v-model="aiSettings.formData.selectedModel">
+                  <option value="">Select Model</option>
+                  <option 
+                    v-for="model in getAvailableModels(aiSettings.formData.selectedProvider)"
+                    :key="model"
+                    :value="model"
+                  >
+                    {{ model }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>API Keys</h3>
+              <div v-for="provider in aiSettings.providers" :key="provider.name" class="api-key-input">
+                <label>{{ provider.name }} API Key:</label>
+                <input 
+                  type="password" 
+                  v-model="aiSettings.formData.apiKeys[provider.name]"
+                  :placeholder="aiSettings.provider_configs[provider.name]?.has_api_key ? 'API key configured' : 'Enter API key'"
+                />
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Available Models</h3>
+              <div v-for="provider in aiSettings.providers" :key="provider.name" class="provider-models">
+                <h4>{{ provider.name }}</h4>
+                <div class="model-checkboxes">
+                  <label v-for="model in provider.models" :key="model" class="model-checkbox">
+                    <input 
+                      type="checkbox" 
+                      :checked="isModelEnabled(provider.name, model)"
+                      @change="toggleModel(provider.name, model)"
+                    />
+                    {{ model }}
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

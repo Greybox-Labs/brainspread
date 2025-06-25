@@ -4,7 +4,8 @@ from typing import Dict, List
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ai_chat.repositories.chat_repository import ChatRepository
-from ai_chat.services.openai_service import OpenAIService, OpenAIServiceError
+from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
+from ai_chat.services.base_ai_service import AIServiceError
 from ai_chat.services.user_settings_service import UserSettingsService
 
 logger = logging.getLogger(__name__)
@@ -37,19 +38,21 @@ class SendMessageCommand(AbstractBaseCommand):
             if not user_settings.provider:
                 raise SendMessageCommandError("No AI provider configured.")
             
-            if not user_settings.api_key:
-                raise SendMessageCommandError("No API key configured.")
-            
-            api_key = user_settings.api_key
+            # Get API key from provider config
+            api_key = UserSettingsService.get_api_key(self.user, user_settings.provider)
+            if not api_key:
+                raise SendMessageCommandError("No API key configured for the selected provider.")
             
             if not user_settings.default_model:
                 raise SendMessageCommandError("No default model configured.")
             
-            # Validate provider (currently only OpenAI is supported)
-            if user_settings.provider.name.lower() != "openai":
+            # Validate provider is supported
+            supported_providers = AIServiceFactory.get_supported_providers()
+            if user_settings.provider.name.lower() not in supported_providers:
+                supported_list = ", ".join(supported_providers)
                 raise SendMessageCommandError(
-                    f"Provider '{user_settings.provider.name}' is not currently supported. "
-                    "Please configure OpenAI as your provider."
+                    f"Provider '{user_settings.provider.name}' is not supported. "
+                    f"Supported providers: {supported_list}"
                 )
 
             # Create or get session
@@ -65,8 +68,12 @@ class SendMessageCommand(AbstractBaseCommand):
                 for msg in ChatRepository.get_messages(self.session)
             ]
 
-            # Call OpenAI service
-            service = OpenAIService(api_key, user_settings.default_model)
+            # Create AI service using factory
+            service = AIServiceFactory.create_service(
+                provider_name=user_settings.provider.name,
+                api_key=api_key,
+                model=user_settings.default_model
+            )
             response_content = service.send_message(messages)
 
             # Add assistant response to database
@@ -77,8 +84,8 @@ class SendMessageCommand(AbstractBaseCommand):
                 "session_id": str(self.session.uuid)
             }
 
-        except OpenAIServiceError as e:
-            logger.error(f"OpenAI service error for user {self.user.id}: {str(e)}")
+        except (AIServiceError, AIServiceFactoryError) as e:
+            logger.error(f"AI service error for user {self.user.id}: {str(e)}")
             # Still save the user message even if AI fails
             if self.session:
                 ChatRepository.add_message(self.session, "assistant", 

@@ -14,10 +14,14 @@ const ChatPanel = {
       minWidth: 300,
       maxWidth: 800,
       currentSessionId: null,
+      showModelSelector: false,
+      aiSettings: null,
+      selectedModel: null,
     };
   },
   mounted() {
     this.setupResizeListener();
+    this.loadAISettings();
   },
   beforeUnmount() {
     this.removeResizeListener();
@@ -154,6 +158,62 @@ const ChatPanel = {
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
     },
+    
+    async loadAISettings() {
+      try {
+        const result = await window.apiService.getAISettings();
+        if (result.success) {
+          this.aiSettings = result.data;
+          this.selectedModel = result.data.current_model;
+        }
+      } catch (error) {
+        console.error("Failed to load AI settings:", error);
+      }
+    },
+    
+    toggleModelSelector() {
+      this.showModelSelector = !this.showModelSelector;
+    },
+    
+    getAvailableModels() {
+      if (!this.aiSettings || !this.aiSettings.current_provider) return [];
+      
+      const currentProvider = this.aiSettings.providers.find(
+        p => p.name === this.aiSettings.current_provider
+      );
+      
+      if (!currentProvider) return [];
+      
+      const providerConfig = this.aiSettings.provider_configs[this.aiSettings.current_provider];
+      if (providerConfig && providerConfig.enabled_models && providerConfig.enabled_models.length > 0) {
+        return providerConfig.enabled_models;
+      }
+      
+      return currentProvider.models;
+    },
+    
+    async selectModel(model) {
+      try {
+        this.selectedModel = model;
+        this.showModelSelector = false;
+        
+        // Update user's default model
+        const updateData = {
+          provider: this.aiSettings.current_provider,
+          model: model
+        };
+        
+        await window.apiService.updateAISettings(updateData);
+        await this.loadAISettings(); // Refresh settings
+      } catch (error) {
+        console.error("Failed to update model:", error);
+      }
+    },
+    
+    openSettings() {
+      // Emit event to parent to open settings modal with AI tab
+      this.$emit('open-settings', 'ai');
+    },
   },
   template: `
     <div class="chat-panel" :class="{ open: isOpen }" :style="{ width: width + 'px' }">
@@ -183,10 +243,36 @@ const ChatPanel = {
           </div>
         </div>
         <div class="input-area">
-          <textarea v-model="message" placeholder="Ask something..." @keydown="handleKeydown"></textarea>
-          <button @click="sendMessage" :disabled="loading">
-            {{ loading ? 'Sending...' : 'Send' }}
-          </button>
+          <div class="chat-controls">
+            <div class="model-selector" v-if="aiSettings">
+              <button 
+                class="model-selector-btn" 
+                @click="toggleModelSelector"
+                :title="selectedModel || 'Select Model'"
+              >
+                {{ selectedModel || 'Model' }}
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div v-if="showModelSelector" class="model-dropdown">
+                <div 
+                  v-for="model in getAvailableModels()" 
+                  :key="model"
+                  class="model-option"
+                  :class="{ active: model === selectedModel }"
+                  @click="selectModel(model)"
+                >
+                  {{ model }}
+                </div>
+              </div>
+            </div>
+            <button class="settings-btn" @click="openSettings" title="AI Settings">⚙️</button>
+          </div>
+          <div class="message-input">
+            <textarea v-model="message" placeholder="Ask something..." @keydown="handleKeydown"></textarea>
+            <button @click="sendMessage" :disabled="loading">
+              {{ loading ? 'Sending...' : 'Send' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>

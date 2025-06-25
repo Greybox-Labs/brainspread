@@ -4,15 +4,17 @@ from typing import List, Dict
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
 
+from .base_ai_service import BaseAIService, AIServiceError
+
 logger = logging.getLogger(__name__)
 
 
-class OpenAIServiceError(Exception):
+class OpenAIServiceError(AIServiceError):
     """Custom exception for OpenAI service errors"""
     pass
 
 
-class OpenAIService:
+class OpenAIService(BaseAIService):
     def __init__(self, api_key: str, model: str = "gpt-4o") -> None:
         self.api_key = api_key
         self.model = model
@@ -38,12 +40,8 @@ class OpenAIService:
             OpenAIServiceError: If the API call fails
         """
         try:
-            # Validate messages format
-            for msg in messages:
-                if "role" not in msg or "content" not in msg:
-                    raise OpenAIServiceError("Invalid message format: missing 'role' or 'content'")
-                if msg["role"] not in ["user", "assistant", "system"]:
-                    raise OpenAIServiceError(f"Invalid role: {msg['role']}")
+            # Validate messages format using base class method
+            self.validate_messages(messages)
 
             # Make the API call
             response: ChatCompletion = self.client.chat.completions.create(
@@ -69,3 +67,37 @@ class OpenAIService:
                 raise
             else:
                 raise OpenAIServiceError(f"OpenAI API call failed: {str(e)}") from e
+    
+    def get_available_models(self) -> List[str]:
+        """
+        Get list of available OpenAI models.
+        
+        Returns:
+            List[str]: List of available model names
+        """
+        return [
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo"
+        ]
+    
+    def validate_api_key(self) -> bool:
+        """
+        Validate the OpenAI API key by making a test call.
+        
+        Returns:
+            bool: True if API key is valid, False otherwise
+        """
+        try:
+            # Make a minimal test call to validate the API key
+            test_messages = [{"role": "user", "content": "Hi"}]
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=test_messages,
+                max_tokens=1
+            )
+            return response is not None
+        except Exception as e:
+            logger.error(f"API key validation failed: {e}")
+            return False

@@ -305,6 +305,17 @@ class ApiService {
   async getChatSessionDetail(sessionId) {
     return await this.request(`/api/ai-chat/sessions/${sessionId}/`);
   }
+
+  async getAISettings() {
+    return await this.request("/api/ai-chat/settings/");
+  }
+
+  async updateAISettings(settings) {
+    return await this.request("/api/ai-chat/settings/update/", {
+      method: "POST",
+      body: JSON.stringify(settings),
+    });
+  }
 }
 
 // Export for use in other files

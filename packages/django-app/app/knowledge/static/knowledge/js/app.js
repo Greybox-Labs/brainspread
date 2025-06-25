@@ -12,6 +12,7 @@ const KnowledgeApp = createApp({
       currentView: isAuth ? "journal" : "login", // Set view immediately
       loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
       showSettings: false, // Settings modal state
+      settingsActiveTab: "general", // Default tab for settings modal
     };
   },
 
@@ -132,12 +133,18 @@ const KnowledgeApp = createApp({
     },
 
     // Theme and settings methods
-    openSettings() {
+    openSettings(activeTab = "general") {
+      this.settingsActiveTab = activeTab;
       this.showSettings = true;
     },
 
     closeSettings() {
       this.showSettings = false;
+      this.settingsActiveTab = "general"; // Reset to default
+    },
+
+    onChatPanelOpenSettings(activeTab) {
+      this.openSettings(activeTab);
     },
 
     onThemeUpdated(updatedUser) {
@@ -199,10 +206,11 @@ const KnowledgeApp = createApp({
         <SettingsModal
             :is-open="showSettings"
             :user="user"
+            :active-tab="settingsActiveTab"
             @close="closeSettings"
             @theme-updated="onThemeUpdated"
         />
-        <ChatPanel />
+        <ChatPanel @open-settings="onChatPanelOpenSettings" />
     `,
 });
 
