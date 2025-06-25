@@ -123,6 +123,7 @@ const ChatPanel = {
       this.isResizing = false;
       document.removeEventListener("mousemove", this.resizeHandler);
       document.removeEventListener("mouseup", this.stopResizeHandler);
+      this.saveWidth(); // Save width when resize is finished
     },
     handleKeydown(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
