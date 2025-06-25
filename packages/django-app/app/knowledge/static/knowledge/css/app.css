@@ -2169,18 +2169,21 @@ body {
 
 /* Context UI Styles */
 .context-btn {
-  background: none;
-  border: none;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-secondary);
   color: var(--text-secondary);
   padding: 0.25rem;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: color 0.2s ease;
+  border-radius: 0;
+  transition: none;
 }
 
 .context-btn:hover,
 .context-btn.active {
   color: var(--text-primary);
+  border-color: var(--context-color);
+  background: var(--hover-bg);
 }
 
 .context-area {
