@@ -3,6 +3,7 @@ from django.db import models
 
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
+
 from .ai_provider import AIProvider
 
 

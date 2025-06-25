@@ -1,16 +1,17 @@
 import logging
-from typing import List, Dict
+from typing import Dict, List
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
 
-from .base_ai_service import BaseAIService, AIServiceError
+from .base_ai_service import AIServiceError, BaseAIService
 
 logger = logging.getLogger(__name__)
 
 
 class OpenAIServiceError(AIServiceError):
     """Custom exception for OpenAI service errors"""
+
     pass
 
 
@@ -29,13 +30,13 @@ class OpenAIService(BaseAIService):
     def send_message(self, messages: List[Dict[str, str]]) -> str:
         """
         Send messages to OpenAI API and return the response content.
-        
+
         Args:
             messages: List of message dictionaries with 'role' and 'content' keys
-            
+
         Returns:
             str: The assistant's response content
-            
+
         Raises:
             OpenAIServiceError: If the API call fails
         """
@@ -67,25 +68,20 @@ class OpenAIService(BaseAIService):
                 raise
             else:
                 raise OpenAIServiceError(f"OpenAI API call failed: {str(e)}") from e
-    
+
     def get_available_models(self) -> List[str]:
         """
         Get list of available OpenAI models.
-        
+
         Returns:
             List[str]: List of available model names
         """
-        return [
-            "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4-turbo",
-            "gpt-3.5-turbo"
-        ]
-    
+        return ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
+
     def validate_api_key(self) -> bool:
         """
         Validate the OpenAI API key by making a test call.
-        
+
         Returns:
             bool: True if API key is valid, False otherwise
         """
@@ -93,9 +89,7 @@ class OpenAIService(BaseAIService):
             # Make a minimal test call to validate the API key
             test_messages = [{"role": "user", "content": "Hi"}]
             response = self.client.chat.completions.create(
-                model=self.model,
-                messages=test_messages,
-                max_tokens=1
+                model=self.model, messages=test_messages, max_tokens=1
             )
             return response is not None
         except Exception as e:

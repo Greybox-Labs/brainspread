@@ -32,18 +32,18 @@ const ChatPanel = {
   },
   methods: {
     loadOpenState() {
-      const saved = localStorage.getItem('chatPanel.isOpen');
+      const saved = localStorage.getItem("chatPanel.isOpen");
       return saved !== null ? JSON.parse(saved) : true;
     },
     loadWidth() {
-      const saved = localStorage.getItem('chatPanel.width');
+      const saved = localStorage.getItem("chatPanel.width");
       return saved ? parseInt(saved) : 400;
     },
     saveOpenState() {
-      localStorage.setItem('chatPanel.isOpen', JSON.stringify(this.isOpen));
+      localStorage.setItem("chatPanel.isOpen", JSON.stringify(this.isOpen));
     },
     saveWidth() {
-      localStorage.setItem('chatPanel.width', this.width.toString());
+      localStorage.setItem("chatPanel.width", this.width.toString());
     },
     togglePanel() {
       this.isOpen = !this.isOpen;
@@ -51,26 +51,26 @@ const ChatPanel = {
     },
     async sendMessage() {
       if (!this.message) return;
-      const userMsg = { 
-        role: "user", 
+      const userMsg = {
+        role: "user",
         content: this.message,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
       this.messages.push(userMsg);
       this.scrollToBottom(); // Scroll after adding user message
-      const payload = { 
+      const payload = {
         message: this.message,
-        session_id: this.currentSessionId 
+        session_id: this.currentSessionId,
       };
       this.message = "";
       this.loading = true;
       try {
         const result = await window.apiService.sendAIMessage(payload);
         if (result.success) {
-          this.messages.push({ 
-            role: "assistant", 
+          this.messages.push({
+            role: "assistant",
             content: result.data.response,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
           });
           if (result.data.session_id && !this.currentSessionId) {
             this.currentSessionId = result.data.session_id;
@@ -85,7 +85,9 @@ const ChatPanel = {
     },
     async onSessionSelected(session) {
       try {
-        const result = await window.apiService.getChatSessionDetail(session.uuid);
+        const result = await window.apiService.getChatSessionDetail(
+          session.uuid
+        );
         if (result.success) {
           this.messages = result.data.messages;
           this.currentSessionId = session.uuid;
@@ -130,7 +132,7 @@ const ChatPanel = {
       this.saveWidth(); // Save width when resize is finished
     },
     handleKeydown(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         this.sendMessage();
       }
@@ -138,27 +140,34 @@ const ChatPanel = {
     },
     scrollToBottom() {
       this.$nextTick(() => {
-        const messagesContainer = this.$el.querySelector('.messages');
+        const messagesContainer = this.$el.querySelector(".messages");
         if (messagesContainer) {
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       });
     },
     formatTimestamp(timestamp) {
-      if (!timestamp) return '';
+      if (!timestamp) return "";
       const date = new Date(timestamp);
       const now = new Date();
       const isToday = date.toDateString() === now.toDateString();
-      
+
       if (isToday) {
         // Show only time for today's messages
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       } else {
         // Show date and time for older messages
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return (
+          date.toLocaleDateString() +
+          " " +
+          date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        );
       }
     },
-    
+
     async loadAISettings() {
       try {
         const result = await window.apiService.getAISettings();
@@ -170,49 +179,54 @@ const ChatPanel = {
         console.error("Failed to load AI settings:", error);
       }
     },
-    
+
     toggleModelSelector() {
       this.showModelSelector = !this.showModelSelector;
     },
-    
+
     getAvailableModels() {
       if (!this.aiSettings || !this.aiSettings.current_provider) return [];
-      
+
       const currentProvider = this.aiSettings.providers.find(
-        p => p.name === this.aiSettings.current_provider
+        (p) => p.name === this.aiSettings.current_provider
       );
-      
+
       if (!currentProvider) return [];
-      
-      const providerConfig = this.aiSettings.provider_configs[this.aiSettings.current_provider];
-      if (providerConfig && providerConfig.enabled_models && providerConfig.enabled_models.length > 0) {
+
+      const providerConfig =
+        this.aiSettings.provider_configs[this.aiSettings.current_provider];
+      if (
+        providerConfig &&
+        providerConfig.enabled_models &&
+        providerConfig.enabled_models.length > 0
+      ) {
         return providerConfig.enabled_models;
       }
-      
+
       return currentProvider.models;
     },
-    
+
     async selectModel(model) {
       try {
         this.selectedModel = model;
         this.showModelSelector = false;
-        
+
         // Update user's default model
         const updateData = {
           provider: this.aiSettings.current_provider,
-          model: model
+          model: model,
         };
-        
+
         await window.apiService.updateAISettings(updateData);
         await this.loadAISettings(); // Refresh settings
       } catch (error) {
         console.error("Failed to update model:", error);
       }
     },
-    
+
     openSettings() {
       // Emit event to parent to open settings modal with AI tab
-      this.$emit('open-settings', 'ai');
+      this.$emit("open-settings", "ai");
     },
   },
   template: `

@@ -175,7 +175,7 @@ const KnowledgeApp = createApp({
                         <h1><a href="/knowledge/" class="brand-link">brainspreader</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
-                            <button @click="openSettings" class="settings-btn">settings</button>
+                            <button @click="openSettings()" class="settings-btn">settings</button>
                             <button @click="handleLogout" class="btn btn-outline">logout</button>
                         </div>
                     </div>

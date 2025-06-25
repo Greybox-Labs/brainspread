@@ -3,11 +3,13 @@ from django.db import models
 
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
+
 from .ai_provider import AIProvider
 
 
 class UserProviderConfig(UUIDModelMixin, CRUDTimestampsMixin):
     """Stores user configuration for each AI provider"""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     provider = models.ForeignKey(AIProvider, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=255, blank=True)

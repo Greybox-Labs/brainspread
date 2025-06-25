@@ -15,7 +15,9 @@ class ChatSession(UUIDModelMixin, CRUDTimestampsMixin):
 
 
 class ChatMessage(UUIDModelMixin, CRUDTimestampsMixin):
-    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name="messages")
+    session = models.ForeignKey(
+        ChatSession, on_delete=models.CASCADE, related_name="messages"
+    )
     role = models.CharField(max_length=20)  # 'user' or 'assistant'
     content = models.TextField()
 

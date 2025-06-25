@@ -24,7 +24,7 @@ window.SettingsModal = {
       isUpdating: false,
       aiSettings: null,
       loadingAISettings: false,
-      currentTab: "general",
+      currentTab: this.activeTab || "general",
       commonTimezones: [
         "UTC",
         "America/New_York",
@@ -80,24 +80,23 @@ window.SettingsModal = {
     },
     activeTab: {
       handler(newTab) {
-        this.currentTab = newTab;
-      }
+        this.currentTab = newTab || "general";
+      },
+      immediate: true,
+    },
+    isOpen: {
+      async handler(newValue) {
+        if (newValue) {
+          this.currentTab = this.activeTab || "general";
+          await this.loadAISettings();
+        }
+      },
     },
   },
 
   async mounted() {
     if (this.isOpen) {
       await this.loadAISettings();
-    }
-  },
-
-  watch: {
-    isOpen: {
-      async handler(newValue) {
-        if (newValue) {
-          await this.loadAISettings();
-        }
-      }
     }
   },
 
@@ -198,27 +197,30 @@ window.SettingsModal = {
 
     async loadAISettings() {
       if (this.loadingAISettings || this.aiSettings) return;
-      
+
       try {
         this.loadingAISettings = true;
         const result = await window.apiService.getAISettings();
         if (result.success) {
           this.aiSettings = result.data;
-          
+
           // Initialize form data
           this.aiSettings.formData = {
             selectedProvider: this.aiSettings.current_provider || "",
             selectedModel: this.aiSettings.current_model || "",
             apiKeys: {},
-            enabledModels: {}
+            enabledModels: {},
           };
-          
+
           // Initialize API keys and enabled models from provider configs
-          Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
-            const config = this.aiSettings.provider_configs[providerName];
-            this.aiSettings.formData.apiKeys[providerName] = "";
-            this.aiSettings.formData.enabledModels[providerName] = config.enabled_models || [];
-          });
+          Object.keys(this.aiSettings.provider_configs).forEach(
+            (providerName) => {
+              const config = this.aiSettings.provider_configs[providerName];
+              this.aiSettings.formData.apiKeys[providerName] = "";
+              this.aiSettings.formData.enabledModels[providerName] =
+                config.enabled_models || [];
+            }
+          );
         }
       } catch (error) {
         console.error("Failed to load AI settings:", error);
@@ -229,25 +231,28 @@ window.SettingsModal = {
 
     async saveAISettings() {
       if (!this.aiSettings) return;
-      
+
       try {
         this.isUpdating = true;
-        
+
         const updateData = {
           provider: this.aiSettings.formData.selectedProvider,
           model: this.aiSettings.formData.selectedModel,
           api_keys: this.aiSettings.formData.apiKeys,
-          provider_configs: {}
+          provider_configs: {},
         };
-        
+
         // Build provider configs
-        Object.keys(this.aiSettings.formData.enabledModels).forEach(providerName => {
-          updateData.provider_configs[providerName] = {
-            is_enabled: true,
-            enabled_models: this.aiSettings.formData.enabledModels[providerName]
-          };
-        });
-        
+        Object.keys(this.aiSettings.formData.enabledModels).forEach(
+          (providerName) => {
+            updateData.provider_configs[providerName] = {
+              is_enabled: true,
+              enabled_models:
+                this.aiSettings.formData.enabledModels[providerName],
+            };
+          }
+        );
+
         const result = await window.apiService.updateAISettings(updateData);
         if (result.success) {
           console.log("AI settings updated successfully");
@@ -263,7 +268,9 @@ window.SettingsModal = {
 
     getAvailableModels(providerName) {
       if (!this.aiSettings) return [];
-      const provider = this.aiSettings.providers.find(p => p.name === providerName);
+      const provider = this.aiSettings.providers.find(
+        (p) => p.name === providerName
+      );
       return provider ? provider.models : [];
     },
 
@@ -271,10 +278,11 @@ window.SettingsModal = {
       if (!this.aiSettings.formData.enabledModels[providerName]) {
         this.aiSettings.formData.enabledModels[providerName] = [];
       }
-      
-      const enabledModels = this.aiSettings.formData.enabledModels[providerName];
+
+      const enabledModels =
+        this.aiSettings.formData.enabledModels[providerName];
       const index = enabledModels.indexOf(model);
-      
+
       if (index > -1) {
         enabledModels.splice(index, 1);
       } else {
@@ -283,10 +291,15 @@ window.SettingsModal = {
     },
 
     isModelEnabled(providerName, model) {
-      if (!this.aiSettings || !this.aiSettings.formData.enabledModels[providerName]) {
+      if (
+        !this.aiSettings ||
+        !this.aiSettings.formData.enabledModels[providerName]
+      ) {
         return false;
       }
-      return this.aiSettings.formData.enabledModels[providerName].includes(model);
+      return this.aiSettings.formData.enabledModels[providerName].includes(
+        model
+      );
     },
   },
 
@@ -319,44 +332,44 @@ window.SettingsModal = {
         <div v-if="currentTab === 'general'" class="tab-content">
           <div class="settings-section">
             <h3>Theme</h3>
-          <div class="theme-options">
-            <button 
-              class="theme-option"
-              :class="{ active: selectedTheme === 'dark' }"
-              @click="selectTheme('dark')"
-              type="button"
-            >
-              Dark
-            </button>
-            <button 
-              class="theme-option"
-              :class="{ active: selectedTheme === 'light' }"
-              @click="selectTheme('light')"
-              type="button"
-            >
-              Light
-            </button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Time Zone</h3>
-          <div class="timezone-selector">
-            <select 
-              v-model="selectedTimezone"
-              class="timezone-select"
-              @change="selectTimezone($event.target.value)"
-            >
-              <option 
-                v-for="timezone in commonTimezones"
-                :key="timezone"
-                :value="timezone"
+            <div class="theme-options">
+              <button 
+                class="theme-option"
+                :class="{ active: selectedTheme === 'dark' }"
+                @click="selectTheme('dark')"
+                type="button"
               >
-                {{ timezone.replace('_', ' ') }}
-              </option>
-            </select>
+                Dark
+              </button>
+              <button 
+                class="theme-option"
+                :class="{ active: selectedTheme === 'light' }"
+                @click="selectTheme('light')"
+                type="button"
+              >
+                Light
+              </button>
+            </div>
           </div>
-        </div>
+
+          <div class="settings-section">
+            <h3>Time Zone</h3>
+            <div class="timezone-selector">
+              <select 
+                v-model="selectedTimezone"
+                class="timezone-select"
+                @change="selectTimezone($event.target.value)"
+              >
+                <option 
+                  v-for="timezone in commonTimezones"
+                  :key="timezone"
+                  :value="timezone"
+                >
+                  {{ timezone.replace('_', ' ') }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div v-if="currentTab === 'ai'" class="tab-content">
