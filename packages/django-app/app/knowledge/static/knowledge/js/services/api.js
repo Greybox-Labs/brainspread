@@ -297,6 +297,14 @@ class ApiService {
       body: JSON.stringify(payload),
     });
   }
+
+  async getChatSessions() {
+    return await this.request("/api/ai-chat/sessions/");
+  }
+
+  async getChatSessionDetail(sessionId) {
+    return await this.request(`/api/ai-chat/sessions/${sessionId}/`);
+  }
 }
 
 // Export for use in other files
