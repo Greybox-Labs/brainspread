@@ -48,9 +48,15 @@ class Command(BaseCommand):
             # Anthropic models
             (
                 "Anthropic",
+                "claude-opus-4-20250514",
+                "Claude Opus 4",
+                "Most capable Claude 4 model",
+            ),
+            (
+                "Anthropic",
                 "claude-sonnet-4-20250514",
                 "Claude Sonnet 4",
-                "Latest and most capable Claude model",
+                "Latest Claude 4 model",
             ),
             (
                 "Anthropic",
