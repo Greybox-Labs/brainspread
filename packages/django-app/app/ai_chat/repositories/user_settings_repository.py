@@ -1,13 +1,13 @@
 from typing import Optional
 
 from ai_chat.models import UserAISettings, UserProviderConfig
+from common.repositories.base_repository import BaseRepository
 
 
-class UserSettingsService:
-    """Service to manage user AI settings"""
+class UserSettingsRepository(BaseRepository):
+    """Repository for user AI settings data access"""
 
-    @staticmethod
-    def get_user_settings(user) -> Optional[UserAISettings]:
+    def get_user_settings(self, user) -> Optional[UserAISettings]:
         """
         Get AI settings for a user.
 
@@ -18,12 +18,11 @@ class UserSettingsService:
             UserAISettings or None if not configured
         """
         try:
-            return UserAISettings.objects.select_related("provider").get(user=user)
+            return UserAISettings.objects.get(user=user)
         except UserAISettings.DoesNotExist:
             return None
 
-    @staticmethod
-    def has_valid_settings(user) -> bool:
+    def has_valid_settings(self, user) -> bool:
         """
         Check if user has valid AI settings configured.
 
@@ -31,24 +30,20 @@ class UserSettingsService:
             user: The user object
 
         Returns:
-            bool: True if user has provider, model, and API key configured
+            bool: True if user has preferred model and at least one API key configured
         """
-        settings = UserSettingsService.get_user_settings(user)
-        if not settings or not settings.provider or not settings.default_model:
+        settings = self.get_user_settings(user)
+        if not settings or not settings.preferred_model:
             return False
 
-        # Check if user has API key configured for the current provider
-        try:
-            provider_config = UserProviderConfig.objects.get(
-                user=user, provider=settings.provider
-            )
-            return bool(provider_config.api_key and provider_config.is_enabled)
-        except UserProviderConfig.DoesNotExist:
-            # No provider config found
-            return False
+        # Check if user has at least one API key configured
+        provider_configs = UserProviderConfig.objects.filter(
+            user=user, is_enabled=True
+        ).exclude(api_key__isnull=True).exclude(api_key__exact='')
+        
+        return provider_configs.exists()
 
-    @staticmethod
-    def get_api_key(user, provider) -> Optional[str]:
+    def get_api_key(self, user, provider) -> Optional[str]:
         """
         Get API key for a user and provider.
 
@@ -67,5 +62,4 @@ class UserSettingsService:
                 return provider_config.api_key
             return None
         except UserProviderConfig.DoesNotExist:
-            # No provider config found
             return None

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
+    AIModel,
     AIProvider,
     ChatMessage,
     ChatSession,
@@ -19,6 +20,27 @@ class AIProviderAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("name", "base_url")}),
+        (
+            "Metadata",
+            {"fields": ("id", "created_at", "modified_at"), "classes": ("collapse",)},
+        ),
+    )
+
+
+@admin.register(AIModel)
+class AIModelAdmin(admin.ModelAdmin):
+    list_display = ["name", "provider", "display_name", "is_active", "created_at"]
+    list_filter = ["provider", "is_active", "created_at"]
+    search_fields = ["name", "display_name", "description"]
+    readonly_fields = ["id", "created_at", "modified_at"]
+    raw_id_fields = ["provider"]
+
+    fieldsets = (
+        (None, {"fields": ("name", "provider", "display_name", "is_active")}),
+        (
+            "Description",
+            {"fields": ("description",), "classes": ("wide",)},
+        ),
         (
             "Metadata",
             {"fields": ("id", "created_at", "modified_at"), "classes": ("collapse",)},
@@ -117,19 +139,20 @@ class ChatMessageAdmin(admin.ModelAdmin):
 
 @admin.register(UserAISettings)
 class UserAISettingsAdmin(admin.ModelAdmin):
-    list_display = ["user", "provider", "default_model", "created_at"]
-    list_filter = ["provider", "created_at"]
+    list_display = ["user", "preferred_model", "created_at"]
+    list_filter = ["created_at", "preferred_model__provider"]
     search_fields = [
         "user__email",
         "user__first_name",
         "user__last_name",
-        "default_model",
+        "preferred_model__name",
+        "preferred_model__display_name",
     ]
     readonly_fields = ["id", "created_at", "modified_at"]
-    raw_id_fields = ["user", "provider"]
+    raw_id_fields = ["user", "preferred_model"]
 
     fieldsets = (
-        (None, {"fields": ("user", "provider", "default_model")}),
+        (None, {"fields": ("user", "preferred_model")}),
         (
             "Metadata",
             {"fields": ("id", "created_at", "modified_at"), "classes": ("collapse",)},
@@ -170,7 +193,7 @@ class UserProviderConfigAdmin(admin.ModelAdmin):
             "Model Configuration",
             {
                 "fields": ("enabled_models",),
-                "description": "JSON list of enabled models for this provider.",
+                "description": "Models that this user has enabled for this provider.",
             },
         ),
         (
@@ -186,7 +209,7 @@ class UserProviderConfigAdmin(admin.ModelAdmin):
     has_api_key.short_description = "Has API Key"
 
     def enabled_models_count(self, obj):
-        return len(obj.enabled_models) if obj.enabled_models else 0
+        return obj.enabled_models.count()
 
     enabled_models_count.short_description = "Enabled Models"
 

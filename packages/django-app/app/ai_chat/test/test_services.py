@@ -2,9 +2,9 @@ from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
+from ai_chat.repositories.user_settings_repository import UserSettingsRepository
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
-from ai_chat.services.user_settings_service import UserSettingsService
 from ai_chat.test.helpers import (
     AnthropicProviderFactory,
     OpenAIProviderFactory,
@@ -125,27 +125,39 @@ class AIServiceFactoryTestCase(TestCase):
         self.assertEqual(models, [])
 
 
-class UserSettingsServiceTestCase(TestCase):
-    """Test user settings service functionality"""
+class UserSettingsRepositoryTestCase(TestCase):
+    """Test user settings repository functionality"""
 
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(email="test@example.com")
         cls.openai_provider = OpenAIProviderFactory()
         cls.anthropic_provider = AnthropicProviderFactory()
+        cls.repo = UserSettingsRepository()
+
+    def setUp(self):
+        # Create AIModel for testing
+        from ai_chat.models import AIModel
+        self.gpt4_model = AIModel.objects.create(
+            name="gpt-4",
+            provider=self.openai_provider,
+            display_name="GPT-4",
+            description="Test GPT-4 model",
+            is_active=True,
+        )
 
     def test_get_user_settings_exists(self):
         """Test getting existing user settings"""
         settings = UserAISettingsFactory(
-            user=self.user, provider=self.openai_provider, default_model="gpt-4"
+            user=self.user, preferred_model=self.gpt4_model
         )
 
-        result = UserSettingsService.get_user_settings(self.user)
+        result = self.repo.get_user_settings(self.user)
         self.assertEqual(result, settings)
 
     def test_get_user_settings_not_exists(self):
         """Test getting user settings when none exist"""
-        result = UserSettingsService.get_user_settings(self.user)
+        result = self.repo.get_user_settings(self.user)
         self.assertIsNone(result)
 
     def test_get_api_key_exists(self):
@@ -154,12 +166,12 @@ class UserSettingsServiceTestCase(TestCase):
             user=self.user, provider=self.openai_provider, api_key="test-api-key-123"
         )
 
-        api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
+        api_key = self.repo.get_api_key(self.user, self.openai_provider)
         self.assertEqual(api_key, "test-api-key-123")
 
     def test_get_api_key_not_exists(self):
         """Test getting API key when provider config doesn't exist"""
-        api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
+        api_key = self.repo.get_api_key(self.user, self.openai_provider)
         self.assertIsNone(api_key)
 
     def test_get_api_key_disabled_provider(self):
@@ -171,7 +183,7 @@ class UserSettingsServiceTestCase(TestCase):
             is_enabled=False,
         )
 
-        api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
+        api_key = self.repo.get_api_key(self.user, self.openai_provider)
         self.assertIsNone(api_key)
 
     def test_get_api_key_empty_key(self):
@@ -180,28 +192,37 @@ class UserSettingsServiceTestCase(TestCase):
             user=self.user, provider=self.openai_provider, api_key="", is_enabled=True
         )
 
-        api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
+        api_key = self.repo.get_api_key(self.user, self.openai_provider)
         self.assertIsNone(api_key)
 
     def test_user_isolation(self):
         """Test that user settings are properly isolated"""
         # Create settings for test user
         test_settings = UserAISettingsFactory(
-            user=self.user, provider=self.openai_provider
+            user=self.user, preferred_model=self.gpt4_model
         )
 
         # Create settings for different user
         other_user = UserFactory(email="other@example.com")
+        # Create an Anthropic model for the other user
+        from ai_chat.models import AIModel
+        claude_model = AIModel.objects.create(
+            name="claude-3-sonnet",
+            provider=self.anthropic_provider,
+            display_name="Claude 3 Sonnet",
+            description="Test Claude model",
+            is_active=True,
+        )
         other_settings = UserAISettingsFactory(
-            user=other_user, provider=self.anthropic_provider
+            user=other_user, preferred_model=claude_model
         )
 
         # Verify isolation
-        result = UserSettingsService.get_user_settings(self.user)
+        result = self.repo.get_user_settings(self.user)
         self.assertEqual(result, test_settings)
         self.assertNotEqual(result, other_settings)
 
-        result_other = UserSettingsService.get_user_settings(other_user)
+        result_other = self.repo.get_user_settings(other_user)
         self.assertEqual(result_other, other_settings)
         self.assertNotEqual(result_other, test_settings)
 
@@ -248,10 +269,21 @@ class ServiceIntegrationTestCase(TestCase):
     def setUpTestData(cls):
         cls.user = UserFactory(email="test@example.com")
         cls.openai_provider = OpenAIProviderFactory()
+        cls.repo = UserSettingsRepository()
 
     def setUp(self):
+        # Create AIModel for testing
+        from ai_chat.models import AIModel
+        self.gpt4_model = AIModel.objects.create(
+            name="gpt-4",
+            provider=self.openai_provider,
+            display_name="GPT-4",
+            description="Test GPT-4 model",
+            is_active=True,
+        )
+
         self.user_settings = UserAISettingsFactory(
-            user=self.user, provider=self.openai_provider, default_model="gpt-4"
+            user=self.user, preferred_model=self.gpt4_model
         )
 
         self.provider_config = UserProviderConfigFactory(
@@ -267,18 +299,18 @@ class ServiceIntegrationTestCase(TestCase):
         mock_create_service.return_value = mock_service
 
         # Get user settings
-        settings = UserSettingsService.get_user_settings(self.user)
+        settings = self.repo.get_user_settings(self.user)
         self.assertIsNotNone(settings)
 
         # Get API key
-        api_key = UserSettingsService.get_api_key(self.user, settings.provider)
+        api_key = self.repo.get_api_key(self.user, settings.preferred_model.provider)
         self.assertEqual(api_key, "test-api-key-12345")
 
         # Create service
         service = AIServiceFactory.create_service(
-            provider_name=settings.provider.name,
+            provider_name=settings.preferred_model.provider.name,
             api_key=api_key,
-            model=settings.default_model,
+            model=settings.preferred_model.name,
         )
 
         # Send message
@@ -300,11 +332,11 @@ class ServiceIntegrationTestCase(TestCase):
         self.provider_config.delete()
 
         # Get settings should still work
-        settings = UserSettingsService.get_user_settings(self.user)
+        settings = self.repo.get_user_settings(self.user)
         self.assertIsNotNone(settings)
 
         # But API key should be None
-        api_key = UserSettingsService.get_api_key(self.user, settings.provider)
+        api_key = self.repo.get_api_key(self.user, settings.preferred_model.provider)
         self.assertIsNone(api_key)
 
     def test_provider_config_without_settings(self):
@@ -313,9 +345,9 @@ class ServiceIntegrationTestCase(TestCase):
         self.user_settings.delete()
 
         # Settings should be None
-        settings = UserSettingsService.get_user_settings(self.user)
+        settings = self.repo.get_user_settings(self.user)
         self.assertIsNone(settings)
 
         # But we can still get API key if we have the provider
-        api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
+        api_key = self.repo.get_api_key(self.user, self.openai_provider)
         self.assertEqual(api_key, "test-api-key-12345")

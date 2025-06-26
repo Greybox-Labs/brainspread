@@ -9,7 +9,6 @@ class AIProvider(UUIDModelMixin, CRUDTimestampsMixin):
 
     name = models.CharField(max_length=50)
     base_url = models.URLField(blank=True, null=True)
-    # Store API key per user via UserAISettings
 
     class Meta:
         db_table = "ai_providers"

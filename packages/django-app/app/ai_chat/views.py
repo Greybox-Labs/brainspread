@@ -8,14 +8,16 @@ from rest_framework.response import Response
 
 from .commands import SendMessageCommand
 from .commands.send_message import SendMessageCommandError
+from .forms import SendMessageForm
 from .models import (
+    AIModel,
     AIProvider,
     ChatSession,
     UserAISettings,
     UserProviderConfig,
 )
+from .repositories.user_settings_repository import UserSettingsRepository
 from .services.ai_service_factory import AIServiceFactory
-from .services.user_settings_service import UserSettingsService
 
 logger = logging.getLogger(__name__)
 
@@ -32,32 +34,31 @@ def send_message(request):
 
     Expected request data:
     - message: The user's message (required)
+    - model: The AI model to use for this request (required)
     - session_id: Optional session ID to continue conversation
+    - context_blocks: Optional list of context blocks
 
     API key is automatically retrieved from user settings.
     """
     try:
-        message = request.data.get("message", "").strip()
-        if not message:
+        form = SendMessageForm(request.data, user=request.user)
+        if not form.is_valid():
+            # Extract first error message from form errors
+            error_message = (
+                str(list(form.errors.values())[0][0])
+                if form.errors
+                else "Invalid form data"
+            )
             return Response(
-                {"success": False, "error": "Message cannot be empty"},
+                {
+                    "success": False,
+                    "error": error_message,
+                    "error_type": "configuration_error",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        session_id = request.data.get("session_id")
-        context_blocks = request.data.get("context_blocks", [])
-
-        session = None
-        if session_id:
-            try:
-                session = ChatSession.objects.get(uuid=session_id, user=request.user)
-            except ChatSession.DoesNotExist:
-                logger.warning(
-                    f"Session {session_id} not found for user {request.user.id}"
-                )
-                session = None
-
-        command = SendMessageCommand(request.user, session, message, context_blocks)
+        command = SendMessageCommand(form)
         result = command.execute()
         return Response({"success": True, "data": result})
 
@@ -179,26 +180,24 @@ def ai_settings(request):
     try:
         # Get available providers
         providers = AIProvider.objects.all()
-        providers_data = [
-            {
+        # Get available models from database grouped by provider
+        providers_data = []
+        for provider in providers:
+            models = AIModel.objects.filter(provider=provider, is_active=True).values_list('name', flat=True)
+            providers_data.append({
                 "id": provider.id,
                 "uuid": str(provider.uuid),
                 "name": provider.name,
-                "models": AIServiceFactory.get_available_models(provider.name),
-            }
-            for provider in providers
-        ]
+                "models": list(models),
+            })
 
         # Get user's current settings
-        user_settings = UserSettingsService.get_user_settings(request.user)
-        current_provider = None
+        user_settings_repo = UserSettingsRepository()
+        user_settings = user_settings_repo.get_user_settings(request.user)
         current_model = None
 
-        if user_settings:
-            current_provider = (
-                user_settings.provider.name if user_settings.provider else None
-            )
-            current_model = user_settings.default_model
+        if user_settings and user_settings.preferred_model:
+            current_model = user_settings.preferred_model.name
 
         # Get user provider configurations
         provider_configs = UserProviderConfig.objects.filter(user=request.user)
@@ -208,12 +207,11 @@ def ai_settings(request):
             configs_data[config.provider.name] = {
                 "is_enabled": config.is_enabled,
                 "has_api_key": bool(config.api_key),
-                "enabled_models": config.enabled_models,
+                "enabled_models": list(config.enabled_models.values_list('name', flat=True)),
             }
 
         response_data = {
             "providers": providers_data,
-            "current_provider": current_provider,
             "current_model": current_model,
             "provider_configs": configs_data,
         }
@@ -243,28 +241,20 @@ def update_ai_settings(request):
         )  # Dict of provider configs
 
         # Update user AI settings
-        if provider_name and model:
+        if model:
+            # Get the AIModel object for the preferred model
             try:
-                provider = AIProvider.objects.get(name__iexact=provider_name)
-            except AIProvider.DoesNotExist:
-                return Response(
-                    {
-                        "success": False,
-                        "error": f"Provider '{provider_name}' not found",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
+                ai_model = AIModel.objects.get(name=model, is_active=True)
+                user_settings, created = UserAISettings.objects.get_or_create(
+                    user=request.user,
+                    defaults={"preferred_model": ai_model},
                 )
 
-            # Get or create user settings
-            user_settings, created = UserAISettings.objects.get_or_create(
-                user=request.user,
-                defaults={"provider": provider, "default_model": model},
-            )
-
-            if not created:
-                user_settings.provider = provider
-                user_settings.default_model = model
-                user_settings.save()
+                if not created:
+                    user_settings.preferred_model = ai_model
+                    user_settings.save()
+            except AIModel.DoesNotExist:
+                logger.warning(f"AI model '{model}' not found when updating user settings")
 
         # Update provider configurations
         for provider_name, config_data in provider_configs.items():
@@ -275,7 +265,6 @@ def update_ai_settings(request):
                     provider=provider,
                     defaults={
                         "is_enabled": config_data.get("is_enabled", True),
-                        "enabled_models": config_data.get("enabled_models", []),
                     },
                 )
 
@@ -283,10 +272,18 @@ def update_ai_settings(request):
                     provider_config.is_enabled = config_data.get(
                         "is_enabled", provider_config.is_enabled
                     )
-                    provider_config.enabled_models = config_data.get(
-                        "enabled_models", provider_config.enabled_models
-                    )
                     provider_config.save()
+                
+                # Handle enabled_models M2M relationship
+                enabled_model_names = config_data.get("enabled_models", [])
+                if enabled_model_names:
+                    # Get AIModel objects for the given names and provider
+                    ai_models = AIModel.objects.filter(
+                        name__in=enabled_model_names,
+                        provider=provider,
+                        is_active=True
+                    )
+                    provider_config.enabled_models.set(ai_models)
 
             except AIProvider.DoesNotExist:
                 logger.warning(

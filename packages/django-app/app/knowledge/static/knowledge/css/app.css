@@ -385,8 +385,12 @@ body {
   background: var(--bg-primary);
   border: 1px solid var(--border-primary);
   padding: 2rem;
-  max-width: 500px;
+  max-width: 600px;
   width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .settings-modal h2 {
@@ -456,7 +460,10 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-secondary);
+  flex-shrink: 0;
 }
 
 /* Tags */
@@ -1967,6 +1974,9 @@ body {
 
 .tab-content {
   animation: fadeIn 0.2s ease-in;
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
 }
 
 @keyframes fadeIn {
@@ -2022,16 +2032,27 @@ body {
   font-family: inherit;
 }
 
+.provider-models {
+  margin-bottom: 1.5rem;
+}
+
 .provider-models h4 {
   margin: 1rem 0 0.5rem 0;
   color: var(--text-primary);
   font-size: 1rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-secondary);
 }
 
 .model-checkboxes {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-secondary);
+  padding: 0.5rem;
+  background: var(--accent-bg);
 }
 
 .model-checkbox {

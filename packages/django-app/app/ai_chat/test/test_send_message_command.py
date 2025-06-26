@@ -1,8 +1,11 @@
 from unittest.mock import Mock, patch
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from ai_chat.commands.send_message import SendMessageCommand, SendMessageCommandError
+from ai_chat.forms import SendMessageForm
+from ai_chat.models import AIModel
 from ai_chat.services.ai_service_factory import AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
 from ai_chat.test.helpers import (
@@ -23,9 +26,25 @@ class SendMessageCommandTestCase(TestCase):
         cls.openai_provider = OpenAIProviderFactory()
 
     def setUp(self):
-        # Create user AI settings with OpenAI as default
+        # Create AIModel entries for testing
+        self.gpt4_model = AIModel.objects.create(
+            name="gpt-4",
+            provider=self.openai_provider,
+            display_name="GPT-4",
+            description="Test GPT-4 model",
+            is_active=True,
+        )
+        self.gpt35_model = AIModel.objects.create(
+            name="gpt-3.5-turbo",
+            provider=self.openai_provider,
+            display_name="GPT-3.5 Turbo",
+            description="Test GPT-3.5 model",
+            is_active=True,
+        )
+
+        # Create user AI settings with preferred model
         self.user_settings = UserAISettingsFactory(
-            user=self.user, provider=self.openai_provider, default_model="gpt-4"
+            user=self.user, preferred_model=self.gpt4_model
         )
 
         # Create provider config with API key
@@ -33,8 +52,19 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             provider=self.openai_provider,
             api_key="test-api-key-12345",
-            enabled_models=["gpt-4", "gpt-3.5-turbo"],
+            enabled_models=[self.gpt4_model, self.gpt35_model],
         )
+
+    def _create_form(self, message="Hello, AI!", model="gpt-4", session_id=None, context_blocks=None):
+        """Helper to create a form with default values"""
+        form_data = {
+            "message": message,
+            "model": model,
+            "context_blocks": context_blocks or [],
+        }
+        if session_id:
+            form_data["session_id"] = str(session_id)
+        return SendMessageForm(form_data, user=self.user)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
@@ -63,12 +93,8 @@ class SendMessageCommandTestCase(TestCase):
         mock_create_service.return_value = mock_service
 
         # Execute command
-        command = SendMessageCommand(
-            user=self.user,
-            session=None,  # No existing session
-            message="Hello, AI!",
-            context_blocks=[],
-        )
+        form = self._create_form()
+        command = SendMessageCommand(form)
         result = command.execute()
 
         # Verify result
@@ -79,7 +105,7 @@ class SendMessageCommandTestCase(TestCase):
         mock_create_session.assert_called_once_with(self.user)
         self.assertEqual(mock_add_message.call_count, 2)  # User message + AI response
         mock_create_service.assert_called_once_with(
-            provider_name=self.openai_provider.name,
+            provider_name="openai",  # Determined from model
             api_key="test-api-key-12345",
             model="gpt-4",
         )
@@ -110,12 +136,8 @@ class SendMessageCommandTestCase(TestCase):
         mock_create_service.return_value = mock_service
 
         # Execute command
-        command = SendMessageCommand(
-            user=self.user,
-            session=session,
-            message="Follow-up question",
-            context_blocks=[],
-        )
+        form = self._create_form(message="Follow-up question", session_id=session.uuid)
+        command = SendMessageCommand(form)
         result = command.execute()
 
         # Verify result
@@ -127,93 +149,35 @@ class SendMessageCommandTestCase(TestCase):
         call_args = mock_service.send_message.call_args[0][0]
         self.assertEqual(len(call_args), 3)  # Previous 2 + new user message
 
-    def test_execute_no_settings_error(self):
-        """Test command fails when no AI settings configured"""
-        # Delete user settings
-        self.user_settings.delete()
-
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
-
-        with self.assertRaises(SendMessageCommandError) as context:
-            command.execute()
-
-        self.assertIn("No AI settings configured", str(context.exception))
-
-    def test_execute_no_provider_error(self):
-        """Test command fails when no provider configured"""
-        # Remove provider from settings
-        self.user_settings.provider = None
-        self.user_settings.save()
-
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
-
-        with self.assertRaises(SendMessageCommandError) as context:
-            command.execute()
-
-        self.assertIn("No AI provider configured", str(context.exception))
-
-    def test_execute_no_api_key_error(self):
-        """Test command fails when no API key configured"""
+    def test_execute_no_api_key_for_model_error(self):
+        """Test command fails when no API key configured for the model's provider"""
         # Delete provider config (which contains API key)
         self.provider_config.delete()
 
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
+        form = self._create_form(model="gpt-4")  # OpenAI model
 
-        with self.assertRaises(SendMessageCommandError) as context:
+        with self.assertRaises(ValidationError) as context:
+            command = SendMessageCommand(form)
             command.execute()
 
-        self.assertIn("No API key configured", str(context.exception))
+        error_message = str(context.exception)
+        self.assertIn("No API key configured for OpenAI", error_message)
 
-    def test_execute_no_model_error(self):
-        """Test command fails when no default model configured"""
-        # Remove default model (use empty string since field doesn't allow null)
-        self.user_settings.default_model = ""
-        self.user_settings.save()
+    def test_execute_unknown_model_error(self):
+        """Test command fails when model is not found in database"""
+        form = self._create_form(model="unknown-model-xyz")
 
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
-
-        with self.assertRaises(SendMessageCommandError) as context:
+        with self.assertRaises(ValidationError) as context:
+            command = SendMessageCommand(form)
             command.execute()
 
-        self.assertIn("No default model configured", str(context.exception))
+        error_message = str(context.exception)
+        self.assertIn("Model", error_message)
+        self.assertIn("unknown-model-xyz", error_message)
+        self.assertIn("not available or not found", error_message)
 
-    @patch(
-        "ai_chat.services.ai_service_factory.AIServiceFactory.get_supported_providers"
-    )
-    def test_execute_unsupported_provider_error(self, mock_get_providers):
-        """Test command fails when provider is not supported"""
-        mock_get_providers.return_value = ["openai", "anthropic"]
 
-        # Change provider to unsupported one and create a provider config with API key
-        unsupported_provider = OpenAIProviderFactory(name="UnsupportedProvider")
-        self.user_settings.provider = unsupported_provider
-        self.user_settings.save()
 
-        # Create provider config with API key so we don't fail on API key check first
-        UserProviderConfigFactory(
-            user=self.user,
-            provider=unsupported_provider,
-            api_key="test-api-key-unsupported",
-        )
-
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
-
-        with self.assertRaises(SendMessageCommandError) as context:
-            command.execute()
-
-        self.assertIn(
-            "Provider 'UnsupportedProvider' is not supported", str(context.exception)
-        )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
@@ -240,9 +204,8 @@ class SendMessageCommandTestCase(TestCase):
         # Make AI service fail
         mock_create_service.side_effect = AIServiceError("API rate limit exceeded")
 
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
+        form = self._create_form(message="Hello")
+        command = SendMessageCommand(form)
 
         with self.assertRaises(SendMessageCommandError) as context:
             command.execute()
@@ -281,9 +244,8 @@ class SendMessageCommandTestCase(TestCase):
         # Make service factory fail
         mock_create_service.side_effect = AIServiceFactoryError("Unsupported provider")
 
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Hello", context_blocks=[]
-        )
+        form = self._create_form(message="Hello")
+        command = SendMessageCommand(form)
 
         with self.assertRaises(SendMessageCommandError) as context:
             command.execute()
@@ -299,14 +261,14 @@ class SendMessageCommandTestCase(TestCase):
             {"content": "Heading note", "block_type": "heading"},
         ]
 
-        command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="What should I do?",
-            context_blocks=context_blocks,
+        form = self._create_form(
+            message="What should I do?", context_blocks=context_blocks
         )
+        command = SendMessageCommand(form)
 
-        formatted_message = command._format_message_with_context()
+        formatted_message = command._format_message_with_context(
+            "What should I do?", context_blocks
+        )
 
         # Verify context formatting
         self.assertIn("**Context from my notes:**", formatted_message)
@@ -319,11 +281,10 @@ class SendMessageCommandTestCase(TestCase):
 
     def test_format_message_no_context_blocks(self):
         """Test message formatting without context blocks"""
-        command = SendMessageCommand(
-            user=self.user, session=None, message="Simple question", context_blocks=[]
-        )
+        form = self._create_form(message="Simple question")
+        command = SendMessageCommand(form)
 
-        formatted_message = command._format_message_with_context()
+        formatted_message = command._format_message_with_context("Simple question", [])
         self.assertEqual(formatted_message, "Simple question")
 
     def test_format_message_empty_context_blocks(self):
@@ -333,14 +294,14 @@ class SendMessageCommandTestCase(TestCase):
             {"content": "   ", "block_type": "bullet"},
         ]
 
-        command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Question with empty context",
-            context_blocks=context_blocks,
+        form = self._create_form(
+            message="Question with empty context", context_blocks=context_blocks
         )
+        command = SendMessageCommand(form)
 
-        formatted_message = command._format_message_with_context()
+        formatted_message = command._format_message_with_context(
+            "Question with empty context", context_blocks
+        )
         self.assertEqual(formatted_message, "Question with empty context")
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
@@ -373,12 +334,9 @@ class SendMessageCommandTestCase(TestCase):
         mock_create_service.return_value = mock_service
 
         # Execute command with context blocks
-        command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="What to do?",
-            context_blocks=[{"content": "Important task", "block_type": "todo"}],
-        )
+        context_blocks = [{"content": "Important task", "block_type": "todo"}]
+        form = self._create_form(message="What to do?", context_blocks=context_blocks)
+        command = SendMessageCommand(form)
         result = command.execute()
 
         # Verify result

@@ -4,13 +4,18 @@ from django.db import models
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
 
-from .ai_provider import AIProvider
-
 
 class UserAISettings(UUIDModelMixin, CRUDTimestampsMixin):
+    """Stores user-specific AI settings such as preferred model"""
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    provider = models.ForeignKey(AIProvider, on_delete=models.SET_NULL, null=True)
-    default_model = models.CharField(max_length=100, blank=True)
+    preferred_model = models.ForeignKey(
+        'AIModel', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="User's preferred AI model for new conversations"
+    )
 
     class Meta:
         db_table = "user_ai_settings"

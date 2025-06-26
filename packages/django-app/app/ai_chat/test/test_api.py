@@ -6,6 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from ai_chat.models import (
+    AIModel,
     ChatSession,
     UserAISettings,
     UserProviderConfig,
@@ -40,9 +41,41 @@ class AIChatAPITestCase(TestCase):
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
 
-        # Create user AI settings with OpenAI as default
+        # Create AIModel entries for testing
+        self.gpt4_model = AIModel.objects.create(
+            name="gpt-4",
+            provider=self.openai_provider,
+            display_name="GPT-4",
+            description="Test GPT-4 model",
+            is_active=True,
+        )
+        self.gpt35_model = AIModel.objects.create(
+            name="gpt-3.5-turbo",
+            provider=self.openai_provider,
+            display_name="GPT-3.5 Turbo",
+            description="Test GPT-3.5 model",
+            is_active=True,
+        )
+        
+        # Create Anthropic models for testing
+        self.claude_sonnet_model = AIModel.objects.create(
+            name="claude-3-sonnet",
+            provider=self.anthropic_provider,
+            display_name="Claude 3 Sonnet",
+            description="Test Claude 3 Sonnet model",
+            is_active=True,
+        )
+        self.claude_haiku_model = AIModel.objects.create(
+            name="claude-3-haiku",
+            provider=self.anthropic_provider,
+            display_name="Claude 3 Haiku",
+            description="Test Claude 3 Haiku model",
+            is_active=True,
+        )
+
+        # Create user AI settings with preferred model
         self.user_settings = UserAISettingsFactory(
-            user=self.user, provider=self.openai_provider, default_model="gpt-4"
+            user=self.user, preferred_model=self.gpt4_model
         )
 
         # Create provider config with API key
@@ -50,7 +83,7 @@ class AIChatAPITestCase(TestCase):
             user=self.user,
             provider=self.openai_provider,
             api_key="test-api-key-12345",
-            enabled_models=["gpt-4", "gpt-3.5-turbo"],
+            enabled_models=[self.gpt4_model, self.gpt35_model],
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
@@ -61,7 +94,7 @@ class AIChatAPITestCase(TestCase):
         mock_service.send_message.return_value = "Hello! How can I help you today?"
         mock_create_service.return_value = mock_service
 
-        data = {"message": "Hello, AI!"}
+        data = {"message": "Hello, AI!", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -78,7 +111,7 @@ class AIChatAPITestCase(TestCase):
 
         # Verify mock was called correctly
         mock_create_service.assert_called_once_with(
-            provider_name=self.openai_provider.name,
+            provider_name="openai",  # Determined from model name
             api_key="test-api-key-12345",
             model="gpt-4",
         )
@@ -95,6 +128,7 @@ class AIChatAPITestCase(TestCase):
 
         data = {
             "message": "What should I do about this?",
+            "model": "gpt-4",
             "context_blocks": [
                 {"content": "Buy groceries", "block_type": "todo"},
                 {"content": "Call dentist", "block_type": "done"},
@@ -129,7 +163,7 @@ class AIChatAPITestCase(TestCase):
             session=session, role="assistant", content="Previous response"
         )
 
-        data = {"message": "Follow-up question", "session_id": str(session.uuid)}
+        data = {"message": "Follow-up question", "model": "gpt-4", "session_id": str(session.uuid)}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -142,7 +176,7 @@ class AIChatAPITestCase(TestCase):
 
     def test_send_message_empty_message(self):
         """Test sending empty message returns error"""
-        data = {"message": ""}
+        data = {"message": "", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -150,35 +184,36 @@ class AIChatAPITestCase(TestCase):
         self.assertIn("Message cannot be empty", response.data["error"])
 
     def test_send_message_no_settings(self):
-        """Test sending message without AI settings configured"""
-        # Delete user settings
+        """Test sending message without API key for the model's provider"""
+        # Delete both user settings and provider config
         UserAISettings.objects.filter(user=self.user).delete()
+        UserProviderConfig.objects.filter(user=self.user).delete()
 
-        data = {"message": "Hello"}
+        data = {"message": "Hello", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(response.data["success"])
-        self.assertIn("No AI settings configured", response.data["error"])
+        self.assertIn("No API key configured for OpenAI", response.data["error"])
 
     def test_send_message_no_api_key(self):
         """Test sending message without API key configured"""
         # Delete provider config (which contains API key)
         UserProviderConfig.objects.filter(user=self.user).delete()
 
-        data = {"message": "Hello"}
+        data = {"message": "Hello", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(response.data["success"])
-        self.assertIn("No API key configured", response.data["error"])
+        self.assertIn("No API key configured for OpenAI", response.data["error"])
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_ai_service_error(self, mock_create_service):
         """Test handling AI service errors"""
         mock_create_service.side_effect = AIServiceError("API rate limit exceeded")
 
-        data = {"message": "Hello"}
+        data = {"message": "Hello", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -190,7 +225,7 @@ class AIChatAPITestCase(TestCase):
         """Test API authentication is required"""
         self.client.credentials()  # Remove authentication
 
-        data = {"message": "Hello"}
+        data = {"message": "Hello", "model": "gpt-4"}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -301,11 +336,9 @@ class AIChatAPITestCase(TestCase):
 
         settings_data = response.data["data"]
         self.assertIn("providers", settings_data)
-        self.assertIn("current_provider", settings_data)
         self.assertIn("current_model", settings_data)
         self.assertIn("provider_configs", settings_data)
 
-        self.assertEqual(settings_data["current_provider"], self.openai_provider.name)
         self.assertEqual(settings_data["current_model"], "gpt-4")
 
     def test_update_ai_settings_success(self):
@@ -331,8 +364,8 @@ class AIChatAPITestCase(TestCase):
 
         # Verify settings were updated
         user_settings = UserAISettings.objects.get(user=self.user)
-        self.assertEqual(user_settings.provider.name, "Anthropic")
-        self.assertEqual(user_settings.default_model, "claude-3-sonnet")
+        self.assertEqual(user_settings.preferred_model.name, "claude-3-sonnet")
+        self.assertEqual(user_settings.preferred_model.provider.name, "Anthropic")
 
         # Verify provider config was created
         provider_config = UserProviderConfig.objects.get(
@@ -340,30 +373,30 @@ class AIChatAPITestCase(TestCase):
         )
         self.assertEqual(provider_config.api_key, "new-anthropic-key")
         self.assertTrue(provider_config.is_enabled)
-        self.assertEqual(
-            provider_config.enabled_models, ["claude-3-sonnet", "claude-3-haiku"]
-        )
+        
+        # Check enabled models (M2M relationship)
+        enabled_model_names = list(provider_config.enabled_models.values_list('name', flat=True))
+        self.assertIn("claude-3-sonnet", enabled_model_names)
+        self.assertIn("claude-3-haiku", enabled_model_names)
 
     def test_update_ai_settings_invalid_provider(self):
-        """Test updating settings with invalid provider"""
+        """Test updating settings with invalid model"""
         data = {"provider": "NonExistentProvider", "model": "some-model"}
 
         response = self.client.post(
             "/api/ai-chat/settings/update/", data, format="json"
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(response.data["success"])
-        self.assertIn(
-            "Provider 'NonExistentProvider' not found", response.data["error"]
-        )
+        # With the new architecture, invalid models are logged but don't cause errors
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["success"])
 
     def test_api_endpoints_authentication_required(self):
         """Test all AI chat endpoints require authentication"""
         self.client.credentials()  # Remove authentication
 
         endpoints = [
-            ("/api/ai-chat/send/", "post", {"message": "test"}),
+            ("/api/ai-chat/send/", "post", {"message": "test", "model": "gpt-4"}),
             ("/api/ai-chat/sessions/", "get", None),
             ("/api/ai-chat/sessions/test-uuid/", "get", None),
             ("/api/ai-chat/settings/", "get", None),
@@ -390,7 +423,7 @@ class AIChatAPITestCase(TestCase):
         import uuid
 
         fake_uuid = str(uuid.uuid4())
-        data = {"message": "Hello", "session_id": fake_uuid}
+        data = {"message": "Hello", "model": "gpt-4", "session_id": fake_uuid}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -4,8 +4,9 @@ from typing import Dict, List
 from ai_chat.repositories.chat_repository import ChatRepository
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
-from ai_chat.services.user_settings_service import UserSettingsService
 from common.commands.abstract_base_command import AbstractBaseCommand
+
+from ..forms import SendMessageForm
 
 logger = logging.getLogger(__name__)
 
@@ -17,84 +18,59 @@ class SendMessageCommandError(Exception):
 
 
 class SendMessageCommand(AbstractBaseCommand):
-    def __init__(
-        self, user, session, message: str, context_blocks: List[Dict] = None
-    ) -> None:
-        self.user = user
-        self.session = session
-        self.message = message
-        self.context_blocks = context_blocks or []
+    def __init__(self, form: SendMessageForm) -> None:
+        self.form = form
 
     def execute(self) -> Dict[str, str]:
         super().execute()
 
         try:
-            # Get user's AI settings
-            user_settings = UserSettingsService.get_user_settings(self.user)
-
-            if not user_settings:
-                raise SendMessageCommandError(
-                    "No AI settings configured. Please configure your AI provider and API key in settings."
-                )
-
-            # Check if settings are complete
-            if not user_settings.provider:
-                raise SendMessageCommandError("No AI provider configured.")
-
-            # Get API key from provider config
-            api_key = UserSettingsService.get_api_key(self.user, user_settings.provider)
-            if not api_key:
-                raise SendMessageCommandError(
-                    "No API key configured for the selected provider."
-                )
-
-            if not user_settings.default_model:
-                raise SendMessageCommandError("No default model configured.")
-
-            # Validate provider is supported
-            supported_providers = AIServiceFactory.get_supported_providers()
-            if user_settings.provider.name.lower() not in supported_providers:
-                supported_list = ", ".join(supported_providers)
-                raise SendMessageCommandError(
-                    f"Provider '{user_settings.provider.name}' is not supported. "
-                    f"Supported providers: {supported_list}"
-                )
+            # Get validated data from form
+            message = self.form.cleaned_data["message"]
+            model = self.form.cleaned_data["model"]
+            session = self.form.cleaned_data.get("session_id")
+            context_blocks = self.form.cleaned_data.get("context_blocks", [])
+            provider_name = self.form.cleaned_data["provider_name"]
+            api_key = self.form.cleaned_data["api_key"]
+            user = self.form.user
 
             # Create or get session
-            if not self.session:
-                self.session = ChatRepository.create_session(self.user)
+            if not session:
+                session = ChatRepository.create_session(user)
 
             # Prepare the message with context blocks
-            formatted_message = self._format_message_with_context()
+            formatted_message = self._format_message_with_context(
+                message, context_blocks
+            )
 
             # Add user message to database
-            ChatRepository.add_message(self.session, "user", formatted_message)
+            ChatRepository.add_message(session, "user", formatted_message)
 
             # Get conversation history
             messages: List[Dict[str, str]] = [
                 {"role": msg.role, "content": msg.content}
-                for msg in ChatRepository.get_messages(self.session)
+                for msg in ChatRepository.get_messages(session)
             ]
 
             # Create AI service using factory
             service = AIServiceFactory.create_service(
-                provider_name=user_settings.provider.name,
+                provider_name=provider_name,
                 api_key=api_key,
-                model=user_settings.default_model,
+                model=model,
             )
             response_content = service.send_message(messages)
 
             # Add assistant response to database
-            ChatRepository.add_message(self.session, "assistant", response_content)
+            ChatRepository.add_message(session, "assistant", response_content)
 
-            return {"response": response_content, "session_id": str(self.session.uuid)}
+            return {"response": response_content, "session_id": str(session.uuid)}
 
         except (AIServiceError, AIServiceFactoryError) as e:
-            logger.error(f"AI service error for user {self.user.id}: {str(e)}")
+            logger.error(f"AI service error for user {user.id}: {str(e)}")
             # Still save the user message even if AI fails
-            if self.session:
+            if session:
                 ChatRepository.add_message(
-                    self.session,
+                    session,
                     "assistant",
                     f"Sorry, I'm experiencing technical difficulties: {str(e)}",
                 )
@@ -106,20 +82,22 @@ class SendMessageCommand(AbstractBaseCommand):
 
         except Exception as e:
             logger.error(
-                f"Unexpected error in SendMessageCommand for user {self.user.id}: {str(e)}"
+                f"Unexpected error in SendMessageCommand for user {user.id}: {str(e)}"
             )
             raise SendMessageCommandError(
                 f"An unexpected error occurred: {str(e)}"
             ) from e
 
-    def _format_message_with_context(self) -> str:
+    def _format_message_with_context(
+        self, message: str, context_blocks: List[Dict]
+    ) -> str:
         """Format the user message with context blocks if any are provided."""
-        if not self.context_blocks:
-            return self.message
+        if not context_blocks:
+            return message
 
         # Format context blocks
         context_text_parts = []
-        for block in self.context_blocks:
+        for block in context_blocks:
             content = block.get("content", "").strip()
             if content:
                 block_type = block.get("block_type", "bullet")
@@ -131,7 +109,7 @@ class SendMessageCommand(AbstractBaseCommand):
                     context_text_parts.append(f"• {content}")
 
         if not context_text_parts:
-            return self.message
+            return message
 
         # Combine context and message
         context_section = "\n".join(context_text_parts)
@@ -139,6 +117,6 @@ class SendMessageCommand(AbstractBaseCommand):
 {context_section}
 
 **My question:**
-{self.message}"""
+{message}"""
 
         return formatted_message

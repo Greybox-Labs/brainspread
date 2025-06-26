@@ -2,6 +2,7 @@ from typing import Dict, List, Type
 
 from .anthropic_service import AnthropicService
 from .base_ai_service import AIServiceError, BaseAIService
+from .google_service import GoogleService
 from .openai_service import OpenAIService
 
 
@@ -18,6 +19,7 @@ class AIServiceFactory:
     _services: Dict[str, Type[BaseAIService]] = {
         "openai": OpenAIService,
         "anthropic": AnthropicService,
+        "google": GoogleService,
     }
 
     @classmethod
