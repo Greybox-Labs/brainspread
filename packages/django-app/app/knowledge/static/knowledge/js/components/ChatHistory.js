@@ -41,12 +41,12 @@ const ChatHistory = {
   template: `
     <div class="chat-history">
       <button class="history-toggle" @click="toggleHistory">
-        History ({{ sessions.length }})
+        history ({{ sessions.length }})
       </button>
       <teleport to=".chat-panel" v-if="isOpen">
         <div class="history-dropdown">
           <div class="history-header">
-            <h3>Chat History</h3>
+            <h3>chat history</h3>
             <button class="close-btn" @click="toggleHistory">×</button>
           </div>
           <div class="history-content">

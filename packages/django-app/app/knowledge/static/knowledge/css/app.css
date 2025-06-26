@@ -119,7 +119,6 @@ body {
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   border-radius: 0;
   box-shadow: 2px 2px 0 var(--border-primary);
@@ -265,7 +264,6 @@ body {
   border-radius: 0;
   box-shadow: 4px 4px 0 var(--border-primary);
   position: relative;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -333,6 +331,40 @@ body {
 
 .settings-btn:hover {
   background: var(--hover-bg);
+}
+
+/* Chat controls buttons - FORCE same height as model selector */
+.chat-controls .settings-btn,
+.chat-controls .context-btn {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-secondary) !important;
+  color: var(--text-primary) !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.25rem !important;
+  min-width: 35px !important;
+  height: 36px !important;
+  box-sizing: border-box !important;
+  font-weight: bold !important;
+  letter-spacing: 0.5px !important;
+}
+
+.chat-controls .settings-btn:hover {
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+  background: var(--hover-bg) !important;
+}
+
+.chat-controls .context-btn:hover,
+.chat-controls .context-btn.active {
+  color: var(--text-primary) !important;
+  border-color: var(--context-color) !important;
+  background: var(--hover-bg) !important;
 }
 
 /* Settings Modal */
@@ -646,11 +678,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: none;
 }
 
 .delete-page-btn:hover {
   background: var(--error-hover);
   border-color: var(--error-hover);
+  box-shadow: none;
+  transform: none;
 }
 
 .date-picker {
@@ -813,8 +848,6 @@ body {
   margin-left: 0.3rem;
   font-family: inherit;
   border-radius: 0;
-  box-shadow: 1px 1px 0 var(--error-color);
-  text-transform: uppercase;
   letter-spacing: 0.3px;
   min-width: 30px;
   height: 20px;
@@ -826,12 +859,10 @@ body {
 .block-delete:hover {
   opacity: 1 !important;
   transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0 var(--error-color);
 }
 
 .block-delete:active {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--error-color);
 }
 
 .child-block {
@@ -888,8 +919,6 @@ body {
   transition: none;
   font-family: inherit;
   border-radius: 0;
-  box-shadow: 4px 4px 0 var(--border-primary);
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -898,12 +927,10 @@ body {
   color: var(--text-primary);
   background-color: var(--hover-bg);
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--border-primary);
 }
 
 .add-block-btn:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--border-primary);
 }
 
 .block-wrapper.focused {
@@ -1547,8 +1574,7 @@ body {
   cursor: pointer;
   border-radius: 0;
   font-weight: bold;
-  text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: 1rem;
   letter-spacing: 0.5px;
   transition: none;
 }
@@ -1666,7 +1692,6 @@ body {
   cursor: pointer;
   font-weight: bold;
   font-family: inherit;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: none;
   align-self: flex-end;
@@ -1739,22 +1764,24 @@ body {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-secondary);
   background: var(--sidebar-bg);
+  min-height: 50px;
 }
 
 .new-chat-btn {
   background: var(--text-primary);
   color: var(--bg-primary);
-  border: 2px solid var(--border-primary);
-  padding: 0.5rem;
+  border: 1px solid var(--border-primary);
+  padding: 0.5rem 0.75rem;
   border-radius: 0;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
-  width: 32px;
-  height: 32px;
-  display: flex;
+  font-family: inherit;
+  min-width: 35px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
 
 .new-chat-btn:hover {
@@ -2041,6 +2068,7 @@ body {
   border-bottom: 1px solid var(--border-secondary);
   background: var(--accent-bg);
   order: 1;
+  min-height: 40px;
 }
 
 /* Message Input Row */
@@ -2072,6 +2100,8 @@ body {
   align-items: center;
   gap: 0.25rem;
   min-width: 80px;
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .model-selector-btn:hover {
@@ -2137,22 +2167,6 @@ body {
   border-bottom: none;
 }
 
-.chat-controls .settings-btn {
-  background: var(--bg-primary);
-  border: 2px solid var(--border-secondary);
-  color: var(--text-secondary);
-  padding: 0.25rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: 0;
-}
-
-.chat-controls .settings-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--border-primary);
-  background: var(--hover-bg);
-}
-
 .new-chat-btn {
   background: none;
   border: none;
@@ -2167,24 +2181,7 @@ body {
   color: var(--text-primary);
 }
 
-/* Context UI Styles */
-.context-btn {
-  background: var(--bg-primary);
-  border: 2px solid var(--border-secondary);
-  color: var(--text-secondary);
-  padding: 0.25rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: 0;
-  transition: none;
-}
-
-.context-btn:hover,
-.context-btn.active {
-  color: var(--text-primary);
-  border-color: var(--context-color);
-  background: var(--hover-bg);
-}
+/* Context UI Styles - moved to chat-controls section above */
 
 .context-area {
   border-top: 1px solid var(--border-secondary);
@@ -2204,7 +2201,6 @@ body {
   font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: bold;
-  text-transform: uppercase;
 }
 
 .context-clear-btn {

@@ -166,22 +166,24 @@ const KnowledgeApp = createApp({
     // Chat context management methods
     addBlockToContext(block) {
       // Don't add if already in context
-      if (!this.chatContextBlocks.find(b => b.id === block.id)) {
+      if (!this.chatContextBlocks.find((b) => b.id === block.id)) {
         this.chatContextBlocks.push({
           id: block.id,
           content: block.content,
           block_type: block.block_type,
-          created_at: block.created_at
+          created_at: block.created_at,
         });
       }
     },
 
     removeBlockFromContext(blockId) {
-      this.chatContextBlocks = this.chatContextBlocks.filter(b => b.id !== blockId);
+      this.chatContextBlocks = this.chatContextBlocks.filter(
+        (b) => b.id !== blockId
+      );
     },
 
     isBlockInContext(blockId) {
-      return this.chatContextBlocks.some(b => b.id === blockId);
+      return this.chatContextBlocks.some((b) => b.id === blockId);
     },
 
     clearChatContext() {
@@ -216,7 +218,7 @@ const KnowledgeApp = createApp({
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
                             <button @click="openSettings()" class="settings-btn">settings</button>
-                            <button @click="handleLogout" class="btn btn-outline">logout</button>
+                            <button @click="handleLogout" class="btn btn-outline">LOGOUT</button>
                         </div>
                     </div>
                 </nav>

@@ -6,12 +6,12 @@ const ChatPanel = {
   props: {
     chatContextBlocks: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     visibleBlocks: {
       type: Array,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
   emits: ["open-settings", "remove-context-block", "clear-context"],
   data() {
@@ -195,23 +195,26 @@ const ChatPanel = {
 
     toggleModelSelector() {
       this.showModelSelector = !this.showModelSelector;
-      
+
       if (this.showModelSelector) {
         // Check if dropdown would be cut off and position accordingly
         this.$nextTick(() => {
-          const dropdown = this.$el.querySelector('.model-dropdown');
-          const button = this.$el.querySelector('.model-selector-btn');
-          
+          const dropdown = this.$el.querySelector(".model-dropdown");
+          const button = this.$el.querySelector(".model-selector-btn");
+
           if (dropdown && button) {
             const buttonRect = button.getBoundingClientRect();
             const viewportHeight = window.innerHeight;
-            const dropdownHeight = Math.min(300, this.getAvailableModels().length * 40); // estimated height
-            
+            const dropdownHeight = Math.min(
+              300,
+              this.getAvailableModels().length * 40
+            ); // estimated height
+
             // If there's not enough space below, show above
             if (buttonRect.bottom + dropdownHeight > viewportHeight - 20) {
-              dropdown.classList.add('show-above');
+              dropdown.classList.add("show-above");
             } else {
-              dropdown.classList.remove('show-above');
+              dropdown.classList.remove("show-above");
             }
           }
         });
@@ -223,14 +226,14 @@ const ChatPanel = {
 
       // Return all enabled models from providers with API keys
       const allModels = [];
-      Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
+      Object.keys(this.aiSettings.provider_configs).forEach((providerName) => {
         const config = this.aiSettings.provider_configs[providerName];
         if (config.has_api_key && config.enabled_models) {
-          config.enabled_models.forEach(model => {
+          config.enabled_models.forEach((model) => {
             allModels.push({
               value: model,
               label: `${providerName}: ${model}`,
-              provider: providerName
+              provider: providerName,
             });
           });
         }
@@ -240,11 +243,13 @@ const ChatPanel = {
     },
 
     getCurrentModelLabel() {
-      if (!this.selectedModel || !this.aiSettings) return 'Model';
-      
+      if (!this.selectedModel || !this.aiSettings) return "Model";
+
       const allModels = this.getAvailableModels();
-      const currentModel = allModels.find(model => model.value === this.selectedModel);
-      
+      const currentModel = allModels.find(
+        (model) => model.value === this.selectedModel
+      );
+
       return currentModel ? currentModel.label : this.selectedModel;
     },
 
@@ -285,7 +290,9 @@ const ChatPanel = {
     },
 
     getContextPreview(block) {
-      return block.content.length > 50 ? block.content.substring(0, 50) + "..." : block.content;
+      return block.content.length > 50
+        ? block.content.substring(0, 50) + "..."
+        : block.content;
     },
 
     getContextCount() {
@@ -302,7 +309,7 @@ const ChatPanel = {
            :class="{ resizing: isResizing }"
            @mousedown="startResize">
       </div>
-      <button class="chat-toggle" @click="togglePanel">AI</button>
+      <button class="chat-toggle" @click="togglePanel">ai</button>
       <div class="chat-content">
         <div class="chat-header">
           <ChatHistory @session-selected="onSessionSelected" />
@@ -390,14 +397,14 @@ const ChatPanel = {
               :class="{ active: hasContext() }"
               :title="hasContext() ? 'Context (' + getContextCount() + ')' : 'Add context'"
             >
-              📎
+              ctx
             </button>
-            <button class="settings-btn" @click="openSettings" title="AI Settings">⚙️</button>
+            <button class="settings-btn" @click="openSettings" title="AI Settings">cfg</button>
           </div>
           <div class="message-input">
             <textarea v-model="message" placeholder="Ask something..." @keydown="handleKeydown"></textarea>
             <button @click="sendMessage" :disabled="loading">
-              {{ loading ? 'Sending...' : 'Send' }}
+              {{ loading ? 'sending...' : 'send' }}
             </button>
           </div>
         </div>
