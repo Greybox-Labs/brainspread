@@ -9,6 +9,24 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Create AIProvider and AIModel entries for all available providers and models"""
 
+        # Provider definitions
+        providers_data = [
+            ("OpenAI", "https://api.openai.com/v1"),
+            ("Anthropic", "https://api.anthropic.com"),
+            ("Google", "https://generativelanguage.googleapis.com/v1beta"),
+        ]
+
+        # Create providers first
+        provider_created_count = 0
+        for provider_name, base_url in providers_data:
+            provider, created = AIProvider.objects.get_or_create(
+                name=provider_name,
+                defaults={"base_url": base_url}
+            )
+            if created:
+                provider_created_count += 1
+                self.stdout.write(f"Created provider: {provider_name}")
+
         # Model definitions
         models_data = [
             # OpenAI models
@@ -136,6 +154,8 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Successfully processed models. Created: {created_count}, Updated: {updated_count}"
+                f"Successfully processed providers and models. "
+                f"Providers created: {provider_created_count}, "
+                f"Models created: {created_count}, Models updated: {updated_count}"
             )
         )
