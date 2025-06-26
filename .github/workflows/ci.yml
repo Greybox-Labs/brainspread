@@ -25,6 +25,12 @@ jobs:
         sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
 
+    - name: Create .env file
+      working-directory: ./packages/django-app
+      run: |
+        just copy-env
+        sed -i "s/SECRET_KEY_GOES_HERE/$(just generate-secret-key)/" .env
+
     - name: Build services
       working-directory: ./packages/django-app
       run: just build
