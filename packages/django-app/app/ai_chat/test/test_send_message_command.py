@@ -1,19 +1,17 @@
 from unittest.mock import Mock, patch
+
 from django.test import TestCase
 
-from core.test.helpers import UserFactory
 from ai_chat.commands.send_message import SendMessageCommand, SendMessageCommandError
-from ai_chat.models import ChatSession, ChatMessage
-from ai_chat.services.base_ai_service import AIServiceError
 from ai_chat.services.ai_service_factory import AIServiceFactoryError
-
-from .helpers import (
+from ai_chat.services.base_ai_service import AIServiceError
+from ai_chat.test.helpers import (
+    ChatSessionFactory,
+    OpenAIProviderFactory,
     UserAISettingsFactory,
     UserProviderConfigFactory,
-    ChatSessionFactory,
-    ChatMessageFactory,
-    OpenAIProviderFactory,
 )
+from core.test.helpers import UserFactory
 
 
 class SendMessageCommandTestCase(TestCase):
@@ -27,36 +25,39 @@ class SendMessageCommandTestCase(TestCase):
     def setUp(self):
         # Create user AI settings with OpenAI as default
         self.user_settings = UserAISettingsFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            default_model="gpt-4"
+            user=self.user, provider=self.openai_provider, default_model="gpt-4"
         )
-        
+
         # Create provider config with API key
         self.provider_config = UserProviderConfigFactory(
             user=self.user,
             provider=self.openai_provider,
             api_key="test-api-key-12345",
-            enabled_models=["gpt-4", "gpt-3.5-turbo"]
+            enabled_models=["gpt-4", "gpt-3.5-turbo"],
         )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.create_session')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.add_message')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.get_messages')
-    def test_execute_success_new_session(self, mock_get_messages, mock_add_message, 
-                                       mock_create_session, mock_create_service):
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    def test_execute_success_new_session(
+        self,
+        mock_get_messages,
+        mock_add_message,
+        mock_create_session,
+        mock_create_service,
+    ):
         """Test successful command execution with new session"""
         # Setup mocks
         mock_session = Mock()
         mock_session.uuid = "test-session-uuid"
         mock_create_session.return_value = mock_session
-        
+
         mock_message = Mock()
         mock_message.role = "user"
         mock_message.content = "Hello, AI!"
         mock_get_messages.return_value = [mock_message]
-        
+
         mock_service = Mock()
         mock_service.send_message.return_value = "Hello! How can I help you?"
         mock_create_service.return_value = mock_service
@@ -66,7 +67,7 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             session=None,  # No existing session
             message="Hello, AI!",
-            context_blocks=[]
+            context_blocks=[],
         )
         result = command.execute()
 
@@ -80,29 +81,30 @@ class SendMessageCommandTestCase(TestCase):
         mock_create_service.assert_called_once_with(
             provider_name=self.openai_provider.name,
             api_key="test-api-key-12345",
-            model="gpt-4"
+            model="gpt-4",
         )
-        mock_service.send_message.assert_called_once_with([{
-            "role": "user",
-            "content": "Hello, AI!"
-        }])
+        mock_service.send_message.assert_called_once_with(
+            [{"role": "user", "content": "Hello, AI!"}]
+        )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.add_message')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.get_messages')
-    def test_execute_success_existing_session(self, mock_get_messages, mock_add_message, 
-                                            mock_create_service):
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    def test_execute_success_existing_session(
+        self, mock_get_messages, mock_add_message, mock_create_service
+    ):
         """Test successful command execution with existing session"""
         # Create existing session
         session = ChatSessionFactory(user=self.user)
-        
-        # Setup mocks
+
+        # Setup mocks - need to return 3 messages (2 previous + new user message)
         mock_messages = [
             Mock(role="user", content="Previous message"),
             Mock(role="assistant", content="Previous response"),
+            Mock(role="user", content="Follow-up question"),
         ]
         mock_get_messages.return_value = mock_messages
-        
+
         mock_service = Mock()
         mock_service.send_message.return_value = "Follow-up response"
         mock_create_service.return_value = mock_service
@@ -112,7 +114,7 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             session=session,
             message="Follow-up question",
-            context_blocks=[]
+            context_blocks=[],
         )
         result = command.execute()
 
@@ -121,11 +123,6 @@ class SendMessageCommandTestCase(TestCase):
         self.assertEqual(result["session_id"], str(session.uuid))
 
         # Verify conversation history was passed to AI service
-        expected_messages = [
-            {"role": "user", "content": "Previous message"},
-            {"role": "assistant", "content": "Previous response"},
-            {"role": "user", "content": "Follow-up question"},
-        ]
         mock_service.send_message.assert_called_once()
         call_args = mock_service.send_message.call_args[0][0]
         self.assertEqual(len(call_args), 3)  # Previous 2 + new user message
@@ -136,10 +133,7 @@ class SendMessageCommandTestCase(TestCase):
         self.user_settings.delete()
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
@@ -154,10 +148,7 @@ class SendMessageCommandTestCase(TestCase):
         self.user_settings.save()
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
@@ -171,10 +162,7 @@ class SendMessageCommandTestCase(TestCase):
         self.provider_config.delete()
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
@@ -184,15 +172,12 @@ class SendMessageCommandTestCase(TestCase):
 
     def test_execute_no_model_error(self):
         """Test command fails when no default model configured"""
-        # Remove default model
-        self.user_settings.default_model = None
+        # Remove default model (use empty string since field doesn't allow null)
+        self.user_settings.default_model = ""
         self.user_settings.save()
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
@@ -200,77 +185,104 @@ class SendMessageCommandTestCase(TestCase):
 
         self.assertIn("No default model configured", str(context.exception))
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.get_supported_providers')
+    @patch(
+        "ai_chat.services.ai_service_factory.AIServiceFactory.get_supported_providers"
+    )
     def test_execute_unsupported_provider_error(self, mock_get_providers):
         """Test command fails when provider is not supported"""
         mock_get_providers.return_value = ["openai", "anthropic"]
-        
-        # Change provider to unsupported one
+
+        # Change provider to unsupported one and create a provider config with API key
         unsupported_provider = OpenAIProviderFactory(name="UnsupportedProvider")
         self.user_settings.provider = unsupported_provider
         self.user_settings.save()
 
-        command = SendMessageCommand(
+        # Create provider config with API key so we don't fail on API key check first
+        UserProviderConfigFactory(
             user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            provider=unsupported_provider,
+            api_key="test-api-key-unsupported",
+        )
+
+        command = SendMessageCommand(
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
             command.execute()
 
-        self.assertIn("Provider 'UnsupportedProvider' is not supported", str(context.exception))
+        self.assertIn(
+            "Provider 'UnsupportedProvider' is not supported", str(context.exception)
+        )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.create_session')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.add_message')
-    def test_execute_ai_service_error(self, mock_add_message, mock_create_session, 
-                                    mock_create_service):
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    def test_execute_ai_service_error(
+        self,
+        mock_get_messages,
+        mock_add_message,
+        mock_create_session,
+        mock_create_service,
+    ):
         """Test command handles AI service errors gracefully"""
-        # Setup mocks
-        mock_session = Mock()
-        mock_session.uuid = "test-session-uuid"
-        mock_create_session.return_value = mock_session
-        
+        # Create a real session for the mocks
+        session = ChatSessionFactory(user=self.user)
+        mock_create_session.return_value = session
+
+        # Mock get_messages to return the user message
+        mock_user_message = Mock()
+        mock_user_message.role = "user"
+        mock_user_message.content = "Hello"
+        mock_get_messages.return_value = [mock_user_message]
+
         # Make AI service fail
         mock_create_service.side_effect = AIServiceError("API rate limit exceeded")
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
             command.execute()
 
         self.assertIn("AI service error", str(context.exception))
-        
+
         # Verify error message was added to session
         mock_add_message.assert_called_with(
-            mock_session,
+            session,
             "assistant",
-            "Sorry, I'm experiencing technical difficulties: API rate limit exceeded"
+            "Sorry, I'm experiencing technical difficulties: API rate limit exceeded",
         )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.create_session')
-    def test_execute_service_factory_error(self, mock_create_session, mock_create_service):
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    def test_execute_service_factory_error(
+        self,
+        mock_get_messages,
+        mock_add_message,
+        mock_create_session,
+        mock_create_service,
+    ):
         """Test command handles service factory errors"""
-        # Setup mocks
-        mock_session = Mock()
-        mock_create_session.return_value = mock_session
-        
+        # Create a real session for the mocks
+        session = ChatSessionFactory(user=self.user)
+        mock_create_session.return_value = session
+
+        # Mock get_messages to return the user message
+        mock_user_message = Mock()
+        mock_user_message.role = "user"
+        mock_user_message.content = "Hello"
+        mock_get_messages.return_value = [mock_user_message]
+
         # Make service factory fail
         mock_create_service.side_effect = AIServiceFactoryError("Unsupported provider")
 
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Hello",
-            context_blocks=[]
+            user=self.user, session=None, message="Hello", context_blocks=[]
         )
 
         with self.assertRaises(SendMessageCommandError) as context:
@@ -291,7 +303,7 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             session=None,
             message="What should I do?",
-            context_blocks=context_blocks
+            context_blocks=context_blocks,
         )
 
         formatted_message = command._format_message_with_context()
@@ -308,10 +320,7 @@ class SendMessageCommandTestCase(TestCase):
     def test_format_message_no_context_blocks(self):
         """Test message formatting without context blocks"""
         command = SendMessageCommand(
-            user=self.user,
-            session=None,
-            message="Simple question",
-            context_blocks=[]
+            user=self.user, session=None, message="Simple question", context_blocks=[]
         )
 
         formatted_message = command._format_message_with_context()
@@ -328,32 +337,39 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             session=None,
             message="Question with empty context",
-            context_blocks=context_blocks
+            context_blocks=context_blocks,
         )
 
         formatted_message = command._format_message_with_context()
         self.assertEqual(formatted_message, "Question with empty context")
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.create_session')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.add_message')
-    @patch('ai_chat.repositories.chat_repository.ChatRepository.get_messages')
-    def test_execute_with_context_blocks_integration(self, mock_get_messages, mock_add_message,
-                                                   mock_create_session, mock_create_service):
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
+    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    def test_execute_with_context_blocks_integration(
+        self,
+        mock_get_messages,
+        mock_add_message,
+        mock_create_session,
+        mock_create_service,
+    ):
         """Test full execution with context blocks"""
         # Setup mocks
         mock_session = Mock()
         mock_session.uuid = "test-session-uuid"
         mock_create_session.return_value = mock_session
-        
+
         # The formatted message will be captured by get_messages
         mock_message = Mock()
         mock_message.role = "user"
         mock_message.content = "**Context from my notes:**\n☐ Important task\n\n**My question:**\nWhat to do?"
         mock_get_messages.return_value = [mock_message]
-        
+
         mock_service = Mock()
-        mock_service.send_message.return_value = "Based on your notes, here's what I suggest..."
+        mock_service.send_message.return_value = (
+            "Based on your notes, here's what I suggest..."
+        )
         mock_create_service.return_value = mock_service
 
         # Execute command with context blocks
@@ -361,13 +377,15 @@ class SendMessageCommandTestCase(TestCase):
             user=self.user,
             session=None,
             message="What to do?",
-            context_blocks=[{"content": "Important task", "block_type": "todo"}]
+            context_blocks=[{"content": "Important task", "block_type": "todo"}],
         )
         result = command.execute()
 
         # Verify result
-        self.assertEqual(result["response"], "Based on your notes, here's what I suggest...")
-        
+        self.assertEqual(
+            result["response"], "Based on your notes, here's what I suggest..."
+        )
+
         # Verify the user message was formatted with context
         user_message_call = mock_add_message.call_args_list[0]
         formatted_content = user_message_call[0][2]  # Third argument is content

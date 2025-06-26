@@ -1,17 +1,17 @@
 from unittest.mock import Mock, patch
+
 from django.test import TestCase
 
-from core.test.helpers import UserFactory
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
 from ai_chat.services.user_settings_service import UserSettingsService
-
-from .helpers import (
+from ai_chat.test.helpers import (
+    AnthropicProviderFactory,
+    OpenAIProviderFactory,
     UserAISettingsFactory,
     UserProviderConfigFactory,
-    OpenAIProviderFactory,
-    AnthropicProviderFactory,
 )
+from core.test.helpers import UserFactory
 
 
 class AIServiceFactoryTestCase(TestCase):
@@ -24,48 +24,55 @@ class AIServiceFactoryTestCase(TestCase):
         self.assertIn("anthropic", providers)
         self.assertIsInstance(providers, list)
 
-    @patch('ai_chat.services.openai_service.OpenAIService')
-    def test_create_openai_service(self, mock_openai_service):
+    def test_create_openai_service(self):
         """Test creating OpenAI service"""
-        mock_instance = Mock()
-        mock_openai_service.return_value = mock_instance
+        with patch.object(AIServiceFactory, "_services") as mock_services:
+            mock_service_class = Mock()
+            mock_instance = Mock()
+            mock_service_class.return_value = mock_instance
+            mock_services.__getitem__.return_value = mock_service_class
+            mock_services.__contains__.return_value = True
 
-        service = AIServiceFactory.create_service(
-            provider_name="openai",
-            api_key="test-key",
-            model="gpt-4"
-        )
+            service = AIServiceFactory.create_service(
+                provider_name="openai", api_key="test-key", model="gpt-4"
+            )
 
-        self.assertEqual(service, mock_instance)
-        mock_openai_service.assert_called_once_with("test-key", "gpt-4")
+            self.assertEqual(service, mock_instance)
+            mock_service_class.assert_called_once_with(
+                api_key="test-key", model="gpt-4"
+            )
 
-    @patch('ai_chat.services.anthropic_service.AnthropicService')
-    def test_create_anthropic_service(self, mock_anthropic_service):
+    def test_create_anthropic_service(self):
         """Test creating Anthropic service"""
-        mock_instance = Mock()
-        mock_anthropic_service.return_value = mock_instance
+        with patch.object(AIServiceFactory, "_services") as mock_services:
+            mock_service_class = Mock()
+            mock_instance = Mock()
+            mock_service_class.return_value = mock_instance
+            mock_services.__getitem__.return_value = mock_service_class
+            mock_services.__contains__.return_value = True
 
-        service = AIServiceFactory.create_service(
-            provider_name="anthropic",
-            api_key="test-key",
-            model="claude-3-sonnet"
-        )
+            service = AIServiceFactory.create_service(
+                provider_name="anthropic", api_key="test-key", model="claude-3-sonnet"
+            )
 
-        self.assertEqual(service, mock_instance)
-        mock_anthropic_service.assert_called_once_with("test-key", "claude-3-sonnet")
+            self.assertEqual(service, mock_instance)
+            mock_service_class.assert_called_once_with(
+                api_key="test-key", model="claude-3-sonnet"
+            )
 
     def test_create_service_case_insensitive(self):
         """Test service creation is case insensitive"""
-        with patch('ai_chat.services.openai_service.OpenAIService') as mock_service:
+        with patch.object(AIServiceFactory, "_services") as mock_services:
+            mock_service_class = Mock()
             mock_instance = Mock()
-            mock_service.return_value = mock_instance
+            mock_service_class.return_value = mock_instance
+            mock_services.__getitem__.return_value = mock_service_class
+            mock_services.__contains__.return_value = True
 
             # Test different cases
             for provider_name in ["OpenAI", "OPENAI", "openai", "OpEnAi"]:
                 service = AIServiceFactory.create_service(
-                    provider_name=provider_name,
-                    api_key="test-key",
-                    model="gpt-4"
+                    provider_name=provider_name, api_key="test-key", model="gpt-4"
                 )
                 self.assertEqual(service, mock_instance)
 
@@ -73,36 +80,44 @@ class AIServiceFactoryTestCase(TestCase):
         """Test creating service with unsupported provider raises error"""
         with self.assertRaises(AIServiceFactoryError) as context:
             AIServiceFactory.create_service(
-                provider_name="unsupported",
-                api_key="test-key",
-                model="test-model"
+                provider_name="unsupported", api_key="test-key", model="test-model"
             )
 
         self.assertIn("Unsupported AI provider: unsupported", str(context.exception))
         self.assertIn("Supported providers:", str(context.exception))
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory._services')
-    def test_get_available_models_openai(self, mock_services):
+    def test_get_available_models_openai(self):
         """Test getting available models for OpenAI"""
-        mock_service_class = Mock()
-        mock_service_class.get_available_models.return_value = ["gpt-4", "gpt-3.5-turbo"]
-        mock_services = {"openai": mock_service_class}
+        with patch.object(AIServiceFactory, "_services") as mock_services:
+            mock_service_class = Mock()
+            mock_instance = Mock()
+            mock_instance.get_available_models.return_value = ["gpt-4", "gpt-3.5-turbo"]
+            mock_service_class.return_value = mock_instance
+            mock_services.__getitem__.return_value = mock_service_class
+            mock_services.__contains__.return_value = True
 
-        with patch.object(AIServiceFactory, '_services', mock_services):
             models = AIServiceFactory.get_available_models("openai")
             self.assertEqual(models, ["gpt-4", "gpt-3.5-turbo"])
-            mock_service_class.get_available_models.assert_called_once()
+            mock_service_class.assert_called_once_with(api_key="dummy", model="dummy")
+            mock_instance.get_available_models.assert_called_once()
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory._services')
-    def test_get_available_models_anthropic(self, mock_services):
+    def test_get_available_models_anthropic(self):
         """Test getting available models for Anthropic"""
-        mock_service_class = Mock()
-        mock_service_class.get_available_models.return_value = ["claude-3-sonnet", "claude-3-haiku"]
-        mock_services = {"anthropic": mock_service_class}
+        with patch.object(AIServiceFactory, "_services") as mock_services:
+            mock_service_class = Mock()
+            mock_instance = Mock()
+            mock_instance.get_available_models.return_value = [
+                "claude-3-sonnet",
+                "claude-3-haiku",
+            ]
+            mock_service_class.return_value = mock_instance
+            mock_services.__getitem__.return_value = mock_service_class
+            mock_services.__contains__.return_value = True
 
-        with patch.object(AIServiceFactory, '_services', mock_services):
             models = AIServiceFactory.get_available_models("anthropic")
             self.assertEqual(models, ["claude-3-sonnet", "claude-3-haiku"])
+            mock_service_class.assert_called_once_with(api_key="dummy", model="dummy")
+            mock_instance.get_available_models.assert_called_once()
 
     def test_get_available_models_unsupported_provider(self):
         """Test getting models for unsupported provider returns empty list"""
@@ -122,9 +137,7 @@ class UserSettingsServiceTestCase(TestCase):
     def test_get_user_settings_exists(self):
         """Test getting existing user settings"""
         settings = UserAISettingsFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            default_model="gpt-4"
+            user=self.user, provider=self.openai_provider, default_model="gpt-4"
         )
 
         result = UserSettingsService.get_user_settings(self.user)
@@ -138,9 +151,7 @@ class UserSettingsServiceTestCase(TestCase):
     def test_get_api_key_exists(self):
         """Test getting API key when provider config exists"""
         UserProviderConfigFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            api_key="test-api-key-123"
+            user=self.user, provider=self.openai_provider, api_key="test-api-key-123"
         )
 
         api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
@@ -157,7 +168,7 @@ class UserSettingsServiceTestCase(TestCase):
             user=self.user,
             provider=self.openai_provider,
             api_key="test-api-key-123",
-            is_enabled=False
+            is_enabled=False,
         )
 
         api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
@@ -166,10 +177,7 @@ class UserSettingsServiceTestCase(TestCase):
     def test_get_api_key_empty_key(self):
         """Test getting empty API key returns None"""
         UserProviderConfigFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            api_key="",
-            is_enabled=True
+            user=self.user, provider=self.openai_provider, api_key="", is_enabled=True
         )
 
         api_key = UserSettingsService.get_api_key(self.user, self.openai_provider)
@@ -179,15 +187,13 @@ class UserSettingsServiceTestCase(TestCase):
         """Test that user settings are properly isolated"""
         # Create settings for test user
         test_settings = UserAISettingsFactory(
-            user=self.user,
-            provider=self.openai_provider
+            user=self.user, provider=self.openai_provider
         )
-        
+
         # Create settings for different user
         other_user = UserFactory(email="other@example.com")
         other_settings = UserAISettingsFactory(
-            user=other_user,
-            provider=self.anthropic_provider
+            user=other_user, provider=self.anthropic_provider
         )
 
         # Verify isolation
@@ -214,25 +220,23 @@ class BaseAIServiceTestCase(TestCase):
         error = AIServiceError("Test error")
         self.assertIsInstance(error, Exception)
 
-    @patch('ai_chat.services.openai_service.OpenAIService.send_message')
+    @patch("ai_chat.services.openai_service.OpenAIService.send_message")
     def test_service_interface_compliance(self, mock_send_message):
         """Test that services comply with base interface"""
         mock_send_message.return_value = "Test response"
 
         # Test that we can create and use a service through the factory
         service = AIServiceFactory.create_service(
-            provider_name="openai",
-            api_key="test-key",
-            model="gpt-4"
+            provider_name="openai", api_key="test-key", model="gpt-4"
         )
 
         # Should have send_message method
-        self.assertTrue(hasattr(service, 'send_message'))
-        
+        self.assertTrue(hasattr(service, "send_message"))
+
         # Test calling the method
         messages = [{"role": "user", "content": "Hello"}]
         response = service.send_message(messages)
-        
+
         mock_send_message.assert_called_once_with(messages)
         self.assertEqual(response, "Test response")
 
@@ -247,18 +251,14 @@ class ServiceIntegrationTestCase(TestCase):
 
     def setUp(self):
         self.user_settings = UserAISettingsFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            default_model="gpt-4"
-        )
-        
-        self.provider_config = UserProviderConfigFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            api_key="test-api-key-12345"
+            user=self.user, provider=self.openai_provider, default_model="gpt-4"
         )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+        self.provider_config = UserProviderConfigFactory(
+            user=self.user, provider=self.openai_provider, api_key="test-api-key-12345"
+        )
+
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_full_service_workflow(self, mock_create_service):
         """Test complete workflow from settings to service creation"""
         # Mock the service
@@ -278,7 +278,7 @@ class ServiceIntegrationTestCase(TestCase):
         service = AIServiceFactory.create_service(
             provider_name=settings.provider.name,
             api_key=api_key,
-            model=settings.default_model
+            model=settings.default_model,
         )
 
         # Send message
@@ -289,7 +289,7 @@ class ServiceIntegrationTestCase(TestCase):
         mock_create_service.assert_called_once_with(
             provider_name=self.openai_provider.name,
             api_key="test-api-key-12345",
-            model="gpt-4"
+            model="gpt-4",
         )
         mock_service.send_message.assert_called_once_with(messages)
         self.assertEqual(response, "AI response")

@@ -44,8 +44,8 @@ class UserSettingsService:
             )
             return bool(provider_config.api_key and provider_config.is_enabled)
         except UserProviderConfig.DoesNotExist:
-            # Fallback to old API key storage in UserAISettings
-            return bool(settings.api_key)
+            # No provider config found
+            return False
 
     @staticmethod
     def get_api_key(user, provider) -> Optional[str]:
@@ -63,10 +63,9 @@ class UserSettingsService:
             provider_config = UserProviderConfig.objects.get(
                 user=user, provider=provider
             )
-            return provider_config.api_key if provider_config.is_enabled else None
+            if provider_config.is_enabled and provider_config.api_key:
+                return provider_config.api_key
+            return None
         except UserProviderConfig.DoesNotExist:
-            # Fallback to old API key storage in UserAISettings
-            settings = UserSettingsService.get_user_settings(user)
-            if settings and settings.provider == provider:
-                return settings.api_key
+            # No provider config found
             return None

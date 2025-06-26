@@ -6,14 +6,18 @@ const DailyNote = {
   props: {
     chatContextBlocks: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     isBlockInContext: {
       type: Function,
-      default: () => () => false
-    }
+      default: () => () => false,
+    },
   },
-  emits: ["block-add-to-context", "block-remove-from-context", "visible-blocks-changed"],
+  emits: [
+    "block-add-to-context",
+    "block-remove-from-context",
+    "visible-blocks-changed",
+  ],
   data() {
     return {
       currentDate: this.getDateFromURL() || this.getLocalDateString(),
@@ -921,7 +925,7 @@ const DailyNote = {
             class="form-control date-picker"
           />
           <button
-            v-if="page && page.id && blocks.length === 0"
+            v-if="page && page.id"
             @click="deletePage"
             class="btn btn-danger delete-page-btn"
             title="Delete this daily note"

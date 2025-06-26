@@ -2,8 +2,14 @@ import factory
 from factory import Faker, SubFactory
 from factory.django import DjangoModelFactory
 
+from ai_chat.models import (
+    AIProvider,
+    ChatMessage,
+    ChatSession,
+    UserAISettings,
+    UserProviderConfig,
+)
 from core.test.helpers import UserFactory
-from ai_chat.models import AIProvider, ChatSession, ChatMessage, UserAISettings, UserProviderConfig
 
 
 class AIProviderFactory(DjangoModelFactory):

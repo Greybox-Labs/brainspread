@@ -36,21 +36,21 @@ const BlockComponent = {
     // Context-related props
     isBlockInContext: {
       type: Function,
-      default: () => () => false
+      default: () => () => false,
     },
     onBlockAddToContext: {
       type: Function,
-      default: () => () => {}
+      default: () => () => {},
     },
     onBlockRemoveFromContext: {
       type: Function,
-      default: () => () => {}
+      default: () => () => {},
     },
   },
   computed: {
     blockInContext() {
       return this.isBlockInContext(this.block.id);
-    }
+    },
   },
   methods: {
     toggleBlockContext() {
@@ -59,7 +59,7 @@ const BlockComponent = {
       } else {
         this.onBlockAddToContext(this.block);
       }
-    }
+    },
   },
   template: `
     <div class="block-wrapper" :class="{ 'child-block': block.parent, 'in-context': blockInContext }" :data-block-id="block.id">

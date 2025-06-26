@@ -1,23 +1,25 @@
 from unittest.mock import Mock, patch
+
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from core.test.helpers import UserFactory
-from ai_chat.models import AIProvider, ChatSession, ChatMessage, UserAISettings, UserProviderConfig
-from ai_chat.services.ai_service_factory import AIServiceFactory
+from ai_chat.models import (
+    ChatSession,
+    UserAISettings,
+    UserProviderConfig,
+)
 from ai_chat.services.base_ai_service import AIServiceError
-
-from .helpers import (
-    AIProviderFactory,
+from ai_chat.test.helpers import (
+    AnthropicProviderFactory,
+    ChatMessageFactory,
+    ChatSessionFactory,
+    OpenAIProviderFactory,
     UserAISettingsFactory,
     UserProviderConfigFactory,
-    ChatSessionFactory,
-    ChatMessageFactory,
-    OpenAIProviderFactory,
-    AnthropicProviderFactory,
 )
+from core.test.helpers import UserFactory
 
 
 class AIChatAPITestCase(TestCase):
@@ -40,20 +42,18 @@ class AIChatAPITestCase(TestCase):
 
         # Create user AI settings with OpenAI as default
         self.user_settings = UserAISettingsFactory(
-            user=self.user,
-            provider=self.openai_provider,
-            default_model="gpt-4"
+            user=self.user, provider=self.openai_provider, default_model="gpt-4"
         )
-        
+
         # Create provider config with API key
         self.provider_config = UserProviderConfigFactory(
             user=self.user,
             provider=self.openai_provider,
             api_key="test-api-key-12345",
-            enabled_models=["gpt-4", "gpt-3.5-turbo"]
+            enabled_models=["gpt-4", "gpt-3.5-turbo"],
         )
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_success(self, mock_create_service):
         """Test successful message sending through API"""
         # Mock AI service response
@@ -66,7 +66,9 @@ class AIChatAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["success"])
-        self.assertEqual(response.data["data"]["response"], "Hello! How can I help you today?")
+        self.assertEqual(
+            response.data["data"]["response"], "Hello! How can I help you today?"
+        )
         self.assertIn("session_id", response.data["data"])
 
         # Verify session and messages were created
@@ -78,15 +80,17 @@ class AIChatAPITestCase(TestCase):
         mock_create_service.assert_called_once_with(
             provider_name=self.openai_provider.name,
             api_key="test-api-key-12345",
-            model="gpt-4"
+            model="gpt-4",
         )
         mock_service.send_message.assert_called_once()
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_with_context_blocks(self, mock_create_service):
         """Test sending message with context blocks"""
         mock_service = Mock()
-        mock_service.send_message.return_value = "Based on your notes, here's my advice..."
+        mock_service.send_message.return_value = (
+            "Based on your notes, here's my advice..."
+        )
         mock_create_service.return_value = mock_service
 
         data = {
@@ -94,8 +98,8 @@ class AIChatAPITestCase(TestCase):
             "context_blocks": [
                 {"content": "Buy groceries", "block_type": "todo"},
                 {"content": "Call dentist", "block_type": "done"},
-                {"content": "Regular note", "block_type": "bullet"}
-            ]
+                {"content": "Regular note", "block_type": "bullet"},
+            ],
         }
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
@@ -111,7 +115,7 @@ class AIChatAPITestCase(TestCase):
         self.assertIn("• Regular note", user_message.content)
         self.assertIn("**My question:**", user_message.content)
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_with_existing_session(self, mock_create_service):
         """Test sending message to existing session"""
         mock_service = Mock()
@@ -121,12 +125,11 @@ class AIChatAPITestCase(TestCase):
         # Create existing session with messages
         session = ChatSessionFactory(user=self.user)
         ChatMessageFactory(session=session, role="user", content="Previous message")
-        ChatMessageFactory(session=session, role="assistant", content="Previous response")
+        ChatMessageFactory(
+            session=session, role="assistant", content="Previous response"
+        )
 
-        data = {
-            "message": "Follow-up question",
-            "session_id": str(session.uuid)
-        }
+        data = {"message": "Follow-up question", "session_id": str(session.uuid)}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -170,7 +173,7 @@ class AIChatAPITestCase(TestCase):
         self.assertFalse(response.data["success"])
         self.assertIn("No API key configured", response.data["error"])
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_ai_service_error(self, mock_create_service):
         """Test handling AI service errors"""
         mock_create_service.side_effect = AIServiceError("API rate limit exceeded")
@@ -197,16 +200,22 @@ class AIChatAPITestCase(TestCase):
         # Create multiple sessions with messages
         session1 = ChatSessionFactory(user=self.user, title="First Chat")
         session2 = ChatSessionFactory(user=self.user, title="Second Chat")
-        
-        ChatMessageFactory(session=session1, role="user", content="First message in session 1")
-        ChatMessageFactory(session=session1, role="assistant", content="Response to first")
-        ChatMessageFactory(session=session2, role="user", content="Message in session 2")
+
+        ChatMessageFactory(
+            session=session1, role="user", content="First message in session 1"
+        )
+        ChatMessageFactory(
+            session=session1, role="assistant", content="Response to first"
+        )
+        ChatMessageFactory(
+            session=session2, role="user", content="Message in session 2"
+        )
 
         response = self.client.get("/api/ai-chat/sessions/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["success"])
-        
+
         sessions_data = response.data["data"]
         self.assertEqual(len(sessions_data), 2)
 
@@ -223,7 +232,7 @@ class AIChatAPITestCase(TestCase):
         """Test that users only see their own sessions"""
         # Create session for test user
         ChatSessionFactory(user=self.user, title="My Session")
-        
+
         # Create session for different user
         other_user = UserFactory(email="other@example.com")
         ChatSessionFactory(user=other_user, title="Other User Session")
@@ -232,7 +241,7 @@ class AIChatAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         sessions_data = response.data["data"]
-        
+
         # Should only see own session
         self.assertEqual(len(sessions_data), 1)
         self.assertEqual(sessions_data[0]["title"], "My Session")
@@ -261,7 +270,11 @@ class AIChatAPITestCase(TestCase):
 
     def test_chat_session_detail_not_found(self):
         """Test getting non-existent session returns 404"""
-        response = self.client.get("/api/ai-chat/sessions/non-existent-uuid/")
+        # Use a valid UUID format but non-existent session
+        import uuid
+
+        fake_uuid = str(uuid.uuid4())
+        response = self.client.get(f"/api/ai-chat/sessions/{fake_uuid}/")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertFalse(response.data["success"])
@@ -276,7 +289,7 @@ class AIChatAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.get_available_models')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.get_available_models")
     def test_ai_settings_get(self, mock_get_models):
         """Test getting AI settings"""
         mock_get_models.return_value = ["gpt-4", "gpt-3.5-turbo"]
@@ -300,18 +313,18 @@ class AIChatAPITestCase(TestCase):
         data = {
             "provider": "Anthropic",
             "model": "claude-3-sonnet",
-            "api_keys": {
-                "Anthropic": "new-anthropic-key"
-            },
+            "api_keys": {"Anthropic": "new-anthropic-key"},
             "provider_configs": {
                 "Anthropic": {
                     "is_enabled": True,
-                    "enabled_models": ["claude-3-sonnet", "claude-3-haiku"]
+                    "enabled_models": ["claude-3-sonnet", "claude-3-haiku"],
                 }
-            }
+            },
         }
 
-        response = self.client.post("/api/ai-chat/settings/", data, format="json")
+        response = self.client.post(
+            "/api/ai-chat/settings/update/", data, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["success"])
@@ -323,25 +336,27 @@ class AIChatAPITestCase(TestCase):
 
         # Verify provider config was created
         provider_config = UserProviderConfig.objects.get(
-            user=self.user,
-            provider=self.anthropic_provider
+            user=self.user, provider=self.anthropic_provider
         )
         self.assertEqual(provider_config.api_key, "new-anthropic-key")
         self.assertTrue(provider_config.is_enabled)
-        self.assertEqual(provider_config.enabled_models, ["claude-3-sonnet", "claude-3-haiku"])
+        self.assertEqual(
+            provider_config.enabled_models, ["claude-3-sonnet", "claude-3-haiku"]
+        )
 
     def test_update_ai_settings_invalid_provider(self):
         """Test updating settings with invalid provider"""
-        data = {
-            "provider": "NonExistentProvider",
-            "model": "some-model"
-        }
+        data = {"provider": "NonExistentProvider", "model": "some-model"}
 
-        response = self.client.post("/api/ai-chat/settings/", data, format="json")
+        response = self.client.post(
+            "/api/ai-chat/settings/update/", data, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(response.data["success"])
-        self.assertIn("Provider 'NonExistentProvider' not found", response.data["error"])
+        self.assertIn(
+            "Provider 'NonExistentProvider' not found", response.data["error"]
+        )
 
     def test_api_endpoints_authentication_required(self):
         """Test all AI chat endpoints require authentication"""
@@ -352,7 +367,7 @@ class AIChatAPITestCase(TestCase):
             ("/api/ai-chat/sessions/", "get", None),
             ("/api/ai-chat/sessions/test-uuid/", "get", None),
             ("/api/ai-chat/settings/", "get", None),
-            ("/api/ai-chat/settings/", "post", {"provider": "test"}),
+            ("/api/ai-chat/settings/update/", "post", {"provider": "test"}),
         ]
 
         for url, method, data in endpoints:
@@ -361,24 +376,25 @@ class AIChatAPITestCase(TestCase):
                     response = self.client.post(url, data or {}, format="json")
                 else:
                     response = self.client.get(url)
-                
+
                 self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch('ai_chat.services.ai_service_factory.AIServiceFactory.create_service')
+    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     def test_send_message_invalid_session_id(self, mock_create_service):
         """Test sending message with invalid session ID creates new session"""
         mock_service = Mock()
         mock_service.send_message.return_value = "Response"
         mock_create_service.return_value = mock_service
 
-        data = {
-            "message": "Hello",
-            "session_id": "invalid-uuid"
-        }
+        # Use a properly formatted UUID that doesn't exist instead of "invalid-uuid"
+        import uuid
+
+        fake_uuid = str(uuid.uuid4())
+        data = {"message": "Hello", "session_id": fake_uuid}
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["success"])
-        
-        # Should create new session since invalid UUID was provided
+
+        # Should create new session since non-existent UUID was provided
         self.assertTrue(ChatSession.objects.filter(user=self.user).exists())

@@ -77,11 +77,7 @@ class AIServiceFactory:
         provider_key = provider_name.lower()
 
         if provider_key not in cls._services:
-            supported = ", ".join(cls._services.keys())
-            raise AIServiceFactoryError(
-                f"Unsupported AI provider: {provider_name}. "
-                f"Supported providers: {supported}"
-            )
+            return []
 
         # Create a temporary instance to get available models
         service_class = cls._services[provider_key]

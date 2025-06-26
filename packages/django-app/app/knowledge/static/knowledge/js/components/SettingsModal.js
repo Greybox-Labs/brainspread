@@ -237,12 +237,14 @@ window.SettingsModal = {
 
         // Only include API keys that have been entered (not empty)
         const apiKeys = {};
-        Object.keys(this.aiSettings.formData.apiKeys).forEach(providerName => {
-          const apiKey = this.aiSettings.formData.apiKeys[providerName];
-          if (apiKey && apiKey.trim() !== '') {
-            apiKeys[providerName] = apiKey;
+        Object.keys(this.aiSettings.formData.apiKeys).forEach(
+          (providerName) => {
+            const apiKey = this.aiSettings.formData.apiKeys[providerName];
+            if (apiKey && apiKey.trim() !== "") {
+              apiKeys[providerName] = apiKey;
+            }
           }
-        });
+        );
 
         const updateData = {
           provider: this.aiSettings.formData.selectedProvider,
@@ -285,22 +287,22 @@ window.SettingsModal = {
 
     getAllEnabledModels() {
       if (!this.aiSettings) return [];
-      
+
       // Return all enabled models from providers with API keys
       const allModels = [];
-      Object.keys(this.aiSettings.provider_configs).forEach(providerName => {
+      Object.keys(this.aiSettings.provider_configs).forEach((providerName) => {
         const config = this.aiSettings.provider_configs[providerName];
         if (config.has_api_key && config.enabled_models) {
-          config.enabled_models.forEach(model => {
+          config.enabled_models.forEach((model) => {
             allModels.push({
               value: model,
               label: `${providerName}: ${model}`,
-              provider: providerName
+              provider: providerName,
             });
           });
         }
       });
-      
+
       return allModels;
     },
 
@@ -308,10 +310,11 @@ window.SettingsModal = {
       // When a model is selected, automatically set the provider
       if (this.aiSettings.formData.selectedModel) {
         const selectedModelData = this.getAllEnabledModels().find(
-          model => model.value === this.aiSettings.formData.selectedModel
+          (model) => model.value === this.aiSettings.formData.selectedModel
         );
         if (selectedModelData) {
-          this.aiSettings.formData.selectedProvider = selectedModelData.provider;
+          this.aiSettings.formData.selectedProvider =
+            selectedModelData.provider;
         }
       } else {
         this.aiSettings.formData.selectedProvider = "";

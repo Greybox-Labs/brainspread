@@ -17,7 +17,9 @@ class SendMessageCommandError(Exception):
 
 
 class SendMessageCommand(AbstractBaseCommand):
-    def __init__(self, user, session, message: str, context_blocks: List[Dict] = None) -> None:
+    def __init__(
+        self, user, session, message: str, context_blocks: List[Dict] = None
+    ) -> None:
         self.user = user
         self.session = session
         self.message = message
@@ -64,7 +66,7 @@ class SendMessageCommand(AbstractBaseCommand):
 
             # Prepare the message with context blocks
             formatted_message = self._format_message_with_context()
-            
+
             # Add user message to database
             ChatRepository.add_message(self.session, "user", formatted_message)
 
@@ -114,23 +116,23 @@ class SendMessageCommand(AbstractBaseCommand):
         """Format the user message with context blocks if any are provided."""
         if not self.context_blocks:
             return self.message
-        
+
         # Format context blocks
         context_text_parts = []
         for block in self.context_blocks:
-            content = block.get('content', '').strip()
+            content = block.get("content", "").strip()
             if content:
-                block_type = block.get('block_type', 'bullet')
-                if block_type == 'todo':
+                block_type = block.get("block_type", "bullet")
+                if block_type == "todo":
                     context_text_parts.append(f"☐ {content}")
-                elif block_type == 'done':
+                elif block_type == "done":
                     context_text_parts.append(f"☑ {content}")
                 else:
                     context_text_parts.append(f"• {content}")
-        
+
         if not context_text_parts:
             return self.message
-        
+
         # Combine context and message
         context_section = "\n".join(context_text_parts)
         formatted_message = f"""**Context from my notes:**
@@ -138,5 +140,5 @@ class SendMessageCommand(AbstractBaseCommand):
 
 **My question:**
 {self.message}"""
-        
+
         return formatted_message
