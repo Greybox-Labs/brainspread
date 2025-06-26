@@ -23,7 +23,13 @@ from .commands import (
     UpdateBlockCommand,
     UpdatePageCommand,
 )
-from .forms import CreatePageForm, DeletePageForm, GetUserPagesForm, UpdatePageForm
+from .forms import (
+    CreatePageForm,
+    DeletePageForm,
+    GetHistoricalDataForm,
+    GetUserPagesForm,
+    UpdatePageForm,
+)
 from .models import Block, Page
 from .models.block import BlockData
 from .models.page import PageData
@@ -590,14 +596,18 @@ def toggle_block_todo(request):
 def get_historical_data(request):
     """Get historical pages and blocks"""
     try:
-        # Get query parameters
-        days_back = int(request.query_params.get("days_back", 30))
-        limit = int(request.query_params.get("limit", 50))
+        # Create and validate form
+        form_data = request.query_params.copy()
+        form_data["user"] = request.user.pk
+        form = GetHistoricalDataForm(form_data)
+        if not form.is_valid():
+            return Response(
+                {"success": False, "errors": form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Use command to get historical data
-        command = GetHistoricalDataCommand(
-            user=request.user, days_back=days_back, limit=limit
-        )
+        command = GetHistoricalDataCommand(form=form)
         result = command.execute()
 
         # Format the data
@@ -605,7 +615,7 @@ def get_historical_data(request):
         for page in result["pages"]:
             page_data = model_to_dict(page)
             # Get a few recent blocks from this page
-            page_blocks = command.repository.get_page_recent_blocks(page, 3)
+            page_blocks = BlockRepository.get_recent_blocks_for_page(page, 3)
             page_data["recent_blocks"] = [model_to_dict(block) for block in page_blocks]
             pages_data.append(page_data)
 

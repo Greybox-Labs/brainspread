@@ -1,9 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Common Commands
-
 This is a Django + PostgreSQL project using Docker Compose and Just as the task runner.
 
 ### Working Directory
@@ -66,6 +62,7 @@ Navigate to `packages/django-app/` for most development tasks.
   - Models should only contain data validation and simple property methods
   - Views should only handle HTTP concerns and delegate to Commands
   - Managers should only contain data querying logic, no business rules
+  - Command `__init__` methods should only take forms. All necessary data should be passed through forms.
 - **Tests**: All commands should be tested. Use factoryboy for model factories.
 - **Repository Pattern**: Use `BaseRepository` for data access
 - **Model Mixins**: UUID, timestamps, soft delete functionality

@@ -121,3 +121,12 @@ class PageRepository(BaseRepository):
             page.delete()
             return True
         return False
+
+    @classmethod
+    def get_pages_by_date_range(cls, user, start_date, end_date, limit=50) -> QuerySet:
+        """Get pages modified within the specified date range"""
+        return (
+            cls.get_queryset()
+            .filter(user=user, modified_at__gte=start_date, modified_at__lte=end_date)
+            .order_by("-date", "-modified_at")[:limit]
+        )

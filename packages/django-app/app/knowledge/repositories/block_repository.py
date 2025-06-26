@@ -155,3 +155,18 @@ class BlockRepository(BaseRepository):
             return True
         except Exception:
             return False
+
+    @classmethod
+    def get_blocks_by_date_range(cls, user, start_date, end_date, limit=50) -> QuerySet:
+        """Get blocks modified within the specified date range"""
+        return (
+            cls.get_queryset()
+            .filter(user=user, modified_at__gte=start_date, modified_at__lte=end_date)
+            .select_related("page")
+            .order_by("-modified_at")[:limit]
+        )
+
+    @classmethod
+    def get_recent_blocks_for_page(cls, page: Page, limit=3) -> QuerySet:
+        """Get recent blocks for a specific page"""
+        return cls.get_queryset().filter(page=page).order_by("-modified_at")[:limit]
