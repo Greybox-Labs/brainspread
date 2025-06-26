@@ -59,8 +59,8 @@ just up
 ✅ **Setup Complete** - Ready for MVP development
 
 ## Access Information
-- **Web Application**: http://localhost:8000/
-- **Admin Panel**: http://localhost:8000/admin/
+- **Web Application**: http://localhost:8001/
+- **Admin Panel**: http://localhost:8001/admin/
 - **Admin Credentials**: admin@email.com / password
 
 ## Key Just Commands for Development

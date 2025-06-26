@@ -17,9 +17,9 @@ RUN pipenv install --dev --deploy --system
 COPY . /code
 
 # run application
-EXPOSE 8000
+EXPOSE 8001
 
 WORKDIR /code/app
 
 # this CMD is overridden by the command in docker-compose.yml for local development
-CMD /code/bin/wait-for-it.sh db:5433 -- python /code/app/manage.py runserver 0.0.0.0:8000
+CMD /code/bin/wait-for-it.sh db:5433 -- python /code/app/manage.py runserver 0.0.0.0:8001
