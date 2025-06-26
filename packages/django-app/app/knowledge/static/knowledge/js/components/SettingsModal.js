@@ -351,63 +351,63 @@ window.SettingsModal = {
   },
 
   template: `
-    <div 
-      v-if="isOpen" 
-      class="settings-modal" 
+    <div
+      v-if="isOpen"
+      class="settings-modal"
       @click="handleBackdropClick"
     >
       <div class="settings-modal-content">
-        <h2>Settings</h2>
-        
+        <h2>settings</h2>
+
         <div class="settings-tabs">
-          <button 
+          <button
             :class="{ active: currentTab === 'general' }"
             @click="switchTab('general')"
             type="button"
           >
-            General
+          general
           </button>
-          <button 
+          <button
             :class="{ active: currentTab === 'ai' }"
             @click="switchTab('ai')"
             type="button"
           >
-            AI Chat
+            ai
           </button>
         </div>
 
         <div v-if="currentTab === 'general'" class="tab-content">
           <div class="settings-section">
-            <h3>Theme</h3>
+            <h3>theme</h3>
             <div class="theme-options">
-              <button 
+              <button
                 class="theme-option"
                 :class="{ active: selectedTheme === 'dark' }"
                 @click="selectTheme('dark')"
                 type="button"
               >
-                Dark
+                dark
               </button>
-              <button 
+              <button
                 class="theme-option"
                 :class="{ active: selectedTheme === 'light' }"
                 @click="selectTheme('light')"
                 type="button"
               >
-                Light
+                light
               </button>
             </div>
           </div>
 
           <div class="settings-section">
-            <h3>Time Zone</h3>
+            <h3>time zone</h3>
             <div class="timezone-selector">
-              <select 
+              <select
                 v-model="selectedTimezone"
                 class="timezone-select"
                 @change="selectTimezone($event.target.value)"
               >
-                <option 
+                <option
                   v-for="timezone in commonTimezones"
                   :key="timezone"
                   :value="timezone"
@@ -421,17 +421,17 @@ window.SettingsModal = {
 
         <div v-if="currentTab === 'ai'" class="tab-content">
           <div v-if="loadingAISettings" class="loading">
-            Loading AI settings...
+            loading ai settings...
           </div>
-          
+
           <div v-else-if="aiSettings" class="ai-settings">
             <div class="settings-section">
-              <h3>Default Model</h3>
+              <h3>model</h3>
               <div class="model-selection">
-                <label>Default Model:</label>
+                <label>default model:</label>
                 <select v-model="aiSettings.formData.selectedModel" @change="onModelChange">
-                  <option value="">Select Model</option>
-                  <option 
+                  <option value="">select model</option>
+                  <option
                     v-for="model in getAllEnabledModels()"
                     :key="model.value"
                     :value="model.value"
@@ -443,25 +443,25 @@ window.SettingsModal = {
             </div>
 
             <div class="settings-section">
-              <h3>API Keys</h3>
+              <h3>api keys</h3>
               <div v-for="provider in aiSettings.providers" :key="provider.name" class="api-key-input">
-                <label>{{ provider.name }} API Key:</label>
-                <input 
-                  type="password" 
+                <label>{{ provider.name }} api key:</label>
+                <input
+                  type="password"
                   v-model="aiSettings.formData.apiKeys[provider.name]"
-                  :placeholder="aiSettings.provider_configs[provider.name]?.has_api_key ? 'API key configured' : 'Enter API key'"
+                  :placeholder="aiSettings.provider_configs[provider.name]?.has_api_key ? 'api key configured' : 'enter api key'"
                 />
               </div>
             </div>
 
             <div class="settings-section">
-              <h3>Available Models</h3>
+              <h3>available models</h3>
               <div v-for="provider in aiSettings.providers" :key="provider.name" class="provider-models">
                 <h4>{{ provider.name }}</h4>
                 <div class="model-checkboxes">
                   <label v-for="model in provider.models" :key="model" class="model-checkbox">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       :checked="isModelEnabled(provider.name, model)"
                       @change="toggleModel(provider.name, model)"
                     />
@@ -474,21 +474,21 @@ window.SettingsModal = {
         </div>
 
         <div class="modal-actions">
-          <button 
-            class="btn btn-outline" 
+          <button
+            class="btn btn-outline"
             @click="closeModal"
             :disabled="isUpdating"
             type="button"
           >
-            Cancel
+            cancel
           </button>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             @click="saveSettings"
             :disabled="isUpdating"
             type="button"
           >
-            {{ isUpdating ? 'Saving...' : 'Save' }}
+            {{ isUpdating ? 'saving...' : 'save' }}
           </button>
         </div>
       </div>

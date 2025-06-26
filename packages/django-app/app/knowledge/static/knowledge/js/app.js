@@ -209,12 +209,12 @@ const KnowledgeApp = createApp({
             <div v-if="loading && !user" class="loading-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
                 <div class="loading">Loading...</div>
             </div>
-            
+
             <!-- Authenticated state -->
             <div v-else-if="isAuthenticated">
                 <nav class="navbar">
                     <div class="nav-content">
-                        <h1><a href="/knowledge/" class="brand-link">brainspreader</a></h1>
+                        <h1><a href="/knowledge/" class="brand-link">brainspread</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
                             <button @click="openSettings()" class="settings-btn">settings</button>
@@ -230,7 +230,7 @@ const KnowledgeApp = createApp({
                     <div v-else class="content-layout">
                         <HistoricalSidebar v-if="!$refs.dailyNote?.isTagPage" @navigate-to-date="onNavigateToDate" />
                         <div class="main-content-area">
-                            <DailyNote 
+                            <DailyNote
                                 ref="dailyNote"
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
@@ -239,7 +239,7 @@ const KnowledgeApp = createApp({
                                 @visible-blocks-changed="updateVisibleBlocks"
                             />
                         </div>
-                        <ChatPanel 
+                        <ChatPanel
                             :chat-context-blocks="chatContextBlocks"
                             :visible-blocks="visibleBlocks"
                             @open-settings="onChatPanelOpenSettings"
@@ -249,7 +249,7 @@ const KnowledgeApp = createApp({
                     </div>
                 </main>
             </div>
-            
+
             <!-- Login state -->
             <main v-else class="main-content">
                 <div class="auth-container">
