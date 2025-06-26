@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "tagging",
     "knowledge",
     "ai_chat",
+    "mcp_server",
 ]
 
 MIDDLEWARE = [
