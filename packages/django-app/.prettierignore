@@ -35,6 +35,11 @@ dev_data.json
 htmlcov/
 .coverage
 
+# Cache directories
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+
 # IDE files
 .vscode/
 .idea/
