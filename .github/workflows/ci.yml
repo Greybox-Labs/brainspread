@@ -1,4 +1,4 @@
-name: Format Check
+name: Lint and Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  format-check:
+  test:
     runs-on: ubuntu-latest
     
     steps:
@@ -25,20 +25,34 @@ jobs:
         sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
 
-    - name: Build and start services
+    - name: Build services
       working-directory: ./packages/django-app
-      run: |
-        just build
-        docker-compose up -d
+      run: just build
+
+    - name: Start services
+      working-directory: ./packages/django-app
+      run: just up-d
 
     - name: Check Python formatting (Black)
       working-directory: ./packages/django-app
-      run: docker-compose run --rm -w /code/app web python -m black . --check --exclude="migrations/"
+      run: just format-check-py
 
-    - name: Stop services
+    - name: Lint Python code
       working-directory: ./packages/django-app
-      run: docker-compose down
+      run: just lint-py
+
+    - name: Run Django system checks
+      working-directory: ./packages/django-app
+      run: just django-admin check --deploy
+
+    - name: Run tests
+      working-directory: ./packages/django-app
+      run: just test
 
     - name: Check JavaScript formatting (Prettier)
       working-directory: ./packages/django-app
       run: npx prettier --check .
+
+    - name: Stop services
+      working-directory: ./packages/django-app
+      run: just down

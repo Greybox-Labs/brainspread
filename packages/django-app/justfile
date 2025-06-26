@@ -220,6 +220,10 @@ create-json-backup location=default_backups_location:
 format-py:
   docker-compose run --rm -w /code/app web python -m black . --exclude="migrations/"
 
+# Check Python formatting (Black)
+format-check-py:
+  docker-compose run --rm -w /code/app web python -m black . --check --exclude="migrations/"
+
 # Format JavaScript code
 format-js:
   npx prettier --write .
