@@ -49,7 +49,8 @@
       "mcp__sse-server__browser_tab_new",
       "Bash(node:*)",
       "Bash(pipenv run pytest:*)",
-      "Bash(pipenv run python:*)"
+      "Bash(pipenv run python:*)",
+      "Bash(docker-compose:*)"
     ],
     "deny": []
   }
