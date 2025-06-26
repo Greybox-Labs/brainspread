@@ -20,7 +20,12 @@ class TestToggleBlockTodoCommand:
             page=page, user=user, content="Test block", block_type="bullet", order=0
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "todo"
@@ -37,7 +42,12 @@ class TestToggleBlockTodoCommand:
             page=page, user=user, content="Test todo", block_type="todo", order=0
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "done"
@@ -54,7 +64,12 @@ class TestToggleBlockTodoCommand:
             page=page, user=user, content="Test done", block_type="done", order=0
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "todo"
@@ -72,17 +87,32 @@ class TestToggleBlockTodoCommand:
         )
 
         # bullet -> todo
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
         assert result.block_type == "todo"
 
         # todo -> done
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
         assert result.block_type == "done"
 
         # done -> todo
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
         assert result.block_type == "todo"
 
@@ -98,7 +128,12 @@ class TestToggleBlockTodoCommand:
             order=0,
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "done"
@@ -120,7 +155,12 @@ class TestToggleBlockTodoCommand:
             order=0,
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "todo"
@@ -142,7 +182,12 @@ class TestToggleBlockTodoCommand:
             order=0,
         )
 
-        command = ToggleBlockTodoCommand(user, block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
         assert result.block_type == "done"
@@ -157,7 +202,12 @@ class TestToggleBlockTodoCommand:
         with pytest.raises(ValidationError, match="Block not found"):
             # Use a valid UUID format that doesn't exist in the database
             nonexistent_uuid = str(uuid.uuid4())
-            command = ToggleBlockTodoCommand(user, nonexistent_uuid)
+            from knowledge.forms import ToggleBlockTodoForm
+
+            form_data = {"user": user.id, "block_id": nonexistent_uuid}
+            form = ToggleBlockTodoForm(form_data)
+            form.is_valid()
+            command = ToggleBlockTodoCommand(form)
             command.execute()
 
     def test_toggle_unauthorized_block(self):
@@ -171,5 +221,10 @@ class TestToggleBlockTodoCommand:
         )
 
         with pytest.raises(ValidationError, match="Block not found"):
-            command = ToggleBlockTodoCommand(user2, block.uuid)
+            from knowledge.forms import ToggleBlockTodoForm
+
+            form_data = {"user": user2.id, "block_id": str(block.uuid)}
+            form = ToggleBlockTodoForm(form_data)
+            form.is_valid()
+            command = ToggleBlockTodoCommand(form)
             command.execute()

@@ -1,20 +1,21 @@
 from common.commands.abstract_base_command import AbstractBaseCommand
 
+from ..forms.update_page_form import UpdatePageForm
 from ..models import Page
 
 
 class UpdatePageCommand(AbstractBaseCommand):
     """Command to update an existing page"""
 
-    def __init__(self, form, user):
+    def __init__(self, form: UpdatePageForm) -> None:
         self.form = form
-        self.user = user
 
     def execute(self) -> Page:
         """Execute the command"""
         super().execute()  # This validates the form
 
-        page = Page.objects.get(uuid=self.form.cleaned_data["page_id"], user=self.user)
+        user = self.form.cleaned_data["user"]
+        page = Page.objects.get(uuid=self.form.cleaned_data["page_id"], user=user)
 
         # Update fields if provided
         if (
@@ -44,6 +45,6 @@ class UpdatePageCommand(AbstractBaseCommand):
         page.save()
 
         if page.content:
-            page.set_tags_from_content(page.content, self.user)
+            page.set_tags_from_content(page.content, user)
 
         return page

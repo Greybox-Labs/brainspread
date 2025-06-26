@@ -24,13 +24,17 @@ from .commands import (
     UpdatePageCommand,
 )
 from .forms import (
+    CreateBlockForm,
     CreatePageForm,
+    DeleteBlockForm,
     DeletePageForm,
     GetHistoricalDataForm,
     GetUserPagesForm,
+    ToggleBlockTodoForm,
+    UpdateBlockForm,
     UpdatePageForm,
 )
-from .models import Block, Page
+from .models import Page
 from .models.block import BlockData
 from .models.page import PageData
 from .repositories import BlockRepository, PageRepository
@@ -162,10 +166,11 @@ def create_page(request):
     """API endpoint to create page"""
     try:
         data = request.data
-        form = CreatePageForm(data, request.user)
+        data["user"] = request.user.id
+        form = CreatePageForm(data)
 
         if form.is_valid():
-            command = CreatePageCommand(form, request.user)
+            command = CreatePageCommand(form)
             page = command.execute()
             return Response({"success": True, "data": model_to_dict(page)})
         else:
@@ -253,10 +258,11 @@ def update_page(request):
     """API endpoint to update page"""
     try:
         data = request.data
-        form = UpdatePageForm(data, request.user)
+        data["user"] = request.user.id
+        form = UpdatePageForm(data)
 
         if form.is_valid():
-            command = UpdatePageCommand(form, request.user)
+            command = UpdatePageCommand(form)
             page = command.execute()
             return Response({"success": True, "data": model_to_dict(page)})
         else:
@@ -284,10 +290,11 @@ def delete_page(request):
     """API endpoint to delete page"""
     try:
         data = request.data
-        form = DeletePageForm(data, request.user)
+        data["user"] = request.user.id
+        form = DeletePageForm(data)
 
         if form.is_valid():
-            command = DeletePageCommand(form, request.user)
+            command = DeletePageCommand(form)
             result = command.execute()
             return Response({"success": True, "data": {"deleted": result}})
         else:
@@ -314,11 +321,12 @@ def delete_page(request):
 def get_pages(request):
     """API endpoint to get user's pages"""
     try:
-        data = request.query_params
+        data = dict(request.query_params)
+        data["user"] = request.user.id
         form = GetUserPagesForm(data)
 
         if form.is_valid():
-            command = GetUserPagesCommand(form, request.user)
+            command = GetUserPagesCommand(form)
             result = command.execute()
             return Response(
                 {
@@ -416,57 +424,20 @@ def get_page_with_blocks(request):
 def create_block(request):
     """Create a new block"""
     try:
+        data = request.data.copy()
+        data["user"] = request.user.id
 
-        data = request.data
-        page_id = data.get("page_id")
-        content = data.get("content", "")
-        parent_id = data.get("parent_id")
-        block_type = data.get("block_type", "bullet")
-        content_type = data.get("content_type", "text")
-        order = data.get("order", 0)
-        media_url = data.get("media_url", "")
-        media_metadata = data.get("media_metadata", {})
-        properties = data.get("properties", {})
+        form = CreateBlockForm(data)
 
-        # Validate page exists and belongs to user
-        try:
-            page = Page.objects.get(uuid=page_id, user=request.user)
-        except Page.DoesNotExist:
+        if form.is_valid():
+            command = CreateBlockCommand(form)
+            block = command.execute()
+            return Response({"success": True, "data": model_to_dict(block)})
+        else:
             return Response(
-                {"success": False, "errors": {"page_id": ["Page not found"]}},
+                {"success": False, "errors": form.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Validate parent if provided
-        parent = None
-        if parent_id:
-            try:
-                parent = Block.objects.get(uuid=parent_id, user=request.user, page=page)
-            except Block.DoesNotExist:
-                return Response(
-                    {
-                        "success": False,
-                        "errors": {"parent_id": ["Parent block not found"]},
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # Use command to create block (includes tag extraction)
-        command = CreateBlockCommand(
-            user=request.user,
-            page=page,
-            content=content,
-            content_type=content_type,
-            block_type=block_type,
-            order=order,
-            parent=parent,
-            media_url=media_url,
-            media_metadata=media_metadata,
-            properties=properties,
-        )
-        block = command.execute()
-
-        return Response({"success": True, "data": model_to_dict(block)})
 
     except Exception as e:
         return Response(
@@ -480,37 +451,20 @@ def create_block(request):
 def update_block(request):
     """Update a block"""
     try:
+        data = request.data.copy()
+        data["user"] = request.user.id
 
-        data = request.data
-        block_id = data.get("block_id")
+        form = UpdateBlockForm(data)
 
-        if not block_id:
+        if form.is_valid():
+            command = UpdateBlockCommand(form)
+            block = command.execute()
+            return Response({"success": True, "data": model_to_dict(block)})
+        else:
             return Response(
-                {"success": False, "errors": {"block_id": ["Block ID is required"]}},
+                {"success": False, "errors": form.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Prepare updates dict
-        updates = {}
-        for field in [
-            "content",
-            "block_type",
-            "content_type",
-            "order",
-            "collapsed",
-            "media_url",
-            "media_metadata",
-            "properties",
-            "parent_id",
-        ]:
-            if field in data:
-                updates[field] = data[field]
-
-        # Use command to update block (includes tag extraction)
-        command = UpdateBlockCommand(request.user, block_id, **updates)
-        block = command.execute()
-
-        return Response({"success": True, "data": model_to_dict(block)})
 
     except ValidationError as e:
         return Response(
@@ -530,20 +484,20 @@ def update_block(request):
 def delete_block(request):
     """Delete a block"""
     try:
+        data = request.data.copy()
+        data["user"] = request.user.id
 
-        block_id = request.data.get("block_id")
+        form = DeleteBlockForm(data)
 
-        if not block_id:
+        if form.is_valid():
+            command = DeleteBlockCommand(form)
+            result = command.execute()
+            return Response({"success": True, "data": {"deleted": result}})
+        else:
             return Response(
-                {"success": False, "errors": {"block_id": ["Block ID is required"]}},
+                {"success": False, "errors": form.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Use command to delete block
-        command = DeleteBlockCommand(request.user, block_id)
-        result = command.execute()
-
-        return Response({"success": True, "data": {"deleted": result}})
 
     except ValidationError as e:
         return Response(
@@ -563,20 +517,20 @@ def delete_block(request):
 def toggle_block_todo(request):
     """Toggle a block's todo status"""
     try:
+        data = request.data.copy()
+        data["user"] = request.user.id
 
-        block_id = request.data.get("block_id")
+        form = ToggleBlockTodoForm(data)
 
-        if not block_id:
+        if form.is_valid():
+            command = ToggleBlockTodoCommand(form)
+            block = command.execute()
+            return Response({"success": True, "data": model_to_dict(block)})
+        else:
             return Response(
-                {"success": False, "errors": {"block_id": ["Block ID is required"]}},
+                {"success": False, "errors": form.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Use command to toggle todo status
-        command = ToggleBlockTodoCommand(request.user, block_id)
-        block = command.execute()
-
-        return Response({"success": True, "data": model_to_dict(block)})
 
     except ValidationError as e:
         return Response(

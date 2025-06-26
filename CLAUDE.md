@@ -23,6 +23,7 @@ Navigate to `packages/django-app/` for most development tasks.
 - Tests use pytest with `--reuse-db` and coverage reporting
 - Test files: `tests.py`, `test_*.py`, `*_test.py`, `*_tests.py`
 - Use browser MCP for testing frontend functionality
+- Always run `just prepush` after your work and iterate until everything passes
 
 ### Database Management
 - `just reload-db [DATA]` - Reload database with fixture (defaults to dev_data.json)

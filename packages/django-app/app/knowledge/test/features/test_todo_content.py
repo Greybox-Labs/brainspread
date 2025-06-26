@@ -21,7 +21,12 @@ class TestTodoContentIntegration(TestCase):
         )
 
         # Toggle to done
-        command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         updated_block = command.execute()
 
         # Verify content and type changed
@@ -29,7 +34,10 @@ class TestTodoContentIntegration(TestCase):
         self.assertEqual(updated_block.block_type, "done")
 
         # Toggle back to todo
-        command2 = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command2 = ToggleBlockTodoCommand(form)
         updated_block2 = command2.execute()
 
         # Verify content and type changed back
@@ -56,7 +64,12 @@ class TestTodoContentIntegration(TestCase):
                 )
 
                 # Toggle to done
-                command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+                from knowledge.forms import ToggleBlockTodoForm
+
+                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form = ToggleBlockTodoForm(form_data)
+                form.is_valid()
+                command = ToggleBlockTodoCommand(form)
                 updated_block = command.execute()
 
                 # Verify content transformation
@@ -83,7 +96,12 @@ class TestTodoContentIntegration(TestCase):
                 )
 
                 # Toggle to todo
-                command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+                from knowledge.forms import ToggleBlockTodoForm
+
+                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form = ToggleBlockTodoForm(form_data)
+                form.is_valid()
+                command = ToggleBlockTodoCommand(form)
                 updated_block = command.execute()
 
                 # Verify content transformation
@@ -100,7 +118,12 @@ class TestTodoContentIntegration(TestCase):
             block_type="todo",
         )
 
-        command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         updated_block = command.execute()
 
         # Replaces all occurrences of TODO
@@ -122,7 +145,12 @@ class TestTodoContentIntegration(TestCase):
                     user=self.user, page=self.page, content=content, block_type="todo"
                 )
 
-                command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+                from knowledge.forms import ToggleBlockTodoForm
+
+                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form = ToggleBlockTodoForm(form_data)
+                form.is_valid()
+                command = ToggleBlockTodoCommand(form)
                 updated_block = command.execute()
 
                 expected_content = content.replace("TODO", "DONE", 1)
@@ -138,7 +166,12 @@ class TestTodoContentIntegration(TestCase):
             block_type="todo",
         )
 
-        command = ToggleBlockTodoCommand(user=self.user, block_id=block.uuid)
+        from knowledge.forms import ToggleBlockTodoForm
+
+        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
         updated_block = command.execute()
 
         # Verify spacing is preserved

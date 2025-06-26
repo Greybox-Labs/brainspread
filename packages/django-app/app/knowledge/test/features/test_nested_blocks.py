@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
+from knowledge.forms import CreateBlockForm, UpdateBlockForm
 from knowledge.test.helpers import PageFactory, UserFactory
 
 
@@ -14,14 +15,28 @@ class TestNestedBlocksIntegration(TestCase):
     def test_should_create_and_manage_nested_hierarchy(self):
         """Test creating and managing a complete nested block hierarchy"""
         # Create root blocks
-        root1_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block 1", parent=None, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block 1",
+            "parent": None,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        root1_cmd = CreateBlockCommand(form)
         root1 = root1_cmd.execute()
 
-        root2_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block 2", parent=None, order=1
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block 2",
+            "parent": None,
+            "order": 1,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        root2_cmd = CreateBlockCommand(form)
         root2 = root2_cmd.execute()
 
         # Verify root blocks
@@ -31,22 +46,28 @@ class TestNestedBlocksIntegration(TestCase):
         self.assertIsNone(root2.parent)
 
         # Create child blocks
-        child1_cmd = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Child of root 1",
-            parent=root1,
-            order=0,
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child of root 1",
+            "parent": root1,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child1_cmd = CreateBlockCommand(form)
         child1 = child1_cmd.execute()
 
-        child2_cmd = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Another child of root 1",
-            parent=root1,
-            order=1,
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Another child of root 1",
+            "parent": root1,
+            "order": 1,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child2_cmd = CreateBlockCommand(form)
         child2 = child2_cmd.execute()
 
         # Verify child blocks
@@ -56,13 +77,16 @@ class TestNestedBlocksIntegration(TestCase):
         self.assertEqual(child2.parent, root1)
 
         # Create grandchild
-        grandchild_cmd = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Grandchild block",
-            parent=child1,
-            order=0,
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Grandchild block",
+            "parent": child1,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        grandchild_cmd = CreateBlockCommand(form)
         grandchild = grandchild_cmd.execute()
 
         # Verify grandchild
@@ -70,9 +94,15 @@ class TestNestedBlocksIntegration(TestCase):
         self.assertEqual(grandchild.parent, child1)
 
         # Test indentation (moving child2 under child1)
-        update_cmd = UpdateBlockCommand(
-            user=self.user, block_id=child2.uuid, parent_id=child1.uuid, order=1
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(child2.uuid),
+            "parent_id": str(child1.uuid),
+            "order": 1,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_cmd = UpdateBlockCommand(form)
         update_cmd.execute()
         child2.refresh_from_db()
 
@@ -81,9 +111,15 @@ class TestNestedBlocksIntegration(TestCase):
         self.assertEqual(child2.parent, child1)
 
         # Test outdentation (moving grandchild to root)
-        update_cmd = UpdateBlockCommand(
-            user=self.user, block_id=grandchild.uuid, parent_id=None, order=2
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(grandchild.uuid),
+            "parent_id": None,
+            "order": 2,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_cmd = UpdateBlockCommand(form)
         update_cmd.execute()
         grandchild.refresh_from_db()
 
@@ -94,23 +130,40 @@ class TestNestedBlocksIntegration(TestCase):
     def test_should_maintain_hierarchy_relationships(self):
         """Test that hierarchy relationships are properly maintained"""
         # Create hierarchy: root -> child -> grandchild
-        root_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block", parent=None, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block",
+            "parent": None,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        root_cmd = CreateBlockCommand(form)
         root = root_cmd.execute()
 
-        child_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=root, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": root,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_cmd = CreateBlockCommand(form)
         child = child_cmd.execute()
 
-        grandchild_cmd = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Grandchild block",
-            parent=child,
-            order=0,
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Grandchild block",
+            "parent": child,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        grandchild_cmd = CreateBlockCommand(form)
         grandchild = grandchild_cmd.execute()
 
         # Test get_children
@@ -131,25 +184,53 @@ class TestNestedBlocksIntegration(TestCase):
     def test_should_preserve_block_order_within_parent(self):
         """Test that block order is preserved within parent context"""
         # Create parent
-        parent_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent block", parent=None, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent block",
+            "parent": None,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent_cmd = CreateBlockCommand(form)
         parent = parent_cmd.execute()
 
         # Create children with specific orders
-        child1_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 1", parent=parent, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 1",
+            "parent": parent,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child1_cmd = CreateBlockCommand(form)
         child1 = child1_cmd.execute()
 
-        child2_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 2", parent=parent, order=1
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 2",
+            "parent": parent,
+            "order": 1,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child2_cmd = CreateBlockCommand(form)
         child2 = child2_cmd.execute()
 
-        child3_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 3", parent=parent, order=2
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 3",
+            "parent": parent,
+            "order": 2,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child3_cmd = CreateBlockCommand(form)
         child3 = child3_cmd.execute()
 
         # Verify order
@@ -162,14 +243,28 @@ class TestNestedBlocksIntegration(TestCase):
     def test_should_handle_data_integrity_validation(self):
         """Test that data integrity is maintained across operations"""
         # Create a block hierarchy
-        root_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block", parent=None, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block",
+            "parent": None,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        root_cmd = CreateBlockCommand(form)
         root = root_cmd.execute()
 
-        child_cmd = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=root, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": root,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_cmd = CreateBlockCommand(form)
         child = child_cmd.execute()
 
         # Verify parent-child relationship integrity

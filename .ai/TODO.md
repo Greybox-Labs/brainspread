@@ -17,6 +17,24 @@
 - [ ] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
 
+# Cleanup
+- [ ] remove empty __init__.py files that are not needed
+- [ ] backend forms that have a field that describes a related model should use
+  the `ModelChoiceField` instead of `CharField`. you can still pass the pk when
+  creating the form and it will find the correct model instance, you don't have
+  to pass the entire model instance. the arg to ModelChoiceField should be
+  something like `queryset=SomeRepository.get_queryset()`. A good example is
+  UpdateBlockForm.
+  ```python
+  class UpdateBlockForm(BaseForm):
+    user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
+    block_id = forms.CharField(required=True)
+  ```
+  The `user` field is defined correctly, but the `block_id` field needs to be
+  changed to
+  `block = forms.ModelChoiceField(queryset=BlockRepository.get_queryset())`. We
+  need to fix this issue for all forms in our app
+
 # Questions
 
 - [ ] Filebase storage vs database? filebase storage could

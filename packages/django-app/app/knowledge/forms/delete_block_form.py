@@ -5,25 +5,24 @@ from common.forms.base_form import BaseForm
 from core.models import User
 from core.repositories import UserRepository
 
-from ..models import Page
+from ..models import Block
 
 
-class DeletePageForm(BaseForm):
+class DeleteBlockForm(BaseForm):
     user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
-    page_id = forms.CharField(required=True)
+    block_id = forms.CharField(required=True)
 
-    def clean_page_id(self) -> str:
-        page_id = self.cleaned_data.get("page_id")
+    def clean_block_id(self) -> str:
+        block_id = self.cleaned_data.get("block_id")
         user = self.cleaned_data.get("user")
 
-        # Validate page exists and belongs to user
-        if page_id and user:
+        if block_id and user:
             try:
-                Page.objects.get(uuid=page_id, user=user)
-            except Page.DoesNotExist:
-                raise ValidationError("Page not found")
+                Block.objects.get(uuid=block_id, user=user)
+            except Block.DoesNotExist:
+                raise ValidationError("Block not found")
 
-        return page_id
+        return block_id
 
     def clean_user(self) -> User:
         user = self.cleaned_data.get("user")

@@ -2,46 +2,68 @@ from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
+from ..forms.update_block_form import UpdateBlockForm
 from ..models import Block
 
 
 class UpdateBlockCommand(AbstractBaseCommand):
     """Command to update an existing block"""
 
-    def __init__(self, user, block_id, **updates):
-        self.user = user
-        self.block_id = block_id
-        self.updates = updates
+    def __init__(self, form: UpdateBlockForm) -> None:
+        self.form = form
 
     def execute(self) -> Block:
         """Execute the command"""
+        super().execute()  # This validates the form
+
+        user = self.form.cleaned_data["user"]
+        block_id = self.form.cleaned_data["block_id"]
+
         try:
-            block = Block.objects.get(uuid=self.block_id, user=self.user)
+            block = Block.objects.get(uuid=block_id, user=user)
         except Block.DoesNotExist:
             raise ValidationError("Block not found")
 
         # Update fields
         content_updated = False
-        for field, value in self.updates.items():
-            if field == "parent_id":
-                # Handle parent field specially
-                if value is None:
-                    block.parent = None
-                else:
-                    try:
-                        parent_block = Block.objects.get(uuid=value, user=self.user)
 
-                        # Check for circular references
-                        if self._would_create_circular_reference(block, parent_block):
-                            raise ValidationError(
-                                "Cannot create circular reference: block cannot be its own ancestor"
-                            )
+        # Handle parent_id field specially
+        if (
+            "parent_id" in self.form.cleaned_data
+            and self.form.cleaned_data["parent_id"] is not None
+        ):
+            parent_id = self.form.cleaned_data["parent_id"]
+            if parent_id == "":
+                block.parent = None
+            else:
+                try:
+                    parent_block = Block.objects.get(uuid=parent_id, user=user)
 
-                        block.parent = parent_block
-                    except Block.DoesNotExist:
-                        raise ValidationError("Parent block not found")
-            elif hasattr(block, field):
-                setattr(block, field, value)
+                    # Check for circular references
+                    if self._would_create_circular_reference(block, parent_block):
+                        raise ValidationError(
+                            "Cannot create circular reference: block cannot be its own ancestor"
+                        )
+
+                    block.parent = parent_block
+                except Block.DoesNotExist:
+                    raise ValidationError("Parent block not found")
+
+        # Update other fields
+        for field in [
+            "content",
+            "content_type",
+            "block_type",
+            "order",
+            "media_url",
+            "media_metadata",
+            "properties",
+        ]:
+            if (
+                field in self.form.cleaned_data
+                and self.form.cleaned_data[field] is not None
+            ):
+                setattr(block, field, self.form.cleaned_data[field])
                 if field == "content":
                     content_updated = True
 
@@ -57,7 +79,7 @@ class UpdateBlockCommand(AbstractBaseCommand):
 
         # Extract and set tags if content was updated (business logic)
         if content_updated and block.content:
-            block.set_tags_from_content(block.content, self.user)
+            block.set_tags_from_content(block.content, user)
             # Refresh block from database to get updated tag relationships
             block.refresh_from_db()
 
@@ -86,9 +108,9 @@ class UpdateBlockCommand(AbstractBaseCommand):
             return "todo"
         elif content_lower.startswith("[x]"):
             return "done"
-        elif content_lower.startswith("☐"):
+        elif content_stripped.startswith("☐"):
             return "todo"
-        elif content_lower.startswith("☑"):
+        elif content_stripped.startswith("☑"):
             return "done"
 
         # If none of the patterns match, keep current type

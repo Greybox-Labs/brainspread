@@ -4,20 +4,25 @@ from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
+from ..forms.toggle_block_todo_form import ToggleBlockTodoForm
 from ..models import Block
 
 
 class ToggleBlockTodoCommand(AbstractBaseCommand):
     """Command to toggle a block's todo status"""
 
-    def __init__(self, user, block_id):
-        self.user = user
-        self.block_id = block_id
+    def __init__(self, form: ToggleBlockTodoForm) -> None:
+        self.form = form
 
     def execute(self) -> Block:
         """Execute the command"""
+        super().execute()  # This validates the form
+
+        user = self.form.cleaned_data["user"]
+        block_id = self.form.cleaned_data["block_id"]
+
         try:
-            block = Block.objects.get(uuid=self.block_id, user=self.user)
+            block = Block.objects.get(uuid=block_id, user=user)
         except Block.DoesNotExist:
             raise ValidationError("Block not found")
 

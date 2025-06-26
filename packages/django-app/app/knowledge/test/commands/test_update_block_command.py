@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from knowledge.commands import CreateBlockCommand, UpdateBlockCommand
+from knowledge.forms import CreateBlockForm, UpdateBlockForm
 from knowledge.models import Block
 
 from ..helpers import PageFactory, UserFactory
@@ -16,20 +17,28 @@ class TestUpdateBlockCommand(TestCase):
         cls.page = PageFactory(user=cls.user)
 
     def setUp(self):
-        # Create a test block for updating
-        create_command = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Original content",
-            block_type="bullet",
-        )
+        # Create a test block for updating using form
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Original content",
+            "block_type": "bullet",
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        create_command = CreateBlockCommand(form)
         self.block = create_command.execute()
 
     def test_should_auto_detect_todo_when_content_changes_to_todo_prefix(self):
         """Test that updating content to 'TODO:' changes block type to todo"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id=self.block.uuid, content="TODO: Buy groceries"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "TODO: Buy groceries",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "todo")
@@ -37,27 +46,42 @@ class TestUpdateBlockCommand(TestCase):
 
     def test_should_auto_detect_todo_when_content_changes_to_checkbox_empty(self):
         """Test that updating content to '[ ]' changes block type to todo"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id=self.block.uuid, content="[ ] Complete project"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "[ ] Complete project",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "todo")
 
     def test_should_auto_detect_done_when_content_changes_to_checkbox_checked(self):
         """Test that updating content to '[x]' changes block type to done"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id=self.block.uuid, content="[x] Finished task"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "[x] Finished task",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "done")
 
     def test_should_auto_detect_done_when_content_changes_to_unicode_checkbox(self):
         """Test that updating content to '☑' changes block type to done"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id=self.block.uuid, content="☑ Unicode done item"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "☑ Unicode done item",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "done")
@@ -65,18 +89,26 @@ class TestUpdateBlockCommand(TestCase):
     def test_should_change_from_todo_to_done_via_content_update(self):
         """Test changing from TODO to DONE by updating content"""
         # First create a todo block
-        create_command = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="TODO: Task to complete",
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "TODO: Task to complete",
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        create_command = CreateBlockCommand(form)
         todo_block = create_command.execute()
         self.assertEqual(todo_block.block_type, "todo")
 
         # Then update content to mark as done
-        update_command = UpdateBlockCommand(
-            user=self.user, block_id=todo_block.uuid, content="[x] Task completed"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(todo_block.uuid),
+            "content": "[x] Task completed",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_command = UpdateBlockCommand(form)
         updated_block = update_command.execute()
 
         self.assertEqual(updated_block.block_type, "done")
@@ -85,17 +117,26 @@ class TestUpdateBlockCommand(TestCase):
     def test_should_not_override_heading_block_type(self):
         """Test that auto-detection doesn't override heading type"""
         # Create a heading block
-        create_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="# Heading", block_type="heading"
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "# Heading",
+            "block_type": "heading",
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        create_command = CreateBlockCommand(form)
         heading_block = create_command.execute()
 
         # Update content to TODO pattern - should NOT change type
-        command = UpdateBlockCommand(
-            user=self.user,
-            block_id=heading_block.uuid,
-            content="TODO: This should stay a heading",
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(heading_block.uuid),
+            "content": "TODO: This should stay a heading",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "heading")
@@ -103,20 +144,26 @@ class TestUpdateBlockCommand(TestCase):
     def test_should_not_override_code_block_type(self):
         """Test that auto-detection doesn't override code type"""
         # Create a code block
-        create_command = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="console.log('hello')",
-            block_type="code",
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "console.log('hello')",
+            "block_type": "code",
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        create_command = CreateBlockCommand(form)
         code_block = create_command.execute()
 
         # Update content to TODO pattern - should NOT change type
-        command = UpdateBlockCommand(
-            user=self.user,
-            block_id=code_block.uuid,
-            content="[ ] This should stay code",
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(code_block.uuid),
+            "content": "[ ] This should stay code",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "code")
@@ -124,18 +171,26 @@ class TestUpdateBlockCommand(TestCase):
     def test_should_preserve_block_type_when_no_pattern_matches(self):
         """Test that block type is preserved when content doesn't match patterns"""
         # Start with a todo block
-        create_command = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="TODO: Original task",
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "TODO: Original task",
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        create_command = CreateBlockCommand(form)
         todo_block = create_command.execute()
         self.assertEqual(todo_block.block_type, "todo")
 
         # Update to regular content - should keep todo type
-        command = UpdateBlockCommand(
-            user=self.user, block_id=todo_block.uuid, content="Just regular content now"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(todo_block.uuid),
+            "content": "Just regular content now",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "todo")
@@ -146,9 +201,14 @@ class TestUpdateBlockCommand(TestCase):
         original_block = self.block
 
         # Update other field, not content
-        command = UpdateBlockCommand(
-            user=self.user, block_id=original_block.uuid, order=5
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(original_block.uuid),
+            "order": 5,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         # Block type should remain unchanged
@@ -157,9 +217,14 @@ class TestUpdateBlockCommand(TestCase):
 
     def test_should_handle_empty_content_update(self):
         """Test that updating to empty content preserves block type"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id=self.block.uuid, content=""
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         self.assertEqual(updated_block.block_type, "bullet")
@@ -167,9 +232,14 @@ class TestUpdateBlockCommand(TestCase):
 
     def test_should_raise_validation_error_for_nonexistent_block(self):
         """Test that updating nonexistent block raises ValidationError"""
-        command = UpdateBlockCommand(
-            user=self.user, block_id="nonexistent-uuid", content="New content"
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": "nonexistent-uuid",
+            "content": "New content",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
 
         with self.assertRaises(ValidationError):
             command.execute()
@@ -184,9 +254,14 @@ class TestUpdateBlockCommand(TestCase):
 
         for content, expected_type in test_cases:
             with self.subTest(content=content):
-                command = UpdateBlockCommand(
-                    user=self.user, block_id=self.block.uuid, content=content
-                )
+                form_data = {
+                    "user": self.user.id,
+                    "block_id": str(self.block.uuid),
+                    "content": content,
+                }
+                form = UpdateBlockForm(form_data)
+                form.is_valid()
+                command = UpdateBlockCommand(form)
                 updated_block = command.execute()
                 self.assertEqual(updated_block.block_type, expected_type)
 
@@ -195,11 +270,14 @@ class TestUpdateBlockCommand(TestCase):
         self, mock_set_tags
     ):
         """Test that tags are extracted when content is updated"""
-        command = UpdateBlockCommand(
-            user=self.user,
-            block_id=self.block.uuid,
-            content="TODO: Buy #groceries and #food",
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "content": "TODO: Buy #groceries and #food",
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         mock_set_tags.assert_called_once_with(
@@ -211,7 +289,14 @@ class TestUpdateBlockCommand(TestCase):
         self, mock_set_tags
     ):
         """Test that tag extraction is skipped when content isn't updated"""
-        command = UpdateBlockCommand(user=self.user, block_id=self.block.uuid, order=10)
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(self.block.uuid),
+            "order": 10,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
         mock_set_tags.assert_not_called()

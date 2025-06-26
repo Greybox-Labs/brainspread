@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
+from knowledge.forms import CreateBlockForm, UpdateBlockForm
 from knowledge.test.helpers import PageFactory, UserFactory
 
 User = get_user_model()
@@ -16,9 +17,15 @@ class TestNestedBlocks(TestCase):
 
     def test_should_create_root_block(self):
         """Test creating a root level block"""
-        command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block content", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block content",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        command = CreateBlockCommand(form)
         block = command.execute()
 
         self.assertIsNotNone(block)
@@ -29,15 +36,27 @@ class TestNestedBlocks(TestCase):
     def test_should_create_child_block(self):
         """Test creating a child block"""
         # Create parent block first
-        parent_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent_command = CreateBlockCommand(form)
         parent_block = parent_command.execute()
 
         # Create child block
-        child_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=parent_block
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": parent_block,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_command = CreateBlockCommand(form)
         child_block = child_command.execute()
 
         self.assertIsNotNone(child_block)
@@ -53,24 +72,39 @@ class TestNestedBlocks(TestCase):
     def test_should_create_multiple_levels_of_nesting(self):
         """Test creating multiple levels of nested blocks"""
         # Create root block
-        root_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Root block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Root block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        root_command = CreateBlockCommand(form)
         root_block = root_command.execute()
 
         # Create child block
-        child_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=root_block
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": root_block,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_command = CreateBlockCommand(form)
         child_block = child_command.execute()
 
         # Create grandchild block
-        grandchild_command = CreateBlockCommand(
-            user=self.user,
-            page=self.page,
-            content="Grandchild block",
-            parent=child_block,
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Grandchild block",
+            "parent": child_block,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        grandchild_command = CreateBlockCommand(form)
         grandchild_block = grandchild_command.execute()
 
         # Verify depths
@@ -92,20 +126,38 @@ class TestNestedBlocks(TestCase):
     def test_should_update_block_parent(self):
         """Test updating a block's parent using UpdateBlockCommand"""
         # Create two root blocks
-        parent1_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent 1", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent 1",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent1_command = CreateBlockCommand(form)
         parent1 = parent1_command.execute()
 
-        parent2_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent 2", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent 2",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent2_command = CreateBlockCommand(form)
         parent2 = parent2_command.execute()
 
         # Create child under parent1
-        child_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=parent1
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": parent1,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_command = CreateBlockCommand(form)
         child = child_command.execute()
 
         # Verify initial state
@@ -114,9 +166,14 @@ class TestNestedBlocks(TestCase):
         self.assertEqual(len(parent2.get_children()), 0)
 
         # Move child to parent2
-        update_command = UpdateBlockCommand(
-            user=self.user, block_id=child.uuid, parent_id=parent2.uuid
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(child.uuid),
+            "parent_id": str(parent2.uuid),
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_command = UpdateBlockCommand(form)
         updated_child = update_command.execute()
 
         # Refresh from database
@@ -132,14 +189,26 @@ class TestNestedBlocks(TestCase):
     def test_should_move_block_to_root_level(self):
         """Test moving a child block to root level"""
         # Create parent and child
-        parent_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent_command = CreateBlockCommand(form)
         parent = parent_command.execute()
 
-        child_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=parent
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": parent,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_command = CreateBlockCommand(form)
         child = child_command.execute()
 
         # Verify initial state
@@ -147,9 +216,14 @@ class TestNestedBlocks(TestCase):
         self.assertEqual(child.get_depth(), 1)
 
         # Move child to root level
-        update_command = UpdateBlockCommand(
-            user=self.user, block_id=child.uuid, parent_id=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(child.uuid),
+            "parent_id": None,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_command = UpdateBlockCommand(form)
         updated_child = update_command.execute()
 
         # Refresh from database
@@ -164,25 +238,52 @@ class TestNestedBlocks(TestCase):
     def test_should_preserve_order_within_parent(self):
         """Test that block order is preserved within parent context"""
         # Create parent
-        parent_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent_command = CreateBlockCommand(form)
         parent = parent_command.execute()
 
         # Create multiple children with specific orders
-        child1_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 1", parent=parent, order=0
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 1",
+            "parent": parent,
+            "order": 0,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child1_command = CreateBlockCommand(form)
         child1 = child1_command.execute()
 
-        child2_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 2", parent=parent, order=1
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 2",
+            "parent": parent,
+            "order": 1,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child2_command = CreateBlockCommand(form)
         child2 = child2_command.execute()
 
-        child3_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child 3", parent=parent, order=2
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child 3",
+            "parent": parent,
+            "order": 2,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child3_command = CreateBlockCommand(form)
         child3 = child3_command.execute()
 
         # Verify order
@@ -195,9 +296,15 @@ class TestNestedBlocks(TestCase):
     def test_should_handle_invalid_parent_id(self):
         """Test that UpdateBlockCommand handles invalid parent_id gracefully"""
         # Create a block
-        block_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Test block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Test block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        block_command = CreateBlockCommand(form)
         block = block_command.execute()
 
         # Try to update with invalid parent_id (valid UUID format but non-existent)
@@ -206,9 +313,14 @@ class TestNestedBlocks(TestCase):
         from django.core.exceptions import ValidationError
 
         non_existent_uuid = str(uuid.uuid4())
-        update_command = UpdateBlockCommand(
-            user=self.user, block_id=block.uuid, parent_id=non_existent_uuid
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(block.uuid),
+            "parent_id": non_existent_uuid,
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_command = UpdateBlockCommand(form)
 
         with self.assertRaises(ValidationError) as context:
             update_command.execute()
@@ -218,22 +330,39 @@ class TestNestedBlocks(TestCase):
     def test_should_prevent_circular_references(self):
         """Test that blocks cannot become their own ancestor"""
         # Create parent and child
-        parent_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Parent block", parent=None
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Parent block",
+            "parent": None,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        parent_command = CreateBlockCommand(form)
         parent = parent_command.execute()
 
-        child_command = CreateBlockCommand(
-            user=self.user, page=self.page, content="Child block", parent=parent
-        )
+        form_data = {
+            "user": self.user.id,
+            "page": self.page.id,
+            "content": "Child block",
+            "parent": parent,
+        }
+        form = CreateBlockForm(form_data)
+        form.is_valid()
+        child_command = CreateBlockCommand(form)
         child = child_command.execute()
 
         # Try to make parent a child of child (circular reference)
         from django.core.exceptions import ValidationError
 
-        update_command = UpdateBlockCommand(
-            user=self.user, block_id=parent.uuid, parent_id=child.uuid
-        )
+        form_data = {
+            "user": self.user.id,
+            "block_id": str(parent.uuid),
+            "parent_id": str(child.uuid),
+        }
+        form = UpdateBlockForm(form_data)
+        form.is_valid()
+        update_command = UpdateBlockCommand(form)
 
         # This should work at the command level but would create a circular reference
         # The model should handle this validation, but for now we test the basic functionality

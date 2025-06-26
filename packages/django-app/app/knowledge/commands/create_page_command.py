@@ -2,22 +2,23 @@ from django.utils.text import slugify
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
+from ..forms.create_page_form import CreatePageForm
 from ..models import Page
 
 
 class CreatePageCommand(AbstractBaseCommand):
     """Command to create a new page"""
 
-    def __init__(self, form, user):
+    def __init__(self, form: CreatePageForm) -> None:
         self.form = form
-        self.user = user
 
     def execute(self) -> Page:
         """Execute the command"""
         super().execute()  # This validates the form
 
+        user = self.form.cleaned_data["user"]
         page = Page.objects.create(
-            user=self.user,
+            user=user,
             title=self.form.cleaned_data["title"],
             slug=self.form.cleaned_data.get("slug")
             or slugify(self.form.cleaned_data["title"]),
@@ -26,6 +27,6 @@ class CreatePageCommand(AbstractBaseCommand):
         )
 
         if page.content:
-            page.set_tags_from_content(page.content, self.user)
+            page.set_tags_from_content(page.content, user)
 
         return page
