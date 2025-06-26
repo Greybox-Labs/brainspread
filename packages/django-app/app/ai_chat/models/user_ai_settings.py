@@ -10,11 +10,11 @@ class UserAISettings(UUIDModelMixin, CRUDTimestampsMixin):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     preferred_model = models.ForeignKey(
-        'AIModel', 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        "AIModel",
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        help_text="User's preferred AI model for new conversations"
+        help_text="User's preferred AI model for new conversations",
     )
 
     class Meta:

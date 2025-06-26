@@ -49,12 +49,12 @@ class UserProviderConfigFactory(DjangoModelFactory):
     class Meta:
         model = UserProviderConfig
         skip_postgeneration_save = True
-    
+
     @factory.post_generation
     def enabled_models(self, create, extracted, **kwargs):
         if not create:
             return
-        
+
         if extracted:
             # If models are passed in, use them
             for model in extracted:
@@ -68,16 +68,16 @@ class UserProviderConfigFactory(DjangoModelFactory):
                     "display_name": "GPT-4",
                     "description": "Test GPT-4 model",
                     "is_active": True,
-                }
+                },
             )
             model2, _ = AIModel.objects.get_or_create(
                 name="gpt-3.5-turbo",
                 provider=self.provider,
                 defaults={
-                    "display_name": "GPT-3.5 Turbo", 
+                    "display_name": "GPT-3.5 Turbo",
                     "description": "Test GPT-3.5 model",
                     "is_active": True,
-                }
+                },
             )
             self.enabled_models.add(model1, model2)
 

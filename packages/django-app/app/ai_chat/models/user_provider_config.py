@@ -15,9 +15,9 @@ class UserProviderConfig(UUIDModelMixin, CRUDTimestampsMixin):
     api_key = models.CharField(max_length=255, blank=True)
     is_enabled = models.BooleanField(default=True)
     enabled_models = models.ManyToManyField(
-        'AIModel', 
-        blank=True, 
-        help_text="Models that this user has enabled for this provider"
+        "AIModel",
+        blank=True,
+        help_text="Models that this user has enabled for this provider",
     )
 
     class Meta:

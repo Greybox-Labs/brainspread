@@ -56,7 +56,7 @@ class AIChatAPITestCase(TestCase):
             description="Test GPT-3.5 model",
             is_active=True,
         )
-        
+
         # Create Anthropic models for testing
         self.claude_sonnet_model = AIModel.objects.create(
             name="claude-3-sonnet",
@@ -163,7 +163,11 @@ class AIChatAPITestCase(TestCase):
             session=session, role="assistant", content="Previous response"
         )
 
-        data = {"message": "Follow-up question", "model": "gpt-4", "session_id": str(session.uuid)}
+        data = {
+            "message": "Follow-up question",
+            "model": "gpt-4",
+            "session_id": str(session.uuid),
+        }
         response = self.client.post("/api/ai-chat/send/", data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -373,9 +377,11 @@ class AIChatAPITestCase(TestCase):
         )
         self.assertEqual(provider_config.api_key, "new-anthropic-key")
         self.assertTrue(provider_config.is_enabled)
-        
+
         # Check enabled models (M2M relationship)
-        enabled_model_names = list(provider_config.enabled_models.values_list('name', flat=True))
+        enabled_model_names = list(
+            provider_config.enabled_models.values_list("name", flat=True)
+        )
         self.assertIn("claude-3-sonnet", enabled_model_names)
         self.assertIn("claude-3-haiku", enabled_model_names)
 

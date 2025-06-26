@@ -1,5 +1,3 @@
-from typing import Any, Dict, List
-
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -7,7 +5,6 @@ from common.forms.base_form import BaseForm
 
 from .models import ChatSession
 from .repositories.user_settings_repository import UserSettingsRepository
-from .services.ai_service_factory import AIServiceFactory
 
 
 class SendMessageForm(BaseForm):
@@ -62,12 +59,15 @@ class SendMessageForm(BaseForm):
 
         # Look up the model in our database
         from .models import AIModel
+
         try:
             ai_model = AIModel.objects.select_related("provider").get(
                 name=model_name, is_active=True
             )
         except AIModel.DoesNotExist:
-            raise ValidationError(f"Model '{model_name}' is not available or not found.")
+            raise ValidationError(
+                f"Model '{model_name}' is not available or not found."
+            )
 
         # Get the provider and check API key
         provider = ai_model.provider
@@ -77,7 +77,9 @@ class SendMessageForm(BaseForm):
         user_settings_repo = UserSettingsRepository()
         api_key = user_settings_repo.get_api_key(self.user, provider)
         if not api_key:
-            raise ValidationError(f"No API key configured for {provider.name}. Please add your API key in settings.")
+            raise ValidationError(
+                f"No API key configured for {provider.name}. Please add your API key in settings."
+            )
 
         # Add validated data to cleaned_data
         cleaned_data["ai_model"] = ai_model

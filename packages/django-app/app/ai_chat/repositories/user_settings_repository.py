@@ -37,10 +37,12 @@ class UserSettingsRepository(BaseRepository):
             return False
 
         # Check if user has at least one API key configured
-        provider_configs = UserProviderConfig.objects.filter(
-            user=user, is_enabled=True
-        ).exclude(api_key__isnull=True).exclude(api_key__exact='')
-        
+        provider_configs = (
+            UserProviderConfig.objects.filter(user=user, is_enabled=True)
+            .exclude(api_key__isnull=True)
+            .exclude(api_key__exact="")
+        )
+
         return provider_configs.exists()
 
     def get_api_key(self, user, provider) -> Optional[str]:

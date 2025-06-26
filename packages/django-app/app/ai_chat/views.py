@@ -17,7 +17,6 @@ from .models import (
     UserProviderConfig,
 )
 from .repositories.user_settings_repository import UserSettingsRepository
-from .services.ai_service_factory import AIServiceFactory
 
 logger = logging.getLogger(__name__)
 
@@ -183,13 +182,17 @@ def ai_settings(request):
         # Get available models from database grouped by provider
         providers_data = []
         for provider in providers:
-            models = AIModel.objects.filter(provider=provider, is_active=True).values_list('name', flat=True)
-            providers_data.append({
-                "id": provider.id,
-                "uuid": str(provider.uuid),
-                "name": provider.name,
-                "models": list(models),
-            })
+            models = AIModel.objects.filter(
+                provider=provider, is_active=True
+            ).values_list("name", flat=True)
+            providers_data.append(
+                {
+                    "id": provider.id,
+                    "uuid": str(provider.uuid),
+                    "name": provider.name,
+                    "models": list(models),
+                }
+            )
 
         # Get user's current settings
         user_settings_repo = UserSettingsRepository()
@@ -207,7 +210,9 @@ def ai_settings(request):
             configs_data[config.provider.name] = {
                 "is_enabled": config.is_enabled,
                 "has_api_key": bool(config.api_key),
-                "enabled_models": list(config.enabled_models.values_list('name', flat=True)),
+                "enabled_models": list(
+                    config.enabled_models.values_list("name", flat=True)
+                ),
             }
 
         response_data = {
@@ -254,7 +259,9 @@ def update_ai_settings(request):
                     user_settings.preferred_model = ai_model
                     user_settings.save()
             except AIModel.DoesNotExist:
-                logger.warning(f"AI model '{model}' not found when updating user settings")
+                logger.warning(
+                    f"AI model '{model}' not found when updating user settings"
+                )
 
         # Update provider configurations
         for provider_name, config_data in provider_configs.items():
@@ -273,15 +280,13 @@ def update_ai_settings(request):
                         "is_enabled", provider_config.is_enabled
                     )
                     provider_config.save()
-                
+
                 # Handle enabled_models M2M relationship
                 enabled_model_names = config_data.get("enabled_models", [])
                 if enabled_model_names:
                     # Get AIModel objects for the given names and provider
                     ai_models = AIModel.objects.filter(
-                        name__in=enabled_model_names,
-                        provider=provider,
-                        is_active=True
+                        name__in=enabled_model_names, provider=provider, is_active=True
                     )
                     provider_config.enabled_models.set(ai_models)
 

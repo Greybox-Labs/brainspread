@@ -138,6 +138,7 @@ class UserSettingsRepositoryTestCase(TestCase):
     def setUp(self):
         # Create AIModel for testing
         from ai_chat.models import AIModel
+
         self.gpt4_model = AIModel.objects.create(
             name="gpt-4",
             provider=self.openai_provider,
@@ -206,6 +207,7 @@ class UserSettingsRepositoryTestCase(TestCase):
         other_user = UserFactory(email="other@example.com")
         # Create an Anthropic model for the other user
         from ai_chat.models import AIModel
+
         claude_model = AIModel.objects.create(
             name="claude-3-sonnet",
             provider=self.anthropic_provider,
@@ -274,6 +276,7 @@ class ServiceIntegrationTestCase(TestCase):
     def setUp(self):
         # Create AIModel for testing
         from ai_chat.models import AIModel
+
         self.gpt4_model = AIModel.objects.create(
             name="gpt-4",
             provider=self.openai_provider,

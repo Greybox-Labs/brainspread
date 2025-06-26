@@ -63,6 +63,16 @@ const ChatPanel = {
     },
     async sendMessage() {
       if (!this.message) return;
+      if (!this.selectedModel) {
+        console.error("No model selected");
+        this.messages.push({
+          role: "assistant",
+          content:
+            "Error: No AI model selected. Please select a model or configure your API keys in settings.",
+          created_at: new Date().toISOString(),
+        });
+        return;
+      }
       const userMsg = {
         role: "user",
         content: this.message,
@@ -72,6 +82,7 @@ const ChatPanel = {
       this.scrollToBottom(); // Scroll after adding user message
       const payload = {
         message: this.message,
+        model: this.selectedModel,
         session_id: this.currentSessionId,
         context_blocks: this.chatContextBlocks,
       };
@@ -89,9 +100,23 @@ const ChatPanel = {
             this.currentSessionId = result.data.session_id;
           }
           this.scrollToBottom(); // Scroll after adding assistant response
+        } else {
+          // Handle error response
+          const errorMsg = result.error || "Failed to send message";
+          this.messages.push({
+            role: "assistant",
+            content: `Error: ${errorMsg}`,
+            created_at: new Date().toISOString(),
+          });
         }
       } catch (err) {
         console.error(err);
+        this.messages.push({
+          role: "assistant",
+          content:
+            "Error: Failed to send message. Please check your connection and try again.",
+          created_at: new Date().toISOString(),
+        });
       } finally {
         this.loading = false;
       }
@@ -187,10 +212,26 @@ const ChatPanel = {
         if (result.success) {
           this.aiSettings = result.data;
           this.selectedModel = result.data.current_model;
+
+          // If no current model or it's not available, pick the first available one
+          if (
+            !this.selectedModel ||
+            !this.isModelAvailable(this.selectedModel)
+          ) {
+            const availableModels = this.getAvailableModels();
+            if (availableModels.length > 0) {
+              this.selectedModel = availableModels[0].value;
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to load AI settings:", error);
       }
+    },
+
+    isModelAvailable(modelName) {
+      const availableModels = this.getAvailableModels();
+      return availableModels.some((model) => model.value === modelName);
     },
 
     toggleModelSelector() {
@@ -243,9 +284,13 @@ const ChatPanel = {
     },
 
     getCurrentModelLabel() {
-      if (!this.selectedModel || !this.aiSettings) return "Model";
+      if (!this.aiSettings) return "Loading...";
 
       const allModels = this.getAvailableModels();
+      if (allModels.length === 0) return "No models available";
+
+      if (!this.selectedModel) return "Select model";
+
       const currentModel = allModels.find(
         (model) => model.value === this.selectedModel
       );
@@ -380,7 +425,11 @@ const ChatPanel = {
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div v-if="showModelSelector" class="model-dropdown">
+                <div v-if="getAvailableModels().length === 0" class="model-option disabled">
+                  No models available. Configure API keys in settings.
+                </div>
                 <div 
+                  v-else
                   v-for="model in getAvailableModels()" 
                   :key="model.value"
                   class="model-option"

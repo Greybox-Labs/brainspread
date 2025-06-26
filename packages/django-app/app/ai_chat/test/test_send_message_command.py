@@ -55,7 +55,9 @@ class SendMessageCommandTestCase(TestCase):
             enabled_models=[self.gpt4_model, self.gpt35_model],
         )
 
-    def _create_form(self, message="Hello, AI!", model="gpt-4", session_id=None, context_blocks=None):
+    def _create_form(
+        self, message="Hello, AI!", model="gpt-4", session_id=None, context_blocks=None
+    ):
         """Helper to create a form with default values"""
         form_data = {
             "message": message,
@@ -175,9 +177,6 @@ class SendMessageCommandTestCase(TestCase):
         self.assertIn("Model", error_message)
         self.assertIn("unknown-model-xyz", error_message)
         self.assertIn("not available or not found", error_message)
-
-
-
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
