@@ -312,10 +312,13 @@ body {
   text-decoration: underline;
   padding: 0.5rem 0;
   font-weight: normal;
+  box-shadow: none;
 }
 
 .btn-link:hover:not(:disabled) {
   color: var(--text-primary);
+  transform: none;
+  box-shadow: none;
 }
 
 /* Settings Button */
@@ -639,7 +642,7 @@ body {
 
 .login-form .btn-link {
   width: auto;
-  margin: 0;
+  margin: 0 auto;
   display: block;
   text-align: center;
 }

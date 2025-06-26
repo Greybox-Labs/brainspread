@@ -50,7 +50,8 @@
       "Bash(node:*)",
       "Bash(pipenv run pytest:*)",
       "Bash(pipenv run python:*)",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "mcp__sse-server__browser_hover"
     ],
     "deny": []
   }
