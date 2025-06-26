@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "core",
     "tagging",
     "knowledge",
+    "ai_chat",
 ]
 
 MIDDLEWARE = [

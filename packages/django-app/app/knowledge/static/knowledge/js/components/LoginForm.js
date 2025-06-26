@@ -21,11 +21,11 @@ const LoginForm = {
         if (result.success) {
           this.$emit("login-success", result.data.user);
         } else {
-          this.error = result.errors?.non_field_errors?.[0] || "Login failed";
+          this.error = result.errors?.non_field_errors?.[0] || "login failed";
         }
       } catch (error) {
-        console.error("Login error:", error);
-        this.error = "Login failed. Please try again.";
+        console.error("login error:", error);
+        this.error = "login failed. please try again.";
       } finally {
         this.loading = false;
       }
@@ -65,11 +65,11 @@ const LoginForm = {
 
   template: `
         <div class="login-form">
-            <h2>{{ showRegister ? 'Register' : 'Login' }}</h2>
+            <h2>{{ showRegister ? 'register' : 'login' }}</h2>
             
             <form @submit.prevent="showRegister ? handleRegister() : handleLogin()">
                 <div class="form-group">
-                    <label for="email">Email:</label>
+                    <label for="email">email:</label>
                     <input 
                         id="email"
                         v-model="email" 
@@ -82,7 +82,7 @@ const LoginForm = {
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password:</label>
+                    <label for="password">password:</label>
                     <input 
                         id="password"
                         v-model="password" 
@@ -95,11 +95,11 @@ const LoginForm = {
                 </div>
                 
                 <button type="submit" :disabled="loading" class="btn btn-primary">
-                    {{ loading ? (showRegister ? 'Registering...' : 'Logging in...') : (showRegister ? 'Register' : 'Login') }}
+                    {{ loading ? (showRegister ? 'registering...' : 'logging in...') : (showRegister ? 'register' : 'login') }}
                 </button>
                 
                 <button type="button" @click="toggleForm" class="btn btn-link" :disabled="loading">
-                    {{ showRegister ? 'Already have an account? Login' : 'Need an account? Register' }}
+                    {{ showRegister ? 'already have an account? login' : 'need an account? register' }}
                 </button>
             </form>
             

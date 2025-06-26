@@ -12,6 +12,10 @@ const KnowledgeApp = createApp({
       currentView: isAuth ? "journal" : "login", // Set view immediately
       loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
       showSettings: false, // Settings modal state
+      settingsActiveTab: "general", // Default tab for settings modal
+      // Chat context management
+      chatContextBlocks: [], // Array of blocks in chat context
+      visibleBlocks: [], // Array of currently visible blocks
     };
   },
 
@@ -21,6 +25,7 @@ const KnowledgeApp = createApp({
     HistoricalSidebar: window.HistoricalSidebar,
     HistoricalDailyNoteBlocks: window.HistoricalDailyNoteBlocks,
     SettingsModal: window.SettingsModal,
+    ChatPanel: window.ChatPanel,
   },
 
   async mounted() {
@@ -131,12 +136,18 @@ const KnowledgeApp = createApp({
     },
 
     // Theme and settings methods
-    openSettings() {
+    openSettings(activeTab = "general") {
+      this.settingsActiveTab = activeTab;
       this.showSettings = true;
     },
 
     closeSettings() {
       this.showSettings = false;
+      this.settingsActiveTab = "general"; // Reset to default
+    },
+
+    onChatPanelOpenSettings(activeTab) {
+      this.openSettings(activeTab);
     },
 
     onThemeUpdated(updatedUser) {
@@ -151,6 +162,45 @@ const KnowledgeApp = createApp({
       const theme = this.user?.theme || "dark";
       document.documentElement.setAttribute("data-theme", theme);
     },
+
+    // Chat context management methods
+    addBlockToContext(block) {
+      // Don't add if already in context
+      if (!this.chatContextBlocks.find((b) => b.id === block.id)) {
+        this.chatContextBlocks.push({
+          id: block.id,
+          content: block.content,
+          block_type: block.block_type,
+          created_at: block.created_at,
+        });
+      }
+    },
+
+    removeBlockFromContext(blockId) {
+      this.chatContextBlocks = this.chatContextBlocks.filter(
+        (b) => b.id !== blockId
+      );
+    },
+
+    isBlockInContext(blockId) {
+      return this.chatContextBlocks.some((b) => b.id === blockId);
+    },
+
+    clearChatContext() {
+      this.chatContextBlocks = [];
+    },
+
+    updateVisibleBlocks(blocks) {
+      this.visibleBlocks = blocks;
+    },
+
+    onBlockAddToContext(block) {
+      this.addBlockToContext(block);
+    },
+
+    onBlockRemoveFromContext(blockId) {
+      this.removeBlockFromContext(blockId);
+    },
   },
 
   template: `
@@ -159,16 +209,16 @@ const KnowledgeApp = createApp({
             <div v-if="loading && !user" class="loading-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
                 <div class="loading">Loading...</div>
             </div>
-            
+
             <!-- Authenticated state -->
             <div v-else-if="isAuthenticated">
                 <nav class="navbar">
                     <div class="nav-content">
-                        <h1><a href="/knowledge/" class="brand-link">brainspreader</a></h1>
+                        <h1><a href="/knowledge/" class="brand-link">brainspread</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
-                            <button @click="openSettings" class="settings-btn">settings</button>
-                            <button @click="handleLogout" class="btn btn-outline">logout</button>
+                            <button @click="openSettings()" class="settings-btn">settings</button>
+                            <button @click="handleLogout" class="btn btn-outline">LOGOUT</button>
                         </div>
                     </div>
                 </nav>
@@ -180,12 +230,26 @@ const KnowledgeApp = createApp({
                     <div v-else class="content-layout">
                         <HistoricalSidebar v-if="!$refs.dailyNote?.isTagPage" @navigate-to-date="onNavigateToDate" />
                         <div class="main-content-area">
-                            <DailyNote ref="dailyNote" />
+                            <DailyNote
+                                ref="dailyNote"
+                                :chat-context-blocks="chatContextBlocks"
+                                :is-block-in-context="isBlockInContext"
+                                @block-add-to-context="onBlockAddToContext"
+                                @block-remove-from-context="onBlockRemoveFromContext"
+                                @visible-blocks-changed="updateVisibleBlocks"
+                            />
                         </div>
+                        <ChatPanel
+                            :chat-context-blocks="chatContextBlocks"
+                            :visible-blocks="visibleBlocks"
+                            @open-settings="onChatPanelOpenSettings"
+                            @remove-context-block="onBlockRemoveFromContext"
+                            @clear-context="clearChatContext"
+                        />
                     </div>
                 </main>
             </div>
-            
+
             <!-- Login state -->
             <main v-else class="main-content">
                 <div class="auth-container">
@@ -195,9 +259,10 @@ const KnowledgeApp = createApp({
         </div>
 
         <!-- Settings Modal -->
-        <SettingsModal 
+        <SettingsModal
             :is-open="showSettings"
             :user="user"
+            :active-tab="settingsActiveTab"
             @close="closeSettings"
             @theme-updated="onThemeUpdated"
         />

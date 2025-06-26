@@ -290,6 +290,32 @@ class ApiService {
       throw error;
     }
   }
+
+  async sendAIMessage(payload) {
+    return await this.request("/api/ai-chat/send/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getChatSessions() {
+    return await this.request("/api/ai-chat/sessions/");
+  }
+
+  async getChatSessionDetail(sessionId) {
+    return await this.request(`/api/ai-chat/sessions/${sessionId}/`);
+  }
+
+  async getAISettings() {
+    return await this.request("/api/ai-chat/settings/");
+  }
+
+  async updateAISettings(settings) {
+    return await this.request("/api/ai-chat/settings/update/", {
+      method: "POST",
+      body: JSON.stringify(settings),
+    });
+  }
 }
 
 // Export for use in other files

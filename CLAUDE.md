@@ -82,9 +82,9 @@ Navigate to `packages/django-app/` for most development tasks.
 - you can run `just tail-logs web 100` or `just tail-logs db 100`
   to get server logs or database logs to debug issues.
 - you can use browser mcp to debug issues also
-  - for the user app go to http://localhost:8000/knowledge/
+  - for the user app go to http://localhost:8001/knowledge/
     - login with "admin@email.com" and "password"
-  - for the admin app go to http://localhost:8000/admin/
+  - for the admin app go to http://localhost:8001/admin/
 
 ### Always load information from extra files in .ai/
 - .ai/DEBUGGING.md contains debugging tips and tricks
