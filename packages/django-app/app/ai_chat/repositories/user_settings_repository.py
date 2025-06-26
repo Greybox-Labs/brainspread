@@ -36,14 +36,14 @@ class UserSettingsRepository(BaseRepository):
         if not settings or not settings.preferred_model:
             return False
 
-        # Check if user has at least one API key configured
-        provider_configs = (
-            UserProviderConfig.objects.filter(user=user, is_enabled=True)
-            .exclude(api_key__isnull=True)
-            .exclude(api_key__exact="")
-        )
-
-        return provider_configs.exists()
+        # Check if user has at least one API key configured (using new secure methods)
+        provider_configs = UserProviderConfig.objects.filter(user=user, is_enabled=True)
+        
+        for config in provider_configs:
+            if config.has_api_key():
+                return True
+        
+        return False
 
     def get_api_key(self, user, provider) -> Optional[str]:
         """
@@ -60,8 +60,8 @@ class UserSettingsRepository(BaseRepository):
             provider_config = UserProviderConfig.objects.get(
                 user=user, provider=provider
             )
-            if provider_config.is_enabled and provider_config.api_key:
-                return provider_config.api_key
+            if provider_config.is_enabled and provider_config.has_api_key():
+                return provider_config.get_api_key()
             return None
         except UserProviderConfig.DoesNotExist:
             return None

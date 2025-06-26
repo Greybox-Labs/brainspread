@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .commands import SendMessageCommand
+from .commands.manage_api_key import ManageAPIKeyCommand
 from .commands.send_message import SendMessageCommandError
 from .forms import SendMessageForm
 from .models import (
@@ -209,7 +210,7 @@ def ai_settings(request):
         for config in provider_configs:
             configs_data[config.provider.name] = {
                 "is_enabled": config.is_enabled,
-                "has_api_key": bool(config.api_key),
+                "has_api_key": config.has_api_key(),
                 "enabled_models": list(
                     config.enabled_models.values_list("name", flat=True)
                 ),
@@ -296,17 +297,19 @@ def update_ai_settings(request):
                 )
                 continue
 
-        # Update API keys
+        # Update API keys using secure command
+        api_key_command = ManageAPIKeyCommand(request)
         for provider_name, api_key in api_keys.items():
             try:
                 provider = AIProvider.objects.get(name__iexact=provider_name)
-                provider_config, created = UserProviderConfig.objects.get_or_create(
-                    user=request.user, provider=provider, defaults={"api_key": api_key}
+                success, message = api_key_command.set_api_key(
+                    request.user, provider, api_key
                 )
-
-                if not created:
-                    provider_config.api_key = api_key
-                    provider_config.save()
+                
+                if not success:
+                    logger.warning(
+                        f"Failed to set API key for provider '{provider_name}': {message}"
+                    )
 
             except AIProvider.DoesNotExist:
                 logger.warning(

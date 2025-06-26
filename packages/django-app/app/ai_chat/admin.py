@@ -4,6 +4,7 @@ from django.utils.html import format_html
 from .models import (
     AIModel,
     AIProvider,
+    APIKeyAudit,
     ChatMessage,
     ChatSession,
     UserAISettings,
@@ -185,8 +186,8 @@ class UserProviderConfigAdmin(admin.ModelAdmin):
         (
             "API Configuration",
             {
-                "fields": ("api_key",),
-                "description": "API key is stored securely and masked in the admin interface.",
+                "fields": ("api_key_status", "api_key"),
+                "description": "API keys are encrypted and stored securely. Legacy plain-text field shown for migration purposes only.",
             },
         ),
         (
@@ -197,16 +198,62 @@ class UserProviderConfigAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Security Information",
+            {
+                "fields": ("encryption_status", "encrypted_api_key", "api_key_salt", "api_key_hash", "api_key_hash_salt"),
+                "classes": ("collapse",),
+                "description": "Encrypted storage fields - do not modify manually.",
+            },
+        ),
+        (
             "Metadata",
             {"fields": ("id", "created_at", "modified_at"), "classes": ("collapse",)},
         ),
     )
 
+    readonly_fields = ["id", "created_at", "modified_at", "api_key_status", "encryption_status"]
+
     def has_api_key(self, obj):
-        return bool(obj.api_key)
+        return obj.has_api_key()
 
     has_api_key.boolean = True
     has_api_key.short_description = "Has API Key"
+
+    def api_key_status(self, obj):
+        """Show secure status of API key."""
+        if obj.has_api_key():
+            if obj.encrypted_api_key and obj.api_key_salt:
+                return format_html('<span style="color: green;">🔒 Encrypted</span>')
+            elif obj.api_key_hash and obj.api_key_hash_salt:
+                return format_html('<span style="color: blue;">🔐 Hash-only (verification)</span>')
+            elif obj.api_key:
+                return format_html('<span style="color: orange;">⚠️ Legacy (plain text)</span>')
+        return format_html('<span style="color: gray;">❌ No key configured</span>')
+
+    api_key_status.short_description = "API Key Status"
+
+    def encryption_status(self, obj):
+        """Show detailed encryption information."""
+        status_parts = []
+        
+        if obj.encrypted_api_key and obj.api_key_salt:
+            status_parts.append("✅ Encrypted data present")
+        else:
+            status_parts.append("❌ No encrypted data")
+            
+        if obj.api_key_hash and obj.api_key_hash_salt:
+            status_parts.append("✅ Hash data present")
+        else:
+            status_parts.append("❌ No hash data")
+            
+        if obj.api_key:
+            status_parts.append("⚠️ Legacy plain text present")
+        else:
+            status_parts.append("✅ No plain text data")
+            
+        return format_html("<br>".join(status_parts))
+
+    encryption_status.short_description = "Encryption Details"
 
     def enabled_models_count(self, obj):
         return obj.enabled_models.count()
@@ -215,8 +262,106 @@ class UserProviderConfigAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+        
+        # Mask the legacy API key field if it has a value
         if obj and obj.api_key:
             form.base_fields["api_key"].widget.attrs[
                 "placeholder"
-            ] = "*** API Key Set ***"
+            ] = "*** Legacy API Key Set ***"
+            
+        # Make encrypted fields read-only to prevent manual modification
+        encrypted_fields = ['encrypted_api_key', 'api_key_salt', 'api_key_hash', 'api_key_hash_salt']
+        for field_name in encrypted_fields:
+            if field_name in form.base_fields:
+                form.base_fields[field_name].widget.attrs['readonly'] = True
+                form.base_fields[field_name].help_text = "Read-only field - managed by system"
+                
         return form
+
+
+@admin.register(APIKeyAudit)
+class APIKeyAuditAdmin(admin.ModelAdmin):
+    """Admin interface for API key audit logs."""
+    
+    list_display = [
+        "user_email",
+        "provider_name", 
+        "operation",
+        "success",
+        "ip_address",
+        "created_at"
+    ]
+    list_filter = [
+        "operation",
+        "success", 
+        "provider",
+        "created_at"
+    ]
+    search_fields = [
+        "user__email",
+        "user__first_name", 
+        "user__last_name",
+        "provider__name",
+        "ip_address",
+        "error_message"
+    ]
+    readonly_fields = [
+        "id", 
+        "uuid",
+        "user", 
+        "provider",
+        "operation",
+        "ip_address",
+        "user_agent", 
+        "metadata",
+        "success",
+        "error_message",
+        "created_at",
+        "modified_at"
+    ]
+    
+    fieldsets = (
+        (None, {
+            "fields": ("user", "provider", "operation", "success")
+        }),
+        (
+            "Request Information", {
+                "fields": ("ip_address", "user_agent"),
+                "description": "Information about the request that triggered this audit log."
+            }
+        ),
+        (
+            "Operation Details", {
+                "fields": ("metadata", "error_message"),
+                "description": "Additional details about the operation."
+            }
+        ),
+        (
+            "Metadata", {
+                "fields": ("id", "uuid", "created_at", "modified_at"),
+                "classes": ("collapse",)
+            }
+        )
+    )
+    
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = "User"
+    user_email.admin_order_field = "user__email"
+    
+    def provider_name(self, obj):
+        return obj.provider.name  
+    provider_name.short_description = "Provider"
+    provider_name.admin_order_field = "provider__name"
+    
+    def has_add_permission(self, request):
+        """Prevent adding audit logs through admin."""
+        return False
+        
+    def has_change_permission(self, request, obj=None):
+        """Prevent modifying audit logs through admin.""" 
+        return False
+        
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion for cleanup purposes."""
+        return request.user.is_superuser
