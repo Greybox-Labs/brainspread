@@ -46,10 +46,6 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
     def __str__(self):
         return f"{self.user.email} - {self.title}"
 
-    def get_root_blocks(self):
-        """Get top-level blocks (no parent)"""
-        return self.blocks.filter(parent=None).order_by("order")
-
     def get_backlinks(self):
         """Get all blocks that link to this page"""
         from .block import Block
@@ -58,17 +54,6 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
         return Block.objects.filter(content__iregex=pattern, user=self.user).exclude(
             page=self
         )
-
-    @classmethod
-    def get_or_create_daily_note(cls, user, date):
-        """Get or create a daily note page for a specific date"""
-        date_str = date.strftime("%Y-%m-%d")
-        page, created = cls.objects.get_or_create(
-            user=user,
-            slug=date_str,
-            defaults={"title": date_str, "page_type": "daily", "date": date},
-        )
-        return page, created
 
 
 # API response type for Page data

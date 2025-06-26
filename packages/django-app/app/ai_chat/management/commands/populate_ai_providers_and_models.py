@@ -20,8 +20,7 @@ class Command(BaseCommand):
         provider_created_count = 0
         for provider_name, base_url in providers_data:
             provider, created = AIProvider.objects.get_or_create(
-                name=provider_name,
-                defaults={"base_url": base_url}
+                name=provider_name, defaults={"base_url": base_url}
             )
             if created:
                 provider_created_count += 1

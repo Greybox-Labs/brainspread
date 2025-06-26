@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import Any, Dict, List, TypedDict
 
+import pytz
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.utils import timezone
@@ -22,8 +24,10 @@ from .commands import (
     UpdatePageCommand,
 )
 from .forms import CreatePageForm, DeletePageForm, GetUserPagesForm, UpdatePageForm
+from .models import Block, Page
 from .models.block import BlockData
 from .models.page import PageData
+from .repositories import BlockRepository, PageRepository
 
 
 # API Response Types for this view
@@ -339,9 +343,6 @@ def get_pages(request):
 def get_page_with_blocks(request):
     """Get a page with all its blocks"""
     try:
-        from datetime import datetime
-
-        from .models import Page
 
         # Support both page_id and date parameters
         page_id = request.query_params.get("page_id")
@@ -367,14 +368,13 @@ def get_page_with_blocks(request):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            page, created = Page.get_or_create_daily_note(request.user, target_date)
+            page, created = PageRepository.get_or_create_daily_note(
+                request.user, target_date
+            )
         else:
             # Default to today's daily note (should not happen in normal flow)
             # Frontend should always pass a date, but fallback to user's timezone
             try:
-                from datetime import datetime
-
-                import pytz
 
                 # Use user's stored timezone
                 if request.user.timezone and request.user.timezone != "UTC":
@@ -387,11 +387,11 @@ def get_page_with_blocks(request):
                 # Fallback to UTC if timezone is invalid
                 today = timezone.now().date()
 
-            page, created = Page.get_or_create_daily_note(request.user, today)
+            page, created = PageRepository.get_or_create_daily_note(request.user, today)
 
         # Get all root blocks with their nested children
         blocks = []
-        for block in page.get_root_blocks():
+        for block in BlockRepository.get_root_blocks(page):
             blocks.append(block_to_dict_with_children(block))
 
         return Response(
@@ -410,7 +410,6 @@ def get_page_with_blocks(request):
 def create_block(request):
     """Create a new block"""
     try:
-        from .models import Block, Page
 
         data = request.data
         page_id = data.get("page_id")

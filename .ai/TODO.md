@@ -28,6 +28,8 @@
 
 # Bugs
 
+- [ ] python imports should not be done inside methods, they should be imported
+  at the top of the file
 - [ ] hitting "enter" to create a new block when on a note from a previous day,
   it incorrectly creates a new block for the current day instead of under the
   active block

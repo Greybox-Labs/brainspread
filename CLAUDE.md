@@ -72,6 +72,7 @@ Navigate to `packages/django-app/` for most development tasks.
 - **Soft Delete**: Models can inherit `SoftDeleteTimestampMixin` for logical deletion
 - **Custom Managers**: Extend Django's model managers for complex queries
 - Always use typehints in Python code for clarity and type safety
+- Import Python modules at the top of the file, not inside methods
 
 ### Environment Configuration
 - Uses environment variables for sensitive data (SECRET_KEY, DEBUG, etc.)

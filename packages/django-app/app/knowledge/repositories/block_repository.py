@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from django.db.models import QuerySet
+from django.db.models import Max, QuerySet
 
 from common.repositories.base_repository import BaseRepository
 
@@ -135,8 +135,6 @@ class BlockRepository(BaseRepository):
     @classmethod
     def get_max_order(cls, page: Page, parent: Block = None) -> int:
         """Get the maximum order value for blocks in a page/parent"""
-        from django.db.models import Max
-
         queryset = cls.get_queryset().filter(page=page, parent=parent)
         max_order = queryset.aggregate(max_order=Max("order"))["max_order"]
         return max_order if max_order is not None else 0

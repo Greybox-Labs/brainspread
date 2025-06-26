@@ -65,7 +65,13 @@ class PageRepository(BaseRepository):
     @classmethod
     def get_or_create_daily_note(cls, user, date: date) -> tuple[Page, bool]:
         """Get or create daily note for specific date"""
-        return cls.model.get_or_create_daily_note(user, date)
+        date_str = date.strftime("%Y-%m-%d")
+        page, created = cls.model.objects.get_or_create(
+            user=user,
+            slug=date_str,
+            defaults={"title": date_str, "page_type": "daily", "date": date},
+        )
+        return page, created
 
     @classmethod
     def search_by_title(cls, user, query: str) -> QuerySet:
