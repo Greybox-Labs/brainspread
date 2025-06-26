@@ -4,10 +4,10 @@ from ai_chat.models import AIModel, AIProvider
 
 
 class Command(BaseCommand):
-    help = "Populate AIModel table with available models from each provider"
+    help = "Populate AIProvider and AIModel tables with available providers and models"
 
     def handle(self, *args, **options):
-        """Create AIModel entries for all available models"""
+        """Create AIProvider and AIModel entries for all available providers and models"""
 
         # Model definitions
         models_data = [
