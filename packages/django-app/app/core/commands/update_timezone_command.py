@@ -6,15 +6,15 @@ from ..repositories import UserRepository
 
 
 class UpdateTimezoneCommand(AbstractBaseCommand):
-    def __init__(self, form: UpdateTimezoneForm, user: User) -> None:
+    def __init__(self, form: UpdateTimezoneForm) -> None:
         self.form = form
-        self.user = user
 
     def execute(self) -> User:
         super().execute()
 
+        user = self.form.cleaned_data["user"]
         timezone = self.form.cleaned_data["timezone"]
 
-        updated_user = UserRepository.update_timezone(self.user, timezone)
+        updated_user = UserRepository.update_timezone(user, timezone)
 
         return updated_user

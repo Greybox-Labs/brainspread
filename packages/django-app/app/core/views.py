@@ -143,9 +143,11 @@ def me(request):
 def update_timezone(request):
     """Update user's timezone preference"""
     try:
-        form = UpdateTimezoneForm(request.data)
+        data = request.data.copy()
+        data["user"] = request.user.id
+        form = UpdateTimezoneForm(data)
         if form.is_valid():
-            command = UpdateTimezoneCommand(form, request.user)
+            command = UpdateTimezoneCommand(form)
             updated_user = command.execute()
             data: UpdateTimezoneResponse = {"user": updated_user.to_user_data()}
             return Response(
@@ -176,9 +178,11 @@ def update_timezone(request):
 def update_theme(request):
     """Update user's theme preference"""
     try:
-        form = UpdateThemeForm(request.data)
+        data = request.data.copy()
+        data["user"] = request.user.id
+        form = UpdateThemeForm(data)
         if form.is_valid():
-            command = UpdateThemeCommand(form, request.user)
+            command = UpdateThemeCommand(form)
             updated_user = command.execute()
             data: UpdateThemeResponse = {"user": updated_user.to_user_data()}
             return Response(

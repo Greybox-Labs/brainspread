@@ -39,6 +39,7 @@ class RegisterForm(BaseForm):
 
 
 class UpdateTimezoneForm(BaseForm):
+    user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
     timezone = forms.CharField(required=True)
 
     def clean_timezone(self):
@@ -56,6 +57,7 @@ class UpdateThemeForm(BaseForm):
         ("light", "Light"),
     ]
 
+    user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
     theme = forms.ChoiceField(choices=THEME_CHOICES, required=True)
 
     def clean_theme(self):
