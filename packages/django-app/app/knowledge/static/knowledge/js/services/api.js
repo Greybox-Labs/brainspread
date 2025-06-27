@@ -177,14 +177,14 @@ class ApiService {
   async deleteBlock(blockUuid) {
     return await this.request("/knowledge/api/blocks/delete/", {
       method: "DELETE",
-      body: JSON.stringify({ block: blockId }),
+      body: JSON.stringify({ block: blockUuid }),
     });
   }
 
   async toggleBlockTodo(blockUuid) {
     return await this.request("/knowledge/api/blocks/toggle-todo/", {
       method: "POST",
-      body: JSON.stringify({ block: blockId }),
+      body: JSON.stringify({ block: blockUuid }),
     });
   }
 

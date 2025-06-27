@@ -180,7 +180,7 @@ const DailyNote = {
           // Add the new block to local state without full page reload
           // Use the actual data returned from the API (includes auto-detected block_type)
           const newBlock = {
-            id: result.data.uuid || result.data.uuid || `temp-${Date.now()}`,
+            uuid: result.data.uuid || result.data.uuid || `temp-${Date.now()}`,
             content: result.data.content || content,
             content_type: result.data.content_type || "text",
             block_type: result.data.block_type || "bullet", // This will include auto-detected types
@@ -253,6 +253,7 @@ const DailyNote = {
       try {
         const result = await window.apiService.updateBlock(block.uuid, {
           content: newContent,
+          parent: block.parent ? block.parent.uuid : null,
         });
 
         if (result.success) {
@@ -530,7 +531,7 @@ const DailyNote = {
         // Update the block's parent and order
         const newOrder = this.getNextChildOrder(previousSibling);
         const result = await window.apiService.updateBlock(block.uuid, {
-          parent_id: previousSibling.uuid,
+          parent: previousSibling.uuid,
           order: newOrder,
         });
 
@@ -573,7 +574,7 @@ const DailyNote = {
         this.updateSiblingOrders(grandparent, newOrder);
 
         const result = await window.apiService.updateBlock(block.uuid, {
-          parent_id: grandparent ? grandparent.uuid : null,
+          parent: grandparent ? grandparent.uuid : null,
           order: newOrder,
         });
 

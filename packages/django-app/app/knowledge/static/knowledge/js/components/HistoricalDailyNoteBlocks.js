@@ -60,8 +60,7 @@ window.HistoricalDailyNoteBlocks = {
       if (!block.uuid) return;
 
       try {
-        const result = await window.apiService.updateBlock({
-          block: block.uuid,
+        const result = await window.apiService.updateBlock(block.uuid, {
           content: newContent,
         });
 
