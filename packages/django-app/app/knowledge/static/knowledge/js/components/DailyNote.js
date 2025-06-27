@@ -1130,7 +1130,7 @@ const DailyNote = {
       </div>
 
       <!-- Historical Daily Notes -->
-      <div v-if="historicalData && historicalData.pages && historicalData.pages.length" class="historical-notes">
+      <div v-if="!isTagPage && historicalData && historicalData.pages && historicalData.pages.length" class="historical-notes">
         <div
           v-for="historicalPage in historicalData.pages
             .filter(p => p.page_type === 'daily' && p.date !== currentDate)
