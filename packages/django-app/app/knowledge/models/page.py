@@ -1,5 +1,5 @@
 import re
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from django.conf import settings
 from django.db import models
@@ -7,6 +7,9 @@ from django.db import models
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
 from tagging.models import TaggableMixin
+
+if TYPE_CHECKING:
+    pass
 
 
 class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):

@@ -20,7 +20,9 @@
   page
 
 # Cleanup
-- [ ] remove empty __init__.py files that are not needed
+- [x] remove empty __init__.py files that are not needed
+- [x] python imports should not be done inside methods, they should be imported
+  at the top of the file
 - [ ] backend forms that have a field that describes a related model should use
   the `ModelChoiceField` instead of `CharField`. you can still pass the pk when
   creating the form and it will find the correct model instance, you don't have
@@ -48,8 +50,6 @@
 
 # Bugs
 
-- [ ] python imports should not be done inside methods, they should be imported
-  at the top of the file
 - [ ] hitting "enter" to create a new block when on a note from a previous day,
   it incorrectly creates a new block for the current day instead of under the
   active block

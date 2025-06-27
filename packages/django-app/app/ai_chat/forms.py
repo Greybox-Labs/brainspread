@@ -7,7 +7,7 @@ from common.forms.base_form import BaseForm
 from core.models import User
 from core.repositories import UserRepository
 
-from .models import ChatSession
+from .models import AIModel, ChatSession
 from .repositories.user_settings_repository import UserSettingsRepository
 
 
@@ -67,8 +67,6 @@ class SendMessageForm(BaseForm):
             raise ValidationError("Model is required.")
 
         # Look up the model in our database
-        from .models import AIModel
-
         try:
             ai_model = AIModel.objects.select_related("provider").get(
                 name=model_name, is_active=True
