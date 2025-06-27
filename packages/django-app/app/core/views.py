@@ -6,8 +6,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from common.forms import UserForm
 from core.commands import (
-    GetUserProfileCommand,
     LoginCommand,
     LogoutCommand,
     RegisterCommand,
@@ -114,7 +114,8 @@ def register(request):
 def logout(request):
     """Logout endpoint that deletes the auth token"""
     try:
-        command = LogoutCommand(request.user)
+        form = UserForm({"user": request.user})
+        command = LogoutCommand(form)
         message = command.execute()
         data: LogoutResponse = {"message": message}
         return Response({"success": True, "data": data})
@@ -129,9 +130,7 @@ def logout(request):
 def me(request):
     """Get current user info"""
     try:
-        command = GetUserProfileCommand(request.user)
-        user = command.execute()
-        data: GetUserProfileResponse = {"user": user.to_user_data()}
+        data: GetUserProfileResponse = {"user": request.user.to_user_data()}
         return Response({"success": True, "data": data})
     except Exception as e:
         return Response(
