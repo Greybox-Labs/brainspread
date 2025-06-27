@@ -120,20 +120,20 @@ class ApiService {
     });
   }
 
-  async updatePage(pageId, updates) {
+  async updatePage(pageUuid, updates) {
     return await this.request("/knowledge/api/pages/update/", {
       method: "PUT",
       body: JSON.stringify({
-        page_id: pageId,
+        page: pageUuid,
         ...updates,
       }),
     });
   }
 
-  async deletePage(pageId) {
+  async deletePage(pageUuid) {
     return await this.request("/knowledge/api/pages/delete/", {
       method: "DELETE",
-      body: JSON.stringify({ page_id: pageId }),
+      body: JSON.stringify({ page: pageUuid }),
     });
   }
 
@@ -144,10 +144,10 @@ class ApiService {
   }
 
   // New block-centric methods
-  async getPageWithBlocks(pageId = null, date = null) {
+  async getPageWithBlocks(pageUuid = null, date = null) {
     let params = "";
-    if (pageId) {
-      params = `?page_id=${pageId}`;
+    if (pageUuid) {
+      params = `?page=${pageUuid}`;
     } else if (date) {
       params = `?date=${date}`;
     }
@@ -162,19 +162,11 @@ class ApiService {
     });
   }
 
-  async updateBlock(blockIdOrData, updateData = null) {
-    let requestData;
-
-    if (updateData) {
-      // Called with updateBlock(blockId, updateData)
-      requestData = {
-        block_id: blockIdOrData,
-        ...updateData,
-      };
-    } else {
-      // Called with updateBlock(blockData) - blockData should contain block_id
-      requestData = blockIdOrData;
-    }
+  async updateBlock(blockUuid, updateData) {
+    const requestData = {
+      block: blockUuid,
+      ...updateData,
+    };
 
     return await this.request("/knowledge/api/blocks/update/", {
       method: "PUT",
@@ -182,17 +174,17 @@ class ApiService {
     });
   }
 
-  async deleteBlock(blockData) {
+  async deleteBlock(blockUuid) {
     return await this.request("/knowledge/api/blocks/delete/", {
       method: "DELETE",
-      body: JSON.stringify(blockData),
+      body: JSON.stringify({ block: blockId }),
     });
   }
 
-  async toggleBlockTodo(blockId) {
+  async toggleBlockTodo(blockUuid) {
     return await this.request("/knowledge/api/blocks/toggle-todo/", {
       method: "POST",
-      body: JSON.stringify({ block_id: blockId }),
+      body: JSON.stringify({ block: blockId }),
     });
   }
 

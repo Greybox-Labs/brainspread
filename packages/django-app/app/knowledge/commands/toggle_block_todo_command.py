@@ -18,13 +18,7 @@ class ToggleBlockTodoCommand(AbstractBaseCommand):
         """Execute the command"""
         super().execute()  # This validates the form
 
-        user = self.form.cleaned_data["user"]
-        block_id = self.form.cleaned_data["block_id"]
-
-        try:
-            block = Block.objects.get(uuid=block_id, user=user)
-        except Block.DoesNotExist:
-            raise ValidationError("Block not found")
+        block = self.form.cleaned_data["block"]
 
         # Toggle todo status and update content (business logic)
         if block.block_type == "todo":

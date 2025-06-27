@@ -1,1 +1,1 @@
-from .send_message import SendMessageCommand
+from .send_message_command import SendMessageCommand

@@ -3,12 +3,12 @@ from typing import Dict, List, Optional
 from django import forms
 from django.core.exceptions import ValidationError
 
-from common.forms.base_form import BaseForm
+from common.forms import BaseForm, UUIDModelChoiceField
 from core.models import User
 from core.repositories import UserRepository
 
 from .models import AIModel, ChatSession
-from .repositories.user_settings_repository import UserSettingsRepository
+from .repositories import ChatSessionRepository, UserSettingsRepository
 
 
 class SendMessageForm(BaseForm):

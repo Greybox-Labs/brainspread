@@ -7,6 +7,7 @@ from knowledge.models import Block, Page
 
 
 class PageFactory(DjangoModelFactory):
+    uuid = factory.Faker("uuid4")
     user = SubFactory(UserFactory)
     title = Faker("sentence", nb_words=3)
     slug = factory.LazyAttribute(
@@ -21,6 +22,7 @@ class PageFactory(DjangoModelFactory):
 
 
 class BlockFactory(DjangoModelFactory):
+    uuid = factory.Faker("uuid4")
     user = SubFactory(UserFactory)
     page = SubFactory(PageFactory)
     content = Faker("text", max_nb_chars=100)

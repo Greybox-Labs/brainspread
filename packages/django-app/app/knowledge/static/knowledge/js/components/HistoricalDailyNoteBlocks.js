@@ -42,9 +42,9 @@ window.HistoricalDailyNoteBlocks = {
 
       try {
         const result = await window.apiService.createBlock({
-          page_id: this.page.uuid,
+          page: this.page.uuid,
           content: content.trim(),
-          parent_id: parentId,
+          parent: parentId,
           order: order,
         });
 
@@ -61,7 +61,7 @@ window.HistoricalDailyNoteBlocks = {
 
       try {
         const result = await window.apiService.updateBlock({
-          block_id: block.uuid,
+          block: block.uuid,
           content: newContent,
         });
 
@@ -77,9 +77,7 @@ window.HistoricalDailyNoteBlocks = {
       if (!block.uuid) return;
 
       try {
-        const result = await window.apiService.deleteBlock({
-          block_id: block.uuid,
-        });
+        const result = await window.apiService.deleteBlock(block.uuid);
 
         if (result.success) {
           await this.loadBlocks();

@@ -15,7 +15,7 @@ class UpdatePageCommand(AbstractBaseCommand):
         super().execute()  # This validates the form
 
         user = self.form.cleaned_data["user"]
-        page = Page.objects.get(uuid=self.form.cleaned_data["page_id"], user=user)
+        page = self.form.cleaned_data["page"]
 
         # Update fields if provided
         if (

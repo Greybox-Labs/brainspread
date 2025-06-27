@@ -1,12 +1,12 @@
 import logging
 from typing import Dict, List
 
-from ai_chat.repositories.chat_repository import ChatRepository
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms import SendMessageForm
+from ..repositories import ChatMessageRepository, ChatSessionRepository
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class SendMessageCommand(AbstractBaseCommand):
 
             # Create or get session
             if not session:
-                session = ChatRepository.create_session(user)
+                session = ChatSessionRepository.create_session(user)
 
             # Prepare the message with context blocks
             formatted_message = self._format_message_with_context(
@@ -44,12 +44,12 @@ class SendMessageCommand(AbstractBaseCommand):
             )
 
             # Add user message to database
-            ChatRepository.add_message(session, "user", formatted_message)
+            ChatMessageRepository.add_message(session, "user", formatted_message)
 
             # Get conversation history
             messages: List[Dict[str, str]] = [
                 {"role": msg.role, "content": msg.content}
-                for msg in ChatRepository.get_messages(session)
+                for msg in ChatMessageRepository.get_messages(session)
             ]
 
             # Create AI service using factory
@@ -61,7 +61,7 @@ class SendMessageCommand(AbstractBaseCommand):
             response_content = service.send_message(messages)
 
             # Add assistant response to database
-            ChatRepository.add_message(session, "assistant", response_content)
+            ChatMessageRepository.add_message(session, "assistant", response_content)
 
             return {"response": response_content, "session_id": str(session.uuid)}
 
@@ -69,7 +69,7 @@ class SendMessageCommand(AbstractBaseCommand):
             logger.error(f"AI service error for user {user.id}: {str(e)}")
             # Still save the user message even if AI fails
             if session:
-                ChatRepository.add_message(
+                ChatMessageRepository.add_message(
                     session,
                     "assistant",
                     f"Sorry, I'm experiencing technical difficulties: {str(e)}",

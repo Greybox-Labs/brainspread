@@ -17,37 +17,25 @@ class UpdateBlockCommand(AbstractBaseCommand):
         super().execute()  # This validates the form
 
         user = self.form.cleaned_data["user"]
-        block_id = self.form.cleaned_data["block_id"]
-
-        try:
-            block = Block.objects.get(uuid=block_id, user=user)
-        except Block.DoesNotExist:
-            raise ValidationError("Block not found")
+        block = self.form.cleaned_data["block"]
+        parent = None
+        if "parent" in self.form.cleaned_data:
+            parent = self.form.cleaned_data["parent"]
 
         # Update fields
         content_updated = False
 
-        # Handle parent_id field specially
-        if (
-            "parent_id" in self.form.cleaned_data
-            and self.form.cleaned_data["parent_id"] is not None
-        ):
-            parent_id = self.form.cleaned_data["parent_id"]
-            if parent_id == "":
-                block.parent = None
-            else:
-                try:
-                    parent_block = Block.objects.get(uuid=parent_id, user=user)
+        if parent:
+            # Check for circular references
+            if self._would_create_circular_reference(block, parent):
+                raise ValidationError(
+                    "Cannot create circular reference: block cannot be its own ancestor"
+                )
 
-                    # Check for circular references
-                    if self._would_create_circular_reference(block, parent_block):
-                        raise ValidationError(
-                            "Cannot create circular reference: block cannot be its own ancestor"
-                        )
-
-                    block.parent = parent_block
-                except Block.DoesNotExist:
-                    raise ValidationError("Parent block not found")
+            block.parent = parent
+        else:
+            # If no parent is provided, ensure parent is set to None
+            block.parent = None
 
         # Update other fields
         for field in [

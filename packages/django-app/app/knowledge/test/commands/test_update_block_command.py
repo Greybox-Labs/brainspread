@@ -7,7 +7,7 @@ from knowledge.commands import CreateBlockCommand, UpdateBlockCommand
 from knowledge.forms import CreateBlockForm, UpdateBlockForm
 from knowledge.models import Block
 
-from ..helpers import PageFactory, UserFactory
+from ..helpers import PageFactory, UserFactory, BlockFactory
 
 
 class TestUpdateBlockCommand(TestCase):
@@ -15,25 +15,13 @@ class TestUpdateBlockCommand(TestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.page = PageFactory(user=cls.user)
-
-    def setUp(self):
-        # Create a test block for updating using form
-        form_data = {
-            "user": self.user.id,
-            "page": self.page.id,
-            "content": "Original content",
-            "block_type": "bullet",
-        }
-        form = CreateBlockForm(form_data)
-        form.is_valid()
-        create_command = CreateBlockCommand(form)
-        self.block = create_command.execute()
+        cls.block = BlockFactory(page=cls.page, user=cls.user)
 
     def test_should_auto_detect_todo_when_content_changes_to_todo_prefix(self):
         """Test that updating content to 'TODO:' changes block type to todo"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "TODO: Buy groceries",
         }
         form = UpdateBlockForm(form_data)
@@ -48,7 +36,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that updating content to '[ ]' changes block type to todo"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "[ ] Complete project",
         }
         form = UpdateBlockForm(form_data)
@@ -62,7 +50,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that updating content to '[x]' changes block type to done"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "[x] Finished task",
         }
         form = UpdateBlockForm(form_data)
@@ -76,7 +64,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that updating content to '☑' changes block type to done"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "☑ Unicode done item",
         }
         form = UpdateBlockForm(form_data)
@@ -91,7 +79,7 @@ class TestUpdateBlockCommand(TestCase):
         # First create a todo block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "TODO: Task to complete",
         }
         form = CreateBlockForm(form_data)
@@ -103,7 +91,7 @@ class TestUpdateBlockCommand(TestCase):
         # Then update content to mark as done
         form_data = {
             "user": self.user.id,
-            "block_id": str(todo_block.uuid),
+            "block": str(todo_block.uuid),
             "content": "[x] Task completed",
         }
         form = UpdateBlockForm(form_data)
@@ -119,7 +107,7 @@ class TestUpdateBlockCommand(TestCase):
         # Create a heading block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "# Heading",
             "block_type": "heading",
         }
@@ -131,7 +119,7 @@ class TestUpdateBlockCommand(TestCase):
         # Update content to TODO pattern - should NOT change type
         form_data = {
             "user": self.user.id,
-            "block_id": str(heading_block.uuid),
+            "block": str(heading_block.uuid),
             "content": "TODO: This should stay a heading",
         }
         form = UpdateBlockForm(form_data)
@@ -146,7 +134,7 @@ class TestUpdateBlockCommand(TestCase):
         # Create a code block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "console.log('hello')",
             "block_type": "code",
         }
@@ -158,7 +146,7 @@ class TestUpdateBlockCommand(TestCase):
         # Update content to TODO pattern - should NOT change type
         form_data = {
             "user": self.user.id,
-            "block_id": str(code_block.uuid),
+            "block": str(code_block.uuid),
             "content": "[ ] This should stay code",
         }
         form = UpdateBlockForm(form_data)
@@ -173,7 +161,7 @@ class TestUpdateBlockCommand(TestCase):
         # Start with a todo block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "TODO: Original task",
         }
         form = CreateBlockForm(form_data)
@@ -185,7 +173,7 @@ class TestUpdateBlockCommand(TestCase):
         # Update to regular content - should keep todo type
         form_data = {
             "user": self.user.id,
-            "block_id": str(todo_block.uuid),
+            "block": str(todo_block.uuid),
             "content": "Just regular content now",
         }
         form = UpdateBlockForm(form_data)
@@ -203,7 +191,7 @@ class TestUpdateBlockCommand(TestCase):
         # Update other field, not content
         form_data = {
             "user": self.user.id,
-            "block_id": str(original_block.uuid),
+            "block": str(original_block.uuid),
             "order": 5,
         }
         form = UpdateBlockForm(form_data)
@@ -219,7 +207,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that updating to empty content preserves block type"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "",
         }
         form = UpdateBlockForm(form_data)
@@ -234,7 +222,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that updating nonexistent block raises ValidationError"""
         form_data = {
             "user": self.user.id,
-            "block_id": "nonexistent-uuid",
+            "block": "nonexistent-uuid",
             "content": "New content",
         }
         form = UpdateBlockForm(form_data)
@@ -256,7 +244,7 @@ class TestUpdateBlockCommand(TestCase):
             with self.subTest(content=content):
                 form_data = {
                     "user": self.user.id,
-                    "block_id": str(self.block.uuid),
+                    "block": str(self.block.uuid),
                     "content": content,
                 }
                 form = UpdateBlockForm(form_data)
@@ -272,7 +260,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that tags are extracted when content is updated"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "content": "TODO: Buy #groceries and #food",
         }
         form = UpdateBlockForm(form_data)
@@ -291,7 +279,7 @@ class TestUpdateBlockCommand(TestCase):
         """Test that tag extraction is skipped when content isn't updated"""
         form_data = {
             "user": self.user.id,
-            "block_id": str(self.block.uuid),
+            "block": str(self.block.uuid),
             "order": 10,
         }
         form = UpdateBlockForm(form_data)

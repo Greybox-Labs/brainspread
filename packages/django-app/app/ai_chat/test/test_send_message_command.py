@@ -3,7 +3,10 @@ from unittest.mock import Mock, patch
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from ai_chat.commands.send_message import SendMessageCommand, SendMessageCommandError
+from ai_chat.commands.send_message_command import (
+    SendMessageCommand,
+    SendMessageCommandError,
+)
 from ai_chat.forms import SendMessageForm
 from ai_chat.models import AIModel
 from ai_chat.services.ai_service_factory import AIServiceFactoryError
@@ -70,9 +73,9 @@ class SendMessageCommandTestCase(TestCase):
         return SendMessageForm(form_data)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
     def test_execute_success_new_session(
         self,
         mock_get_messages,
@@ -117,8 +120,8 @@ class SendMessageCommandTestCase(TestCase):
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
     def test_execute_success_existing_session(
         self, mock_get_messages, mock_add_message, mock_create_service
     ):
@@ -180,9 +183,9 @@ class SendMessageCommandTestCase(TestCase):
         self.assertIn("not available or not found", error_message)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
     def test_execute_ai_service_error(
         self,
         mock_get_messages,
@@ -220,9 +223,9 @@ class SendMessageCommandTestCase(TestCase):
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
     def test_execute_service_factory_error(
         self,
         mock_get_messages,
@@ -305,9 +308,9 @@ class SendMessageCommandTestCase(TestCase):
         self.assertEqual(formatted_message, "Question with empty context")
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.add_message")
-    @patch("ai_chat.repositories.chat_repository.ChatRepository.get_messages")
+    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
+    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
     def test_execute_with_context_blocks_integration(
         self,
         mock_get_messages,

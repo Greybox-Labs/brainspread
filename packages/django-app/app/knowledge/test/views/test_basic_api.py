@@ -145,7 +145,7 @@ class BasicKnowledgeAPITestCase(TestCase):
         )
 
         # 3. Update page through API (tests UpdatePageCommand + form + view + auth)
-        update_data = {"page_id": page_id, "title": "Updated Integration Test"}
+        update_data = {"page": page_id, "title": "Updated Integration Test"}
         update_response = self.client.put(
             "/knowledge/api/pages/update/", update_data, format="json"
         )

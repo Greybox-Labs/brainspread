@@ -20,7 +20,9 @@ class CreateBlockCommand(AbstractBaseCommand):
         content_type = self.form.cleaned_data.get("content_type", "text")
         block_type = self.form.cleaned_data.get("block_type", "bullet")
         order = self.form.cleaned_data.get("order", 0)
-        parent = self.form.cleaned_data.get("parent")
+        parent = None
+        if "parent" in self.form.cleaned_data:
+            parent = self.form.cleaned_data.get("parent")
         media_url = self.form.cleaned_data.get("media_url", "")
         media_metadata = self.form.cleaned_data.get("media_metadata", {})
         properties = self.form.cleaned_data.get("properties", {})

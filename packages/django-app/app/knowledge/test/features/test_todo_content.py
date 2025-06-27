@@ -23,7 +23,7 @@ class TestTodoContentIntegration(TestCase):
         # Toggle to done
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -34,7 +34,7 @@ class TestTodoContentIntegration(TestCase):
         self.assertEqual(updated_block.block_type, "done")
 
         # Toggle back to todo
-        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command2 = ToggleBlockTodoCommand(form)
@@ -66,7 +66,7 @@ class TestTodoContentIntegration(TestCase):
                 # Toggle to done
                 from knowledge.forms import ToggleBlockTodoForm
 
-                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
                 command = ToggleBlockTodoCommand(form)
@@ -98,7 +98,7 @@ class TestTodoContentIntegration(TestCase):
                 # Toggle to todo
                 from knowledge.forms import ToggleBlockTodoForm
 
-                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
                 command = ToggleBlockTodoCommand(form)
@@ -120,7 +120,7 @@ class TestTodoContentIntegration(TestCase):
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -147,7 +147,7 @@ class TestTodoContentIntegration(TestCase):
 
                 from knowledge.forms import ToggleBlockTodoForm
 
-                form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+                form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
                 command = ToggleBlockTodoCommand(form)
@@ -168,7 +168,7 @@ class TestTodoContentIntegration(TestCase):
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": self.user.id, "block_id": str(block.uuid)}
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)

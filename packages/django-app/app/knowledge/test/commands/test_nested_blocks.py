@@ -1,5 +1,8 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
@@ -19,7 +22,7 @@ class TestNestedBlocks(TestCase):
         """Test creating a root level block"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block content",
             "parent": None,
         }
@@ -38,7 +41,7 @@ class TestNestedBlocks(TestCase):
         # Create parent block first
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent block",
             "parent": None,
         }
@@ -50,7 +53,7 @@ class TestNestedBlocks(TestCase):
         # Create child block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": parent_block,
         }
@@ -74,7 +77,7 @@ class TestNestedBlocks(TestCase):
         # Create root block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block",
             "parent": None,
         }
@@ -86,7 +89,7 @@ class TestNestedBlocks(TestCase):
         # Create child block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": root_block,
         }
@@ -98,7 +101,7 @@ class TestNestedBlocks(TestCase):
         # Create grandchild block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Grandchild block",
             "parent": child_block,
         }
@@ -128,7 +131,7 @@ class TestNestedBlocks(TestCase):
         # Create two root blocks
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent 1",
             "parent": None,
         }
@@ -139,7 +142,7 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent 2",
             "parent": None,
         }
@@ -151,7 +154,7 @@ class TestNestedBlocks(TestCase):
         # Create child under parent1
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": parent1,
         }
@@ -168,8 +171,8 @@ class TestNestedBlocks(TestCase):
         # Move child to parent2
         form_data = {
             "user": self.user.id,
-            "block_id": str(child.uuid),
-            "parent_id": str(parent2.uuid),
+            "block": str(child.uuid),
+            "parent": str(parent2.uuid),
         }
         form = UpdateBlockForm(form_data)
         form.is_valid()
@@ -191,7 +194,7 @@ class TestNestedBlocks(TestCase):
         # Create parent and child
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent block",
             "parent": None,
         }
@@ -202,9 +205,9 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
-            "parent": parent,
+            "parent": parent.uuid,
         }
         form = CreateBlockForm(form_data)
         form.is_valid()
@@ -218,8 +221,8 @@ class TestNestedBlocks(TestCase):
         # Move child to root level
         form_data = {
             "user": self.user.id,
-            "block_id": str(child.uuid),
-            "parent_id": None,
+            "block": str(child.uuid),
+            "parent": None,
         }
         form = UpdateBlockForm(form_data)
         form.is_valid()
@@ -240,7 +243,7 @@ class TestNestedBlocks(TestCase):
         # Create parent
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent block",
             "parent": None,
         }
@@ -252,7 +255,7 @@ class TestNestedBlocks(TestCase):
         # Create multiple children with specific orders
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 1",
             "parent": parent,
             "order": 0,
@@ -264,7 +267,7 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 2",
             "parent": parent,
             "order": 1,
@@ -276,7 +279,7 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 3",
             "parent": parent,
             "order": 2,
@@ -298,7 +301,7 @@ class TestNestedBlocks(TestCase):
         # Create a block
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Test block",
             "parent": None,
         }
@@ -308,21 +311,18 @@ class TestNestedBlocks(TestCase):
         block = block_command.execute()
 
         # Try to update with invalid parent_id (valid UUID format but non-existent)
-        import uuid
-
-        from django.core.exceptions import ValidationError
 
         non_existent_uuid = str(uuid.uuid4())
         form_data = {
             "user": self.user.id,
-            "block_id": str(block.uuid),
-            "parent_id": non_existent_uuid,
+            "block": str(block.uuid),
+            "parent": non_existent_uuid,
         }
         form = UpdateBlockForm(form_data)
         form.is_valid()
         update_command = UpdateBlockCommand(form)
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(AssertionError) as context:
             update_command.execute()
 
         self.assertIn("Parent block not found", str(context.exception))
@@ -332,7 +332,7 @@ class TestNestedBlocks(TestCase):
         # Create parent and child
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent block",
             "parent": None,
         }
@@ -343,7 +343,7 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": parent,
         }
@@ -357,8 +357,8 @@ class TestNestedBlocks(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "block_id": str(parent.uuid),
-            "parent_id": str(child.uuid),
+            "block": str(parent.uuid),
+            "parent": str(child.uuid),
         }
         form = UpdateBlockForm(form_data)
         form.is_valid()

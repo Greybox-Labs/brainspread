@@ -17,7 +17,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create root blocks
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block 1",
             "parent": None,
             "order": 0,
@@ -29,7 +29,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block 2",
             "parent": None,
             "order": 1,
@@ -48,7 +48,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create child blocks
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child of root 1",
             "parent": root1,
             "order": 0,
@@ -60,7 +60,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Another child of root 1",
             "parent": root1,
             "order": 1,
@@ -79,7 +79,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create grandchild
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Grandchild block",
             "parent": child1,
             "order": 0,
@@ -96,8 +96,8 @@ class TestNestedBlocksIntegration(TestCase):
         # Test indentation (moving child2 under child1)
         form_data = {
             "user": self.user.id,
-            "block_id": str(child2.uuid),
-            "parent_id": str(child1.uuid),
+            "block": str(child2.uuid),
+            "parent": str(child1.uuid),
             "order": 1,
         }
         form = UpdateBlockForm(form_data)
@@ -113,8 +113,8 @@ class TestNestedBlocksIntegration(TestCase):
         # Test outdentation (moving grandchild to root)
         form_data = {
             "user": self.user.id,
-            "block_id": str(grandchild.uuid),
-            "parent_id": None,
+            "block": str(grandchild.uuid),
+            "parent": None,
             "order": 2,
         }
         form = UpdateBlockForm(form_data)
@@ -132,7 +132,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create hierarchy: root -> child -> grandchild
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block",
             "parent": None,
             "order": 0,
@@ -144,7 +144,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": root,
             "order": 0,
@@ -156,7 +156,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Grandchild block",
             "parent": child,
             "order": 0,
@@ -186,7 +186,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create parent
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Parent block",
             "parent": None,
             "order": 0,
@@ -199,7 +199,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create children with specific orders
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 1",
             "parent": parent,
             "order": 0,
@@ -211,7 +211,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 2",
             "parent": parent,
             "order": 1,
@@ -223,7 +223,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child 3",
             "parent": parent,
             "order": 2,
@@ -245,7 +245,7 @@ class TestNestedBlocksIntegration(TestCase):
         # Create a block hierarchy
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Root block",
             "parent": None,
             "order": 0,
@@ -257,7 +257,7 @@ class TestNestedBlocksIntegration(TestCase):
 
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Child block",
             "parent": root,
             "order": 0,

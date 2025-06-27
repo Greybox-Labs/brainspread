@@ -1,7 +1,6 @@
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms.delete_page_form import DeletePageForm
-from ..models import Page
 
 
 class DeletePageCommand(AbstractBaseCommand):
@@ -14,7 +13,6 @@ class DeletePageCommand(AbstractBaseCommand):
         """Execute the command"""
         super().execute()  # This validates the form
 
-        user = self.form.cleaned_data["user"]
-        page = Page.objects.get(uuid=self.form.cleaned_data["page_id"], user=user)
+        page = self.form.cleaned_data["page"]
         page.delete()
         return True

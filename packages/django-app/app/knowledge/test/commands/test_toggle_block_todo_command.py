@@ -1,4 +1,5 @@
 import pytest
+import uuid
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
@@ -22,7 +23,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -44,7 +45,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -66,7 +67,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -89,7 +90,7 @@ class TestToggleBlockTodoCommand:
         # bullet -> todo
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -99,7 +100,7 @@ class TestToggleBlockTodoCommand:
         # todo -> done
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -109,7 +110,7 @@ class TestToggleBlockTodoCommand:
         # done -> todo
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -130,7 +131,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -157,7 +158,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -184,7 +185,7 @@ class TestToggleBlockTodoCommand:
 
         from knowledge.forms import ToggleBlockTodoForm
 
-        form_data = {"user": user.id, "block_id": str(block.uuid)}
+        form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command = ToggleBlockTodoCommand(form)
@@ -195,8 +196,6 @@ class TestToggleBlockTodoCommand:
 
     def test_toggle_nonexistent_block(self):
         """Test toggling a non-existent block raises ValidationError"""
-        import uuid
-
         user = User.objects.create_user(email="test@example.com", password="password")
 
         with pytest.raises(ValidationError, match="Block not found"):
@@ -204,7 +203,7 @@ class TestToggleBlockTodoCommand:
             nonexistent_uuid = str(uuid.uuid4())
             from knowledge.forms import ToggleBlockTodoForm
 
-            form_data = {"user": user.id, "block_id": nonexistent_uuid}
+            form_data = {"user": user.id, "block": nonexistent_uuid}
             form = ToggleBlockTodoForm(form_data)
             form.is_valid()
             command = ToggleBlockTodoCommand(form)
@@ -223,7 +222,7 @@ class TestToggleBlockTodoCommand:
         with pytest.raises(ValidationError, match="Block not found"):
             from knowledge.forms import ToggleBlockTodoForm
 
-            form_data = {"user": user2.id, "block_id": str(block.uuid)}
+            form_data = {"user": user2.id, "block": str(block.uuid)}
             form = ToggleBlockTodoForm(form_data)
             form.is_valid()
             command = ToggleBlockTodoCommand(form)

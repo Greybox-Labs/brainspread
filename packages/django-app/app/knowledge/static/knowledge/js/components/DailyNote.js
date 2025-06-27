@@ -168,9 +168,9 @@ const DailyNote = {
       try {
         const blockOrder = order !== null ? order : this.getNextOrder(parent);
         const result = await window.apiService.createBlock({
-          page_id: this.page.uuid,
+          page: this.page.uuid,
           content: content,
-          parent_id: parent ? parent.uuid : null,
+          parent: parent ? parent.uuid : null,
           block_type: "bullet",
           content_type: "text",
           order: blockOrder,
@@ -251,8 +251,7 @@ const DailyNote = {
 
     async updateBlock(block, newContent, skipReload = false) {
       try {
-        const result = await window.apiService.updateBlock({
-          block_id: block.uuid,
+        const result = await window.apiService.updateBlock(block.uuid, {
           content: newContent,
         });
 
@@ -278,9 +277,7 @@ const DailyNote = {
 
     async deleteBlock(block) {
       try {
-        const result = await window.apiService.deleteBlock({
-          block_id: block.uuid,
-        });
+        const result = await window.apiService.deleteBlock(block.uuid);
 
         if (result.success) {
           await this.loadPage(); // Reload to get updated structure
@@ -299,9 +296,7 @@ const DailyNote = {
       const previousBlock = this.findPreviousBlock(block);
 
       try {
-        const result = await window.apiService.deleteBlock({
-          block_id: block.uuid,
-        });
+        const result = await window.apiService.deleteBlock(block.uuid);
 
         if (result.success) {
           // Remove from local state immediately for better UX

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .commands import SendMessageCommand
-from .commands.send_message import SendMessageCommandError
+from .commands.send_message_command import SendMessageCommandError
 from .forms import SendMessageForm
 from .models import (
     AIModel,

@@ -19,7 +19,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that blocks starting with 'TODO' are created as todo type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "TODO: Buy groceries",
         }
         form = CreateBlockForm(form_data)
@@ -34,7 +34,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that blocks starting with '[ ]' are created as todo type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "[ ] Complete project",
         }
         form = CreateBlockForm(form_data)
@@ -48,7 +48,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that blocks starting with '[x]' are created as done type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "[x] Finished task",
         }
         form = CreateBlockForm(form_data)
@@ -62,7 +62,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that blocks starting with '☐' are created as todo type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "☐ Unicode todo item",
         }
         form = CreateBlockForm(form_data)
@@ -76,7 +76,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that blocks starting with '☑' are created as done type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "☑ Unicode done item",
         }
         form = CreateBlockForm(form_data)
@@ -90,7 +90,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that explicit block_type is not overridden by auto-detection"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "TODO: This should stay as heading",
             "block_type": "heading",
         }
@@ -105,7 +105,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that regular content defaults to bullet type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "Just a regular block",
         }
         form = CreateBlockForm(form_data)
@@ -119,7 +119,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that empty content defaults to bullet type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "",
         }
         form = CreateBlockForm(form_data)
@@ -133,7 +133,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that whitespace-only content defaults to bullet type"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "   \n\t  ",
         }
         form = CreateBlockForm(form_data)
@@ -156,7 +156,7 @@ class TestCreateBlockCommand(TestCase):
             with self.subTest(content=content):
                 form_data = {
                     "user": self.user.id,
-                    "page": self.page.id,
+                    "page": self.page.uuid,
                     "content": content,
                 }
                 form = CreateBlockForm(form_data)
@@ -170,7 +170,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that tags are extracted from block content"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "TODO: Buy #groceries and #food",
         }
         form = CreateBlockForm(form_data)
@@ -187,7 +187,7 @@ class TestCreateBlockCommand(TestCase):
         """Test that tag extraction is skipped for empty content"""
         form_data = {
             "user": self.user.id,
-            "page": self.page.id,
+            "page": self.page.uuid,
             "content": "",
         }
         form = CreateBlockForm(form_data)
