@@ -38,6 +38,7 @@
   changed to
   `block = forms.ModelChoiceField(queryset=BlockRepository.get_queryset())`. We
   need to fix this issue for all forms in our app
+- [x] core commands's constructors should only take forms, not other args
 
 # Questions
 
