@@ -118,7 +118,7 @@ class UserAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["success"])
-        self.assertEqual(response.data["data"]["user"]["id"], str(self.user.uuid))
+        self.assertEqual(response.data["data"]["user"]["uuid"], str(self.user.uuid))
         self.assertEqual(response.data["data"]["user"]["email"], "test@example.com")
 
     def test_get_user_profile_unauthenticated(self):

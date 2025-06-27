@@ -114,7 +114,7 @@ window.HistoricalView = {
             <div v-else class="pages-grid">
               <div 
                 v-for="page in historicalData.pages" 
-                :key="page.id" 
+                :key="page.uuid" 
                 class="page-card"
               >
                 <div class="page-header">
@@ -131,7 +131,7 @@ window.HistoricalView = {
                   <h5>Recent Blocks:</h5>
                   <div 
                     v-for="block in page.recent_blocks" 
-                    :key="block.id"
+                    :key="block.uuid"
                     class="block-preview"
                   >
                     <span class="block-type">{{ block.block_type }}</span>
@@ -161,7 +161,7 @@ window.HistoricalView = {
             <div v-else class="blocks-list">
               <div 
                 v-for="block in historicalData.blocks" 
-                :key="block.id" 
+                :key="block.uuid" 
                 class="block-card"
               >
                 <div class="block-header">

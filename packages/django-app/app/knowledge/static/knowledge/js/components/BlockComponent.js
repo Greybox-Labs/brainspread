@@ -49,20 +49,20 @@ const BlockComponent = {
   },
   computed: {
     blockInContext() {
-      return this.isBlockInContext(this.block.id);
+      return this.isBlockInContext(this.block.uuid);
     },
   },
   methods: {
     toggleBlockContext() {
       if (this.blockInContext) {
-        this.onBlockRemoveFromContext(this.block.id);
+        this.onBlockRemoveFromContext(this.block.uuid);
       } else {
         this.onBlockAddToContext(this.block);
       }
     },
   },
   template: `
-    <div class="block-wrapper" :class="{ 'child-block': block.parent, 'in-context': blockInContext }" :data-block-id="block.id">
+    <div class="block-wrapper" :class="{ 'child-block': block.parent, 'in-context': blockInContext }" :data-block-uuid="block.uuid">
       <div class="block">
         <div
           class="block-bullet"
@@ -109,7 +109,7 @@ const BlockComponent = {
       <div v-if="block.children && block.children.length" class="block-children">
         <BlockComponent
           v-for="child in block.children"
-          :key="child.id"
+          :key="child.uuid"
           :block="child"
           :onBlockContentChange="onBlockContentChange"
           :onBlockKeyDown="onBlockKeyDown"

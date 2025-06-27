@@ -396,14 +396,14 @@ const ChatPanel = {
           <div class="context-blocks" v-if="hasContext()">
             <div 
               v-for="block in chatContextBlocks" 
-              :key="block.id" 
+              :key="block.uuid" 
               class="context-block"
             >
               <div class="context-block-content">
                 {{ getContextPreview(block) }}
               </div>
               <button 
-                @click="removeContextBlock(block.id)" 
+                @click="removeContextBlock(block.uuid)" 
                 class="context-block-remove"
                 title="Remove from context"
               >

@@ -168,9 +168,9 @@ const DailyNote = {
       try {
         const blockOrder = order !== null ? order : this.getNextOrder(parent);
         const result = await window.apiService.createBlock({
-          page_id: this.page.id,
+          page_id: this.page.uuid,
           content: content,
-          parent_id: parent ? parent.id : null,
+          parent_id: parent ? parent.uuid : null,
           block_type: "bullet",
           content_type: "text",
           order: blockOrder,
@@ -180,7 +180,7 @@ const DailyNote = {
           // Add the new block to local state without full page reload
           // Use the actual data returned from the API (includes auto-detected block_type)
           const newBlock = {
-            id: result.data.uuid || result.data.id || `temp-${Date.now()}`,
+            id: result.data.uuid || result.data.uuid || `temp-${Date.now()}`,
             content: result.data.content || content,
             content_type: result.data.content_type || "text",
             block_type: result.data.block_type || "bullet", // This will include auto-detected types
@@ -213,7 +213,7 @@ const DailyNote = {
             this.$nextTick(() => {
               this.$nextTick(() => {
                 const textarea = document.querySelector(
-                  `[data-block-id="${newBlock.id}"] textarea`
+                  `[data-block-uuid="${newBlock.uuid}"] textarea`
                 );
                 if (textarea) {
                   textarea.focus();
@@ -225,7 +225,7 @@ const DailyNote = {
                   // If textarea still not found, try one more time after a short delay
                   setTimeout(() => {
                     const retryTextarea = document.querySelector(
-                      `[data-block-id="${newBlock.id}"] textarea`
+                      `[data-block-uuid="${newBlock.uuid}"] textarea`
                     );
                     if (retryTextarea) {
                       retryTextarea.focus();
@@ -252,7 +252,7 @@ const DailyNote = {
     async updateBlock(block, newContent, skipReload = false) {
       try {
         const result = await window.apiService.updateBlock({
-          block_id: block.id,
+          block_id: block.uuid,
           content: newContent,
         });
 
@@ -279,7 +279,7 @@ const DailyNote = {
     async deleteBlock(block) {
       try {
         const result = await window.apiService.deleteBlock({
-          block_id: block.id,
+          block_id: block.uuid,
         });
 
         if (result.success) {
@@ -293,14 +293,14 @@ const DailyNote = {
 
     async deleteEmptyBlock(block) {
       // Mark block as being deleted to prevent save conflicts
-      this.deletingBlocks.add(block.id);
+      this.deletingBlocks.add(block.uuid);
 
       // Find the previous block to focus after deletion
       const previousBlock = this.findPreviousBlock(block);
 
       try {
         const result = await window.apiService.deleteBlock({
-          block_id: block.id,
+          block_id: block.uuid,
         });
 
         if (result.success) {
@@ -314,7 +314,7 @@ const DailyNote = {
               // Position cursor at the end of the previous block
               this.$nextTick(() => {
                 const textarea = document.querySelector(
-                  `[data-block-id="${previousBlock.id}"] textarea`
+                  `[data-block-uuid="${previousBlock.uuid}"] textarea`
                 );
                 if (textarea) {
                   textarea.focus();
@@ -331,24 +331,26 @@ const DailyNote = {
         console.error("Failed to delete empty block:", error);
         this.error = "Failed to delete block";
         // Remove from deleting set on error
-        this.deletingBlocks.delete(block.id);
+        this.deletingBlocks.delete(block.uuid);
       } finally {
         // Clean up tracking after a delay to ensure blur events have processed
         setTimeout(() => {
-          this.deletingBlocks.delete(block.id);
+          this.deletingBlocks.delete(block.uuid);
         }, 100);
       }
     },
 
     findPreviousBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex(
+        (b) => b.uuid === currentBlock.uuid
+      );
       return currentIndex > 0 ? allBlocks[currentIndex - 1] : null;
     },
 
     async toggleBlockTodo(block) {
       try {
-        const result = await window.apiService.toggleBlockTodo(block.id);
+        const result = await window.apiService.toggleBlockTodo(block.uuid);
         if (result.success) {
           // Update local state
           block.block_type = result.data.block_type;
@@ -384,13 +386,13 @@ const DailyNote = {
 
       // Find all blocks that need to be shifted (same parent, order >= newOrder)
       const blocksToShift = siblings.filter(
-        (block) => block.id !== currentBlock.id && block.order >= newOrder
+        (block) => block.uuid !== currentBlock.uuid && block.order >= newOrder
       );
 
       // Shift existing blocks down by updating their orders
       for (const block of blocksToShift) {
         try {
-          await window.apiService.updateBlock(block.id, {
+          await window.apiService.updateBlock(block.uuid, {
             order: block.order + 1,
           });
           block.order = block.order + 1;
@@ -412,13 +414,13 @@ const DailyNote = {
         // Restore editing state after reload
         currentlyEditing.forEach((block) => {
           const refreshedBlock = this.getAllBlocks().find(
-            (b) => b.id === block.id
+            (b) => b.uuid === block.uuid
           );
           if (refreshedBlock) {
             refreshedBlock.isEditing = true;
             this.$nextTick(() => {
               const textarea = document.querySelector(
-                `[data-block-id="${refreshedBlock.id}"] textarea`
+                `[data-block-uuid="${refreshedBlock.uuid}"] textarea`
               );
               if (textarea) {
                 textarea.focus();
@@ -532,8 +534,8 @@ const DailyNote = {
 
         // Update the block's parent and order
         const newOrder = this.getNextChildOrder(previousSibling);
-        const result = await window.apiService.updateBlock(block.id, {
-          parent_id: previousSibling.id,
+        const result = await window.apiService.updateBlock(block.uuid, {
+          parent_id: previousSibling.uuid,
           order: newOrder,
         });
 
@@ -551,7 +553,7 @@ const DailyNote = {
           // Focus the block again
           this.$nextTick(() => {
             const textarea = document.querySelector(
-              `[data-block-id="${block.id}"] textarea`
+              `[data-block-uuid="${block.uuid}"] textarea`
             );
             if (textarea) textarea.focus();
           });
@@ -575,8 +577,8 @@ const DailyNote = {
         // Update orders of siblings that come after the parent
         this.updateSiblingOrders(grandparent, newOrder);
 
-        const result = await window.apiService.updateBlock(block.id, {
-          parent_id: grandparent ? grandparent.id : null,
+        const result = await window.apiService.updateBlock(block.uuid, {
+          parent_id: grandparent ? grandparent.uuid : null,
           order: newOrder,
         });
 
@@ -600,7 +602,7 @@ const DailyNote = {
           // Focus the block again
           this.$nextTick(() => {
             const textarea = document.querySelector(
-              `[data-block-id="${block.id}"] textarea`
+              `[data-block-uuid="${block.uuid}"] textarea`
             );
             if (textarea) textarea.focus();
           });
@@ -612,7 +614,7 @@ const DailyNote = {
 
     findPreviousSibling(block) {
       const siblings = block.parent ? block.parent.children : this.blocks;
-      const currentIndex = siblings.findIndex((b) => b.id === block.id);
+      const currentIndex = siblings.findIndex((b) => b.uuid === block.uuid);
       return currentIndex > 0 ? siblings[currentIndex - 1] : null;
     },
 
@@ -625,13 +627,13 @@ const DailyNote = {
       if (block.parent) {
         const parentChildren = block.parent.children || [];
         const index = parentChildren.findIndex(
-          (child) => child.id === block.id
+          (child) => child.uuid === block.uuid
         );
         if (index !== -1) {
           parentChildren.splice(index, 1);
         }
       } else {
-        const index = this.blocks.findIndex((b) => b.id === block.id);
+        const index = this.blocks.findIndex((b) => b.uuid === block.uuid);
         if (index !== -1) {
           this.blocks.splice(index, 1);
         }
@@ -703,7 +705,7 @@ const DailyNote = {
       // Stop editing all other blocks first (save them)
       const allBlocks = this.getAllBlocks();
       allBlocks.forEach((b) => {
-        if (b.id !== block.id && b.isEditing) {
+        if (b.uuid !== block.uuid && b.isEditing) {
           this.updateBlock(b, b.content, true); // Save without reload
           b.isEditing = false;
         }
@@ -713,7 +715,7 @@ const DailyNote = {
       this.$nextTick(() => {
         // Focus the specific textarea for this block
         const blockElement = document.querySelector(
-          `[data-block-id="${block.id}"] textarea`
+          `[data-block-uuid="${block.uuid}"] textarea`
         );
         if (blockElement) {
           blockElement.focus();
@@ -729,7 +731,7 @@ const DailyNote = {
       }
 
       // Don't try to save blocks that are being deleted
-      if (this.deletingBlocks.has(block.id)) {
+      if (this.deletingBlocks.has(block.uuid)) {
         block.isEditing = false;
         return;
       }
@@ -777,7 +779,9 @@ const DailyNote = {
 
     focusNextBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex(
+        (b) => b.uuid === currentBlock.uuid
+      );
 
       if (currentIndex >= 0 && currentIndex < allBlocks.length - 1) {
         const nextBlock = allBlocks[currentIndex + 1];
@@ -788,7 +792,9 @@ const DailyNote = {
 
     focusPreviousBlock(currentBlock) {
       const allBlocks = this.getAllBlocks();
-      const currentIndex = allBlocks.findIndex((b) => b.id === currentBlock.id);
+      const currentIndex = allBlocks.findIndex(
+        (b) => b.uuid === currentBlock.uuid
+      );
 
       if (currentIndex > 0) {
         const previousBlock = allBlocks[currentIndex - 1];
@@ -834,7 +840,7 @@ const DailyNote = {
     },
 
     async deletePage() {
-      if (!this.page || !this.page.id) {
+      if (!this.page || !this.page.uuid) {
         return;
       }
 
@@ -847,7 +853,7 @@ const DailyNote = {
       }
 
       try {
-        const result = await window.apiService.deletePage(this.page.id);
+        const result = await window.apiService.deletePage(this.page.uuid);
 
         if (result.success) {
           this.successMessage = "Daily note deleted successfully";
@@ -867,7 +873,7 @@ const DailyNote = {
 
     getHistoricalBlocks(historicalPage) {
       // Return cached blocks if available, otherwise return empty array
-      const cacheKey = historicalPage.id;
+      const cacheKey = historicalPage.uuid;
       if (this.historicalBlocksCache[cacheKey]) {
         return this.historicalBlocksCache[cacheKey];
       }
@@ -878,7 +884,7 @@ const DailyNote = {
     },
 
     async loadHistoricalPageBlocks(historicalPage) {
-      const cacheKey = historicalPage.id;
+      const cacheKey = historicalPage.uuid;
 
       try {
         const result = await window.apiService.getPageWithBlocks(
@@ -925,7 +931,7 @@ const DailyNote = {
             class="form-control date-picker"
           />
           <button
-            v-if="page && page.id"
+            v-if="page && page.uuid"
             @click="deletePage"
             class="btn btn-danger delete-page-btn"
             title="Delete this daily note"
@@ -948,7 +954,7 @@ const DailyNote = {
         </div>
 
         <div v-if="blocks.length > 0" class="blocks-container">
-          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :data-block-id="block.id">
+          <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :data-block-uuid="block.uuid">
             <div class="block">
               <div
                 class="block-bullet"
@@ -988,7 +994,7 @@ const DailyNote = {
         <h2>{{ formatDate(currentDate) }}</h2>
 
         <div class="blocks-container">
-          <div v-for="block in blocks" :key="block.id" class="block-wrapper" :class="{ 'in-context': isBlockInContext(block.id) }" :data-block-id="block.id">
+          <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :class="{ 'in-context': isBlockInContext(block.uuid) }" :data-block-uuid="block.uuid">
             <div class="block">
               <div
                 class="block-bullet"
@@ -1032,7 +1038,7 @@ const DailyNote = {
 
             <!-- Render children blocks recursively -->
             <div v-if="block.children && block.children.length" class="block-children">
-              <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(child.id) }" :data-block-id="child.id">
+              <div v-for="child in block.children" :key="child.uuid" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(child.uuid) }" :data-block-uuid="child.uuid">
                 <div class="block">
                   <div
                     class="block-bullet"
@@ -1076,7 +1082,7 @@ const DailyNote = {
                 
                 <!-- Render grandchildren -->
                 <div v-if="child.children && child.children.length" class="block-children">
-                  <div v-for="grandchild in child.children" :key="grandchild.id" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(grandchild.id) }" :data-block-id="grandchild.id">
+                  <div v-for="grandchild in child.children" :key="grandchild.uuid" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(grandchild.uuid) }" :data-block-uuid="grandchild.uuid">
                     <div class="block">
                       <div
                         class="block-bullet"
@@ -1135,14 +1141,14 @@ const DailyNote = {
           v-for="historicalPage in historicalData.pages
             .filter(p => p.page_type === 'daily' && p.date !== currentDate)
             .sort((a, b) => new Date(b.date || b.modified_at) - new Date(a.date || a.modified_at))"
-          :key="'historical-' + historicalPage.id"
+          :key="'historical-' + historicalPage.uuid"
           class="historical-daily-note"
         >
           <h2>{{ formatDate(historicalPage.date) }}</h2>
 
           <!-- Load full block data for this historical page -->
           <div class="historical-blocks-container">
-            <div v-for="block in getHistoricalBlocks(historicalPage)" :key="block.id" class="block-wrapper" :data-block-id="block.id">
+            <div v-for="block in getHistoricalBlocks(historicalPage)" :key="block.uuid" class="block-wrapper" :data-block-uuid="block.uuid">
               <div class="block">
                 <div
                   class="block-bullet"

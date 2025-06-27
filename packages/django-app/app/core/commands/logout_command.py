@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 from rest_framework.authtoken.models import Token
 
 from common.commands.abstract_base_command import AbstractBaseCommand
@@ -12,10 +10,11 @@ class LogoutCommand(AbstractBaseCommand):
         self.user = user
         self.form = None
 
-    def execute(self) -> Dict[str, Any]:
+    def execute(self) -> str:
+        super().execute()
         try:
             token = Token.objects.get(user=self.user)
             token.delete()
-            return {"message": "Successfully logged out"}
+            return "Successfully logged out"
         except Token.DoesNotExist:
-            return {"message": "Already logged out"}
+            return "Already logged out"

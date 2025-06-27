@@ -213,7 +213,7 @@ window.HistoricalSidebar = {
               <div class="sidebar-items">
                 <div
                   v-for="page in historicalData.pages"
-                  :key="page.id"
+                  :key="page.uuid"
                   class="sidebar-item page-item clickable"
                   @click="openDailyNote(page)"
                   :title="'Click to open ' + page.title"
@@ -228,7 +228,7 @@ window.HistoricalSidebar = {
                   </div>
                   <div v-if="page.recent_blocks && page.recent_blocks.length" class="recent-blocks-preview">
                     <span class="preview-label">Recent blocks:</span>
-                    <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.id" class="block-preview">
+                    <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.uuid" class="block-preview">
                       {{ truncateContent(block.content, 40) }}
                     </div>
                   </div>
@@ -242,7 +242,7 @@ window.HistoricalSidebar = {
               <div class="sidebar-items">
                 <div
                   v-for="block in historicalData.blocks"
-                  :key="block.id"
+                  :key="block.uuid"
                   class="sidebar-item block-item"
                 >
                   <div class="item-header">

@@ -166,9 +166,9 @@ const KnowledgeApp = createApp({
     // Chat context management methods
     addBlockToContext(block) {
       // Don't add if already in context
-      if (!this.chatContextBlocks.find((b) => b.id === block.id)) {
+      if (!this.chatContextBlocks.find((b) => b.uuid === block.uuid)) {
         this.chatContextBlocks.push({
-          id: block.id,
+          uuid: block.uuid,
           content: block.content,
           block_type: block.block_type,
           created_at: block.created_at,
@@ -176,14 +176,14 @@ const KnowledgeApp = createApp({
       }
     },
 
-    removeBlockFromContext(blockId) {
+    removeBlockFromContext(blockUuid) {
       this.chatContextBlocks = this.chatContextBlocks.filter(
-        (b) => b.id !== blockId
+        (b) => b.uuid !== blockUuid
       );
     },
 
-    isBlockInContext(blockId) {
-      return this.chatContextBlocks.some((b) => b.id === blockId);
+    isBlockInContext(blockUuid) {
+      return this.chatContextBlocks.some((b) => b.uuid === blockUuid);
     },
 
     clearChatContext() {

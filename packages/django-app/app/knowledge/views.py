@@ -10,10 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from tagging.commands import GetTagContentCommand
-from tagging.forms import GetTagContentForm
-
-from .commands import (
+from knowledge.commands import (
     CreateBlockCommand,
     CreatePageCommand,
     DeleteBlockCommand,
@@ -24,7 +21,7 @@ from .commands import (
     UpdateBlockCommand,
     UpdatePageCommand,
 )
-from .forms import (
+from knowledge.forms import (
     CreateBlockForm,
     CreatePageForm,
     DeleteBlockForm,
@@ -35,10 +32,10 @@ from .forms import (
     UpdateBlockForm,
     UpdatePageForm,
 )
-from .models import Page
-from .models.block import BlockData
-from .models.page import PageData
-from .repositories import BlockRepository, PageRepository
+from knowledge.models import BlockData, Page, PageData
+from knowledge.repositories import BlockRepository, PageRepository
+from tagging.commands import GetTagContentCommand
+from tagging.forms import GetTagContentForm
 
 
 # API Response Types for this view
@@ -87,7 +84,7 @@ def index(request, date=None, tag_name=None):
 def model_to_dict(instance):
     """Convert model instance to dictionary"""
     data = {
-        "id": str(instance.uuid),
+        "uuid": str(instance.uuid),
         "created_at": instance.created_at.isoformat(),
         "modified_at": instance.modified_at.isoformat(),
     }

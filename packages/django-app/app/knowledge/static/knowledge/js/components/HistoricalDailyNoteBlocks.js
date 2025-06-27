@@ -42,7 +42,7 @@ window.HistoricalDailyNoteBlocks = {
 
       try {
         const result = await window.apiService.createBlock({
-          page_id: this.page.id,
+          page_id: this.page.uuid,
           content: content.trim(),
           parent_id: parentId,
           order: order,
@@ -57,11 +57,11 @@ window.HistoricalDailyNoteBlocks = {
     },
 
     async updateBlock(block, newContent, skipReload = false) {
-      if (!block.id) return;
+      if (!block.uuid) return;
 
       try {
         const result = await window.apiService.updateBlock({
-          block_id: block.id,
+          block_id: block.uuid,
           content: newContent,
         });
 
@@ -74,11 +74,11 @@ window.HistoricalDailyNoteBlocks = {
     },
 
     async deleteBlock(block) {
-      if (!block.id) return;
+      if (!block.uuid) return;
 
       try {
         const result = await window.apiService.deleteBlock({
-          block_id: block.id,
+          block_id: block.uuid,
         });
 
         if (result.success) {
@@ -90,10 +90,10 @@ window.HistoricalDailyNoteBlocks = {
     },
 
     async toggleBlockTodo(block) {
-      if (!block.id) return;
+      if (!block.uuid) return;
 
       try {
-        const result = await window.apiService.toggleBlockTodo(block.id);
+        const result = await window.apiService.toggleBlockTodo(block.uuid);
         if (result.success) {
           await this.loadBlocks();
         }
@@ -113,7 +113,7 @@ window.HistoricalDailyNoteBlocks = {
     startEditing(block) {
       // Stop editing all other blocks first
       this.getAllBlocks().forEach((b) => {
-        if (b.id !== block.id && b.isEditing) {
+        if (b.uuid !== block.uuid && b.isEditing) {
           this.updateBlock(b, b.content, true);
           b.isEditing = false;
         }
@@ -122,7 +122,7 @@ window.HistoricalDailyNoteBlocks = {
       block.isEditing = true;
       this.$nextTick(() => {
         const blockElement = document.querySelector(
-          `[data-block-id="${block.id}"] textarea`
+          `[data-block-uuid="${block.uuid}"] textarea`
         );
         if (blockElement) {
           blockElement.focus();
@@ -172,7 +172,7 @@ window.HistoricalDailyNoteBlocks = {
       <div v-if="loading" class="loading">Loading blocks...</div>
 
       <div v-else class="blocks-container">
-        <div v-for="block in blocks" :key="block.id" class="block-wrapper" :data-block-id="block.id">
+        <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :data-block-uuid="block.uuid">
           <div class="block">
             <div
               class="block-bullet"
@@ -210,7 +210,7 @@ window.HistoricalDailyNoteBlocks = {
 
           <!-- Render children blocks recursively -->
           <div v-if="block.children && block.children.length" class="block-children">
-            <div v-for="child in block.children" :key="child.id" class="block-wrapper child-block" :data-block-id="child.id">
+            <div v-for="child in block.children" :key="child.uuid" class="block-wrapper child-block" :data-block-uuid="child.uuid">
               <div class="block">
                 <div
                   class="block-bullet"

@@ -1,10 +1,8 @@
-from typing import Any, Dict
-
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms import UpdateTimezoneForm
 from ..models import User
-from ..repositories.user_repository import UserRepository
+from ..repositories import UserRepository
 
 
 class UpdateTimezoneCommand(AbstractBaseCommand):
@@ -12,17 +10,11 @@ class UpdateTimezoneCommand(AbstractBaseCommand):
         self.form = form
         self.user = user
 
-    def execute(self) -> Dict[str, Any]:
+    def execute(self) -> User:
         super().execute()
 
         timezone = self.form.cleaned_data["timezone"]
 
         updated_user = UserRepository.update_timezone(self.user, timezone)
 
-        return {
-            "user": {
-                "id": str(updated_user.uuid),
-                "email": updated_user.email,
-                "timezone": updated_user.timezone,
-            }
-        }
+        return updated_user

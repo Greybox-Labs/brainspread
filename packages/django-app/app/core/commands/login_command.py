@@ -1,17 +1,23 @@
-from typing import Any, Dict
+from typing import NamedTuple
 
 from rest_framework.authtoken.models import Token
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms import LoginForm
+from ..models.user import User
+
+
+class LoginResult(NamedTuple):
+    user: User
+    token: str
 
 
 class LoginCommand(AbstractBaseCommand):
     def __init__(self, form: LoginForm) -> None:
         self.form = form
 
-    def execute(self) -> Dict[str, Any]:
+    def execute(self) -> LoginResult:
         super().execute()
 
         user = self.form.cleaned_data["user"]
@@ -23,12 +29,4 @@ class LoginCommand(AbstractBaseCommand):
 
         token, created = Token.objects.get_or_create(user=user)
 
-        return {
-            "token": token.key,
-            "user": {
-                "id": str(user.uuid),
-                "email": user.email,
-                "timezone": user.timezone,
-                "theme": user.theme,
-            },
-        }
+        return LoginResult(user=user, token=token.key)

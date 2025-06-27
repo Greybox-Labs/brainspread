@@ -55,6 +55,17 @@ class User(
     def __str__(self):
         return self.email
 
+    def to_user_data(self) -> "UserData":
+        """Convert User instance to UserData TypedDict"""
+        return UserData(
+            uuid=str(self.uuid),
+            email=self.email,
+            is_active=self.is_active,
+            timezone=self.timezone,
+            theme=self.theme,
+            created_at=self.created_at.isoformat(),
+        )
+
     class Meta:
         db_table = "users"
         default_permissions = ()
@@ -69,4 +80,4 @@ class UserData(TypedDict):
     is_active: bool
     timezone: str
     theme: str
-    date_joined: str
+    created_at: str

@@ -6,14 +6,16 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .commands.get_user_profile_command import GetUserProfileCommand
-from .commands.login_command import LoginCommand
-from .commands.logout_command import LogoutCommand
-from .commands.register_command import RegisterCommand
-from .commands.update_theme_command import UpdateThemeCommand
-from .commands.update_timezone_command import UpdateTimezoneCommand
-from .forms import LoginForm, RegisterForm, UpdateThemeForm, UpdateTimezoneForm
-from .models.user import UserData
+from core.commands import (
+    GetUserProfileCommand,
+    LoginCommand,
+    LogoutCommand,
+    RegisterCommand,
+    UpdateThemeCommand,
+    UpdateTimezoneCommand,
+)
+from core.forms import LoginForm, RegisterForm, UpdateThemeForm, UpdateTimezoneForm
+from core.models.user import UserData
 
 
 # API Response Types for this view
@@ -51,7 +53,11 @@ def login(request):
         form = LoginForm(request.data)
         if form.is_valid():
             command = LoginCommand(form)
-            data = command.execute()
+            result = command.execute()
+            data: LoginResponse = {
+                "token": result.token,
+                "user": result.user.to_user_data(),
+            }
             return Response({"success": True, "data": data})
         else:
             return Response(
@@ -78,7 +84,11 @@ def register(request):
         form = RegisterForm(request.data)
         if form.is_valid():
             command = RegisterCommand(form)
-            data = command.execute()
+            result = command.execute()
+            data: RegisterResponse = {
+                "token": result.token,
+                "user": result.user.to_user_data(),
+            }
             return Response(
                 {"success": True, "data": data},
                 status=status.HTTP_201_CREATED,
@@ -105,8 +115,9 @@ def logout(request):
     """Logout endpoint that deletes the auth token"""
     try:
         command = LogoutCommand(request.user)
-        data = command.execute()
-        return Response({"success": True, **data})
+        message = command.execute()
+        data: LogoutResponse = {"message": message}
+        return Response({"success": True, "data": data})
     except Exception as e:
         return Response(
             {"success": False, "errors": {"non_field_errors": [str(e)]}},
@@ -119,7 +130,8 @@ def me(request):
     """Get current user info"""
     try:
         command = GetUserProfileCommand(request.user)
-        data = command.execute()
+        user = command.execute()
+        data: GetUserProfileResponse = {"user": user.to_user_data()}
         return Response({"success": True, "data": data})
     except Exception as e:
         return Response(
@@ -135,7 +147,8 @@ def update_timezone(request):
         form = UpdateTimezoneForm(request.data)
         if form.is_valid():
             command = UpdateTimezoneCommand(form, request.user)
-            data = command.execute()
+            updated_user = command.execute()
+            data: UpdateTimezoneResponse = {"user": updated_user.to_user_data()}
             return Response(
                 {
                     "success": True,
@@ -168,14 +181,7 @@ def update_theme(request):
         if form.is_valid():
             command = UpdateThemeCommand(form, request.user)
             updated_user = command.execute()
-            data = {
-                "user": {
-                    "id": str(updated_user.uuid),
-                    "email": updated_user.email,
-                    "timezone": updated_user.timezone,
-                    "theme": updated_user.theme,
-                }
-            }
+            data: UpdateThemeResponse = {"user": updated_user.to_user_data()}
             return Response(
                 {
                     "success": True,

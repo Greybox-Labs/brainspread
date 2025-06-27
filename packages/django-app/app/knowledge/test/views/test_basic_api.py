@@ -127,7 +127,7 @@ class BasicKnowledgeAPITestCase(TestCase):
             "/knowledge/api/pages/", create_data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_200_OK)
-        page_id = create_response.data["data"]["id"]
+        page_id = create_response.data["data"]["uuid"]
 
         # 2. List pages through API (tests GetUserPagesCommand + form + view + auth)
         list_response = self.client.get("/knowledge/api/pages/list/")
