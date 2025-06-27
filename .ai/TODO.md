@@ -16,6 +16,8 @@
   be to move to current day
 - [ ] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
+- [ ] should be able to click on a historical daily note to go to that daily note's
+  page
 
 # Cleanup
 - [ ] remove empty __init__.py files that are not needed

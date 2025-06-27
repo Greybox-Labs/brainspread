@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from tagging.commands import GetTagContentCommand
+from tagging.forms import GetTagContentForm
 
 from .commands import (
     CreateBlockCommand,
@@ -198,7 +199,16 @@ def get_tag_content(request, tag_name):
     """Get all content (blocks and pages) associated with a specific tag"""
     try:
         # Use command to get tag content
-        command = GetTagContentCommand(request.user, tag_name)
+        data = {"user": request.user.id, "tag_name": tag_name}
+        form = GetTagContentForm(data)
+
+        if not form.is_valid():
+            return Response(
+                {"success": False, "errors": form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        command = GetTagContentCommand(form)
         result = command.execute()
 
         if not result:
