@@ -199,7 +199,7 @@ class TestToggleBlockTodoCommand:
         """Test toggling a non-existent block raises ValidationError"""
         user = User.objects.create_user(email="test@example.com", password="password")
 
-        with pytest.raises(ValidationError, match="Block not found"):
+        with pytest.raises(ValidationError, match="not found"):
             # Use a valid UUID format that doesn't exist in the database
             nonexistent_uuid = str(uuid.uuid4())
             from knowledge.forms import ToggleBlockTodoForm

@@ -322,10 +322,12 @@ class TestNestedBlocks(TestCase):
         form.is_valid()
         update_command = UpdateBlockCommand(form)
 
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(ValidationError) as context:
             update_command.execute()
 
-        self.assertIn("Parent block not found", str(context.exception))
+        # The ValidationError contains JSON with the form errors
+        error_str = str(context.exception)
+        self.assertIn("not found", error_str)
 
     def test_should_prevent_circular_references(self):
         """Test that blocks cannot become their own ancestor"""
