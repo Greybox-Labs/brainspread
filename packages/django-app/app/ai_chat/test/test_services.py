@@ -2,6 +2,7 @@ from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
+from ai_chat.models import AIModel
 from ai_chat.repositories.user_settings_repository import UserSettingsRepository
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
@@ -137,7 +138,6 @@ class UserSettingsRepositoryTestCase(TestCase):
 
     def setUp(self):
         # Create AIModel for testing
-        from ai_chat.models import AIModel
 
         self.gpt4_model = AIModel.objects.create(
             name="gpt-4",
@@ -206,8 +206,6 @@ class UserSettingsRepositoryTestCase(TestCase):
         # Create settings for different user
         other_user = UserFactory(email="other@example.com")
         # Create an Anthropic model for the other user
-        from ai_chat.models import AIModel
-
         claude_model = AIModel.objects.create(
             name="claude-3-sonnet",
             provider=self.anthropic_provider,
@@ -275,8 +273,6 @@ class ServiceIntegrationTestCase(TestCase):
 
     def setUp(self):
         # Create AIModel for testing
-        from ai_chat.models import AIModel
-
         self.gpt4_model = AIModel.objects.create(
             name="gpt-4",
             provider=self.openai_provider,

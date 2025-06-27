@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from core.test.helpers import UserFactory
+from knowledge.models import Page
 
 
 class BasicKnowledgeAPITestCase(TestCase):
@@ -31,8 +32,6 @@ class BasicKnowledgeAPITestCase(TestCase):
         self.assertEqual(response.data["data"]["slug"], "api-test-page")
 
         # Verify page was actually created in database
-        from knowledge.models import Page
-
         self.assertTrue(
             Page.objects.filter(title="API Test Page", user=self.user).exists()
         )

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from core.models import User
 from core.test.helpers import UserFactory
 
 
@@ -29,8 +30,6 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.data["data"]["user"]["email"], "newuser@example.com")
 
         # Verify user was created in database
-        from core.models import User
-
         self.assertTrue(User.objects.filter(email="newuser@example.com").exists())
 
     def test_register_duplicate_email(self):

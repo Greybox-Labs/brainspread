@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from google.api_core import exceptions as google_exceptions
 
 from ai_chat.services.google_service import GoogleService, GoogleServiceError
 
@@ -97,8 +98,6 @@ class TestGoogleService:
     @patch("google.generativeai.GenerativeModel")
     def test_send_message_api_error(self, mock_model_class):
         """Test handling of Google API errors"""
-        from google.api_core import exceptions as google_exceptions
-
         mock_model = Mock()
         mock_model.generate_content.side_effect = google_exceptions.GoogleAPIError(
             "API Error"
@@ -140,8 +139,6 @@ class TestGoogleService:
     @patch("google.generativeai.GenerativeModel")
     def test_validate_api_key_failure(self, mock_model_class):
         """Test API key validation failure"""
-        from google.api_core import exceptions as google_exceptions
-
         mock_model = Mock()
         mock_model.generate_content.side_effect = google_exceptions.GoogleAPIError(
             "Invalid API key"

@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from knowledge.commands.toggle_block_todo_command import ToggleBlockTodoCommand
+from knowledge.forms import ToggleBlockTodoForm
 from knowledge.test.helpers import BlockFactory, PageFactory, UserFactory
 
 
@@ -21,8 +22,6 @@ class TestTodoContentIntegration(TestCase):
         )
 
         # Toggle to done
-        from knowledge.forms import ToggleBlockTodoForm
-
         form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
@@ -64,8 +63,6 @@ class TestTodoContentIntegration(TestCase):
                 )
 
                 # Toggle to done
-                from knowledge.forms import ToggleBlockTodoForm
-
                 form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
@@ -96,8 +93,6 @@ class TestTodoContentIntegration(TestCase):
                 )
 
                 # Toggle to todo
-                from knowledge.forms import ToggleBlockTodoForm
-
                 form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
@@ -117,8 +112,6 @@ class TestTodoContentIntegration(TestCase):
             content="TODO: Review TODO items in the code",
             block_type="todo",
         )
-
-        from knowledge.forms import ToggleBlockTodoForm
 
         form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
@@ -145,8 +138,6 @@ class TestTodoContentIntegration(TestCase):
                     user=self.user, page=self.page, content=content, block_type="todo"
                 )
 
-                from knowledge.forms import ToggleBlockTodoForm
-
                 form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
@@ -165,8 +156,6 @@ class TestTodoContentIntegration(TestCase):
             content="TODO:   spaced    content   with    gaps",
             block_type="todo",
         )
-
-        from knowledge.forms import ToggleBlockTodoForm
 
         form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)

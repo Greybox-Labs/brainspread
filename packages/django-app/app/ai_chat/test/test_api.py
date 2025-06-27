@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
@@ -310,7 +311,6 @@ class AIChatAPITestCase(TestCase):
     def test_chat_session_detail_not_found(self):
         """Test getting non-existent session returns 404"""
         # Use a valid UUID format but non-existent session
-        import uuid
 
         fake_uuid = str(uuid.uuid4())
         response = self.client.get(f"/api/ai-chat/sessions/{fake_uuid}/")
@@ -426,7 +426,6 @@ class AIChatAPITestCase(TestCase):
         mock_create_service.return_value = mock_service
 
         # Use a properly formatted UUID that doesn't exist instead of "invalid-uuid"
-        import uuid
 
         fake_uuid = str(uuid.uuid4())
         data = {"message": "Hello", "model": "gpt-4", "session_id": fake_uuid}
