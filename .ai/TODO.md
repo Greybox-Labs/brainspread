@@ -40,7 +40,6 @@
   need to fix this issue for all forms in our app
 - [x] core commands's constructors should only take forms, not other args
 - [ ] fix ai_chat forms to take UUIDModelChoiceField, then fix frontend
-- [ ]]
 
 # Questions
 
