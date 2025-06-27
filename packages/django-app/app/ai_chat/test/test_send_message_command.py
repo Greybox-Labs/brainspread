@@ -60,13 +60,14 @@ class SendMessageCommandTestCase(TestCase):
     ):
         """Helper to create a form with default values"""
         form_data = {
+            "user": self.user.id,
             "message": message,
             "model": model,
             "context_blocks": context_blocks or [],
         }
         if session_id:
             form_data["session_id"] = str(session_id)
-        return SendMessageForm(form_data, user=self.user)
+        return SendMessageForm(form_data)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     @patch("ai_chat.repositories.chat_repository.ChatRepository.create_session")

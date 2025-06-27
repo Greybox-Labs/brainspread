@@ -51,7 +51,11 @@
       "Bash(pipenv run pytest:*)",
       "Bash(pipenv run python:*)",
       "Bash(docker-compose:*)",
-      "mcp__sse-server__browser_hover"
+      "mcp__sse-server__browser_hover",
+      "mcp__gitmcp__fetch_oscarr_documentation",
+      "mcp__gitmcp__search_oscarr_documentation",
+      "mcp__gitmcp__search_oscarr_code",
+      "mcp__gitmcp__fetch_generic_url_content"
     ],
     "deny": []
   }

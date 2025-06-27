@@ -32,7 +32,7 @@ class SendMessageCommand(AbstractBaseCommand):
             context_blocks = self.form.cleaned_data.get("context_blocks", [])
             provider_name = self.form.cleaned_data["provider_name"]
             api_key = self.form.cleaned_data["api_key"]
-            user = self.form.user
+            user = self.form.cleaned_data["user"]
 
             # Create or get session
             if not session:

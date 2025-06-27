@@ -40,7 +40,9 @@ def send_message(request):
     API key is automatically retrieved from user settings.
     """
     try:
-        form = SendMessageForm(request.data, user=request.user)
+        data = request.data.copy()
+        data["user"] = request.user.id
+        form = SendMessageForm(data)
         if not form.is_valid():
             # Extract first error message from form errors
             error_message = (

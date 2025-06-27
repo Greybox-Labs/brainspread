@@ -1,13 +1,18 @@
+from typing import Dict, List, Optional
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from common.forms.base_form import BaseForm
+from core.models import User
+from core.repositories import UserRepository
 
 from .models import ChatSession
 from .repositories.user_settings_repository import UserSettingsRepository
 
 
 class SendMessageForm(BaseForm):
+    user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
     message = forms.CharField(
         required=False
     )  # We'll handle validation in clean_message
@@ -15,28 +20,31 @@ class SendMessageForm(BaseForm):
     session_id = forms.CharField(required=False)
     context_blocks = forms.JSONField(required=False)
 
-    def __init__(self, data, user=None):
-        self.user = user
-        super().__init__(data)
+    def clean_user(self) -> User:
+        user = self.cleaned_data.get("user")
+        if not user:
+            raise ValidationError("User is required")
+        return user
 
-    def clean_message(self):
+    def clean_message(self) -> str:
         message = self.cleaned_data.get("message")
         if not message or not message.strip():
             raise ValidationError("Message cannot be empty")
         return message.strip()
 
-    def clean_session_id(self):
+    def clean_session_id(self) -> Optional[ChatSession]:
         session_id = self.cleaned_data.get("session_id")
-        if session_id and self.user:
+        user = self.cleaned_data.get("user")
+        if session_id and user:
             try:
-                session = ChatSession.objects.get(uuid=session_id, user=self.user)
+                session = ChatSession.objects.get(uuid=session_id, user=user)
                 return session
             except ChatSession.DoesNotExist:
                 # Return None for non-existent sessions - let the command create a new one
                 return None
         return None
 
-    def clean_context_blocks(self):
+    def clean_context_blocks(self) -> List[Dict]:
         context_blocks = self.cleaned_data.get("context_blocks")
         if context_blocks is None:
             return []
@@ -49,7 +57,8 @@ class SendMessageForm(BaseForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        if not self.user:
+        user = cleaned_data.get("user")
+        if not user:
             raise ValidationError("User is required")
 
         # Get model and validate it exists in our database
@@ -75,7 +84,7 @@ class SendMessageForm(BaseForm):
 
         # Check API key for the provider
         user_settings_repo = UserSettingsRepository()
-        api_key = user_settings_repo.get_api_key(self.user, provider)
+        api_key = user_settings_repo.get_api_key(user, provider)
         if not api_key:
             raise ValidationError(
                 f"No API key configured for {provider.name}. Please add your API key in settings."
