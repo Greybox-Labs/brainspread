@@ -73,9 +73,15 @@ class SendMessageCommandTestCase(TestCase):
         return SendMessageForm(form_data)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
+    @patch(
+        "ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages"
+    )
     def test_execute_success_new_session(
         self,
         mock_get_messages,
@@ -120,8 +126,12 @@ class SendMessageCommandTestCase(TestCase):
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages"
+    )
     def test_execute_success_existing_session(
         self, mock_get_messages, mock_add_message, mock_create_service
     ):
@@ -183,9 +193,15 @@ class SendMessageCommandTestCase(TestCase):
         self.assertIn("not available or not found", error_message)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
+    @patch(
+        "ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages"
+    )
     def test_execute_ai_service_error(
         self,
         mock_get_messages,
@@ -223,9 +239,15 @@ class SendMessageCommandTestCase(TestCase):
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
+    @patch(
+        "ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages"
+    )
     def test_execute_service_factory_error(
         self,
         mock_get_messages,
@@ -308,9 +330,15 @@ class SendMessageCommandTestCase(TestCase):
         self.assertEqual(formatted_message, "Question with empty context")
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
-    @patch("ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message")
-    @patch("ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages")
+    @patch(
+        "ai_chat.repositories.chat_session_repository.ChatSessionRepository.create_session"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.add_message"
+    )
+    @patch(
+        "ai_chat.repositories.chat_message_repository.ChatMessageRepository.get_messages"
+    )
     def test_execute_with_context_blocks_integration(
         self,
         mock_get_messages,

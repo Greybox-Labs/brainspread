@@ -7,7 +7,7 @@ from knowledge.commands import CreateBlockCommand, UpdateBlockCommand
 from knowledge.forms import CreateBlockForm, UpdateBlockForm
 from knowledge.models import Block
 
-from ..helpers import PageFactory, UserFactory, BlockFactory
+from ..helpers import BlockFactory, PageFactory, UserFactory
 
 
 class TestUpdateBlockCommand(TestCase):

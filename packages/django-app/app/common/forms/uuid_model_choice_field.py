@@ -27,7 +27,7 @@ class UUIDModelChoiceField(forms.Field):
         Convert the UUID string to a model instance.
         """
         # Handle empty values explicitly - this includes None, '', empty lists, etc.
-        if value in self.empty_values or value is None or value == '':
+        if value in self.empty_values or value is None or value == "":
             return None
 
         # If value is already a model instance of the correct type, return it
@@ -46,7 +46,9 @@ class UUIDModelChoiceField(forms.Field):
         elif isinstance(value, uuid.UUID):
             uuid_obj = value
         else:
-            raise ValidationError("Value must be a UUID string, UUID object, or model instance.")
+            raise ValidationError(
+                "Value must be a UUID string, UUID object, or model instance."
+            )
 
         # Look up the model instance by UUID
         try:

@@ -1,7 +1,5 @@
 import re
 
-from django.core.exceptions import ValidationError
-
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms.toggle_block_todo_form import ToggleBlockTodoForm

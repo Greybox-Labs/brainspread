@@ -1,8 +1,8 @@
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from knowledge.commands.create_block_command import CreateBlockCommand
 from knowledge.commands.update_block_command import UpdateBlockCommand
@@ -353,7 +353,6 @@ class TestNestedBlocks(TestCase):
         child = child_command.execute()
 
         # Try to make parent a child of child (circular reference)
-        from django.core.exceptions import ValidationError
 
         form_data = {
             "user": self.user.id,

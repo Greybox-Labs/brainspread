@@ -19,7 +19,9 @@ class CreateBlockForm(BaseForm):
     content_type = forms.CharField(max_length=50, required=False, initial="text")
     block_type = forms.CharField(max_length=50, required=False, initial="bullet")
     order = forms.IntegerField(min_value=0, required=False, initial=0)
-    parent = UUIDModelChoiceField(queryset=BlockRepository.get_queryset(), required=False)
+    parent = UUIDModelChoiceField(
+        queryset=BlockRepository.get_queryset(), required=False
+    )
     media_url = forms.URLField(required=False, initial="")
     media_metadata = forms.JSONField(required=False, initial=dict)
     properties = forms.JSONField(required=False, initial=dict)

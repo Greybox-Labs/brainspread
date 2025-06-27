@@ -1,5 +1,6 @@
-import pytest
 import uuid
+
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
