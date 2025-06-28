@@ -21,7 +21,7 @@
 
 # Optimizations
 
-- [ ] infinite scroll for ai chat history + 
+- [ ] infinite scroll for ai chat history
 - [ ] infinite scroll for daily notes
 
 # Cleanup
@@ -46,7 +46,7 @@
 - [x] core commands's constructors should only take forms, not other args
 - [ ] fix ai_chat forms to take UUIDModelChoiceField, then fix frontend
 - [ ] not all view functions follow conventions. there is a fair amount of
-  business logic in view files
+  business logic in ai_chat view files
 
 # Questions
 
@@ -65,6 +65,9 @@
 - [ ] when hitting tab on a new block, it indents the block properly, but it
   does not keep focus on the block
 - [ ] can't see nested blocks for past daily notes in list view
+  - maybe this isn't the worst ui, but we should show that there are nested
+    blocks and either let the user expand them there or let the user click into
+    the note. the latter should be possible regardless.
 
 # Maybe later
 
