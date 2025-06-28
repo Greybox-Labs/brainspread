@@ -344,7 +344,7 @@ def delete_page(request):
 def get_pages(request):
     """API endpoint to get user's pages"""
     try:
-        data = dict(request.query_params)
+        data = request.query_params.copy()
         data["user"] = request.user.id
         form = GetUserPagesForm(data)
 
@@ -378,11 +378,7 @@ def get_pages(request):
 def get_page_with_blocks(request):
     """Get a page with all its blocks"""
     try:
-        # Flatten query parameters to handle cases where values might be lists
-        data = {}
-        for key, value in request.query_params.items():
-            data[key] = value
-
+        data = request.query_params.copy()
         data["user"] = request.user.id
         form = GetPageWithBlocksForm(data)
 
