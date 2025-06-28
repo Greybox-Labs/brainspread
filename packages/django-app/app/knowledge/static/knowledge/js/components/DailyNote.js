@@ -453,9 +453,17 @@ const DailyNote = {
         block.content.trim() === "" &&
         event.target.selectionStart === 0
       ) {
-        // Delete empty block when backspace is pressed at the beginning
         event.preventDefault();
-        await this.deleteEmptyBlock(block);
+        // If block has children (is a parent), delete it and go to previous block
+        if (block.children && block.children.length > 0) {
+          await this.deleteEmptyBlock(block);
+        } else if (block.parent) {
+          // If block has no children but has a parent, unindent it
+          await this.outdentBlock(block);
+        } else {
+          // If block is at root level with no children, delete it
+          await this.deleteEmptyBlock(block);
+        }
       } else if (event.key === " ") {
         // Handle double-space indentation for mobile users
         const textarea = event.target;
