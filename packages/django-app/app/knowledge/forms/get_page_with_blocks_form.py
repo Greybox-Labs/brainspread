@@ -28,18 +28,6 @@ class GetPageWithBlocksForm(BaseForm):
             raise ValidationError("Page not found")
         return page
 
-    def clean_date(self):
-        date_str = self.data.get("date")
-        if date_str:
-            # Handle case where date comes as a list from query parameters
-            if isinstance(date_str, list):
-                date_str = date_str[0] if date_str else None
-            if date_str:
-                try:
-                    return datetime.strptime(date_str, "%Y-%m-%d").date()
-                except ValueError:
-                    raise ValidationError("Invalid date format. Use YYYY-MM-DD")
-        return None
 
     def clean(self):
         cleaned_data = super().clean()
