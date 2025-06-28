@@ -456,6 +456,33 @@ const DailyNote = {
         // Delete empty block when backspace is pressed at the beginning
         event.preventDefault();
         await this.deleteEmptyBlock(block);
+      } else if (event.key === " ") {
+        // Handle double-space indentation for mobile users
+        const textarea = event.target;
+        const currentContent = textarea.value;
+        const cursorPos = textarea.selectionStart;
+
+        // Check if the previous character is also a space (double-space) AND we're at the beginning of the block
+        if (
+          cursorPos > 0 &&
+          currentContent[cursorPos - 1] === " " &&
+          cursorPos <= 2
+        ) {
+          event.preventDefault();
+          // Remove the current space that would be added and the previous space
+          const newContent =
+            currentContent.slice(0, cursorPos - 1) +
+            currentContent.slice(cursorPos);
+          block.content = newContent;
+
+          // Update textarea value and cursor position
+          textarea.value = newContent;
+          textarea.setSelectionRange(cursorPos - 1, cursorPos - 1);
+
+          // Save current content and indent the block
+          await this.updateBlock(block, newContent, true);
+          await this.indentBlock(block);
+        }
       } else if (event.key === "Tab") {
         event.preventDefault();
         if (event.shiftKey) {
