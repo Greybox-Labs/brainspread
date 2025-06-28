@@ -1628,12 +1628,159 @@ body {
 }
 
 .message-content {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem 0.3rem 0.75rem;
   border-radius: 12px;
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.1;
   font-size: 0.9rem;
+}
+
+/* Reset all spacing for markdown elements */
+.message-content * {
+  margin: 0;
+  padding: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-block-start: 0;
+  padding-block-end: 0;
+}
+
+/* Code block styles for chat messages */
+.message-content pre {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin: 0.05rem 0;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.message-content code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+}
+
+.message-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+}
+
+.message-content p code {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.message-content blockquote {
+  border-left: 4px solid var(--accent-color);
+  padding-left: 1rem;
+  margin: 0.25rem 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.message-content h1, .message-content h2, .message-content h3, 
+.message-content h4, .message-content h5, .message-content h6 {
+  margin: 0.1rem 0 0.05rem 0;
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.message-content h1:first-child, .message-content h2:first-child, .message-content h3:first-child,
+.message-content h4:first-child, .message-content h5:first-child, .message-content h6:first-child {
+  margin-top: 0;
+}
+
+.message-content h1 { font-size: 1.2rem; }
+.message-content h2 { font-size: 1.1rem; }
+.message-content h3 { font-size: 1rem; }
+.message-content h4, .message-content h5, .message-content h6 { font-size: 0.95rem; }
+
+.message-content ul, .message-content ol {
+  padding-left: 1.5rem;
+  white-space: normal;
+}
+
+.message-content li {
+  white-space: normal;
+}
+
+.message-content p {
+  white-space: normal;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Override browser default spacing */
+.message-content li:not(:last-of-type) {
+  margin-block-end: 0.5rem !important;
+}
+
+.message-content :is(ul, ol) + :is(ul, ol),
+.message-content li :is(ul, ol) {
+  margin-block-start: 0 !important;
+}
+
+.message-content p {
+  margin-block-start: 0 !important;
+  margin-block-end: 0 !important;
+}
+
+.message-content ul, .message-content ol {
+  margin-block-start: 0 !important;
+  margin-block-end: 0 !important;
+}
+
+.message-content p + p,
+.message-content p + pre,
+.message-content pre + p {
+  margin-top: 0.05rem;
+}
+
+.message-content p + ul, 
+.message-content p + ol,
+.message-content ul + p, 
+.message-content ol + p {
+  margin-top: 0.1rem;
+}
+
+.message-content a {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+.message-content a:hover {
+  text-decoration: none;
+}
+
+.message-content table {
+  border-collapse: collapse;
+  margin: 0.25rem 0;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.message-content th, .message-content td {
+  border: 1px solid var(--border-secondary);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.message-content th {
+  background: var(--bg-secondary);
+  font-weight: bold;
 }
 
 .message-bubble.user .message-content {

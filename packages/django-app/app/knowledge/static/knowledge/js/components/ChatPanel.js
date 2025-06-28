@@ -34,6 +34,7 @@ const ChatPanel = {
   mounted() {
     this.setupResizeListener();
     this.loadAISettings();
+    this.loadLastChatSession();
   },
   beforeUnmount() {
     this.removeResizeListener();
@@ -43,6 +44,8 @@ const ChatPanel = {
       handler() {
         // Auto-scroll when messages array changes (new messages added)
         this.scrollToBottom();
+        // Apply syntax highlighting to new messages
+        this.highlightCode();
       },
       deep: true,
     },
@@ -55,6 +58,16 @@ const ChatPanel = {
     loadWidth() {
       const saved = localStorage.getItem("chatPanel.width");
       return saved ? parseInt(saved) : 400;
+    },
+    loadLastSessionId() {
+      return localStorage.getItem("chatPanel.lastSessionId");
+    },
+    saveLastSessionId(sessionId) {
+      if (sessionId) {
+        localStorage.setItem("chatPanel.lastSessionId", sessionId);
+      } else {
+        localStorage.removeItem("chatPanel.lastSessionId");
+      }
     },
     saveOpenState() {
       localStorage.setItem("chatPanel.isOpen", JSON.stringify(this.isOpen));
@@ -102,6 +115,7 @@ const ChatPanel = {
           });
           if (result.data.session_id && !this.currentSessionId) {
             this.currentSessionId = result.data.session_id;
+            this.saveLastSessionId(result.data.session_id);
           }
         } else {
           // Handle error response
@@ -132,6 +146,7 @@ const ChatPanel = {
         if (result.success) {
           this.messages = result.data.messages;
           this.currentSessionId = session.uuid;
+          this.saveLastSessionId(session.uuid);
         }
       } catch (error) {
         console.error("Failed to load session:", error);
@@ -140,6 +155,7 @@ const ChatPanel = {
     startNewChat() {
       this.messages = [];
       this.currentSessionId = null;
+      this.saveLastSessionId(null);
     },
     setupResizeListener() {
       this.resizeHandler = this.handleMouseMove.bind(this);
@@ -236,6 +252,38 @@ const ChatPanel = {
         }
       } catch (error) {
         console.error("Failed to load AI settings:", error);
+      }
+    },
+
+    async loadLastChatSession() {
+      // Only load if we don't already have messages and no current session
+      if (this.messages.length > 0 || this.currentSessionId) {
+        return;
+      }
+
+      const lastSessionId = this.loadLastSessionId();
+      if (!lastSessionId) {
+        return;
+      }
+
+      try {
+        // First verify the session still exists by loading all sessions
+        const sessionsResult = await window.apiService.getChatSessions();
+        if (sessionsResult.success) {
+          const lastSession = sessionsResult.data.find(
+            session => session.uuid === lastSessionId
+          );
+          
+          if (lastSession) {
+            // Load the last viewed session
+            await this.onSessionSelected(lastSession);
+          } else {
+            // Session no longer exists, clear the stored ID
+            this.saveLastSessionId(null);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load last chat session:", error);
       }
     },
 
@@ -357,6 +405,34 @@ const ChatPanel = {
     hasContext() {
       return this.chatContextBlocks.length > 0;
     },
+
+    parseMarkdown(content) {
+      if (!content) return '';
+      
+      // Configure marked options
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+      });
+      
+      // Parse markdown to HTML
+      const html = marked.parse(content);
+      
+      // Sanitize HTML to prevent XSS
+      const cleanHtml = DOMPurify.sanitize(html);
+      
+      return cleanHtml;
+    },
+
+    highlightCode() {
+      // Apply syntax highlighting after DOM update
+      this.$nextTick(() => {
+        const codeBlocks = this.$el.querySelectorAll('pre code');
+        codeBlocks.forEach(block => {
+          Prism.highlightElement(block);
+        });
+      });
+    },
   },
   template: `
     <div class="chat-panel" :class="{ open: isOpen }" :style="isOpen ? { width: width + 'px' } : {}">
@@ -372,7 +448,7 @@ const ChatPanel = {
         </div>
         <div class="messages">
           <div v-for="(msg, index) in messages" :key="index" :class="['message-bubble', msg.role]">
-            <div class="message-content">{{ msg.content }}</div>
+            <div class="message-content" v-html="parseMarkdown(msg.content)"></div>
             <div class="message-timestamp">{{ formatTimestamp(msg.created_at) }}</div>
           </div>
           <div v-if="loading" class="message-bubble assistant loading">

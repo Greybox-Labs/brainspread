@@ -18,6 +18,9 @@
   immediately so the user can see the change
 - [ ] should be able to click on a historical daily note to go to that daily note's
   page
+- [ ] should be able to copy content from code blocks in ai chat view
+- [ ] ai chat messages should have a context menu popover with option to copy
+  content
 
 # Optimizations
 

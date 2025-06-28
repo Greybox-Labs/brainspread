@@ -1,5 +1,6 @@
 const ChatHistory = {
   name: "ChatHistory",
+  emits: ["session-selected", "sessions-loaded"],
   data() {
     return {
       sessions: [],
@@ -19,6 +20,7 @@ const ChatHistory = {
         const result = await window.apiService.getChatSessions();
         if (result.success) {
           this.sessions = result.data;
+          this.$emit("sessions-loaded", this.sessions);
         }
       } catch (error) {
         console.error("Failed to load chat sessions:", error);
