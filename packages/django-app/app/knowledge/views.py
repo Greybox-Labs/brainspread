@@ -1,10 +1,7 @@
-from datetime import datetime
 from typing import Any, Dict, List, TypedDict
 
-import pytz
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +13,7 @@ from knowledge.commands import (
     DeleteBlockCommand,
     DeletePageCommand,
     GetHistoricalDataCommand,
+    GetPageWithBlocksCommand,
     GetUserPagesCommand,
     ToggleBlockTodoCommand,
     UpdateBlockCommand,
@@ -27,13 +25,14 @@ from knowledge.forms import (
     DeleteBlockForm,
     DeletePageForm,
     GetHistoricalDataForm,
+    GetPageWithBlocksForm,
     GetUserPagesForm,
     ToggleBlockTodoForm,
     UpdateBlockForm,
     UpdatePageForm,
 )
-from knowledge.models import BlockData, Page, PageData
-from knowledge.repositories import BlockRepository, PageRepository
+from knowledge.models import BlockData, PageData
+from knowledge.repositories import BlockRepository
 from tagging.commands import GetTagContentCommand
 from tagging.forms import GetTagContentForm
 
@@ -92,6 +91,11 @@ class GetPagesResponse(TypedDict):
     has_more: bool
 
 
+class GetPageWithBlocksResponse(TypedDict):
+    page: Dict[str, Any]
+    blocks: List[Dict[str, Any]]
+
+
 def index(request, date=None, tag_name=None):
     return render(request, "knowledge/index.html")
 
@@ -136,10 +140,10 @@ def model_to_dict(instance):
         data["collapsed"] = instance.collapsed
 
     if hasattr(instance, "parent"):
-        data["parent_id"] = str(instance.parent.uuid) if instance.parent else None
+        data["parent_uuid"] = str(instance.parent.uuid) if instance.parent else None
 
     if hasattr(instance, "page"):
-        data["page_id"] = str(instance.page.uuid) if instance.page else None
+        data["page_uuid"] = str(instance.page.uuid) if instance.page else None
 
     if hasattr(instance, "media_url"):
         data["media_url"] = instance.media_url
@@ -374,59 +378,34 @@ def get_pages(request):
 def get_page_with_blocks(request):
     """Get a page with all its blocks"""
     try:
+        # Flatten query parameters to handle cases where values might be lists
+        data = {}
+        for key, value in request.query_params.items():
+            data[key] = value
 
-        # Support both page_id and date parameters
-        page_id = request.query_params.get("page_id")
-        date_param = request.query_params.get("date")
+        data["user"] = request.user.id
+        form = GetPageWithBlocksForm(data)
 
-        if page_id:
-            try:
-                page = Page.objects.get(uuid=page_id, user=request.user)
-            except Page.DoesNotExist:
-                return Response(
-                    {"success": False, "errors": {"page_id": ["Page not found"]}},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-        elif date_param:
-            try:
-                target_date = datetime.strptime(date_param, "%Y-%m-%d").date()
-            except ValueError:
-                return Response(
-                    {
-                        "success": False,
-                        "errors": {"date": ["Invalid date format. Use YYYY-MM-DD"]},
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if form.is_valid():
+            command = GetPageWithBlocksCommand(form)
+            page, blocks = command.execute()
 
-            page, created = PageRepository.get_or_create_daily_note(
-                request.user, target_date
-            )
+            response_data: GetPageWithBlocksResponse = {
+                "page": model_to_dict(page),
+                "blocks": [block_to_dict_with_children(block) for block in blocks],
+            }
+
+            return Response({"success": True, "data": response_data})
         else:
-            # Default to today's daily note (should not happen in normal flow)
-            # Frontend should always pass a date, but fallback to user's timezone
-            try:
+            return Response(
+                {"success": False, "errors": form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-                # Use user's stored timezone
-                if request.user.timezone and request.user.timezone != "UTC":
-                    user_tz = pytz.timezone(request.user.timezone)
-                    now_user_tz = timezone.now().astimezone(user_tz)
-                    today = now_user_tz.date()
-                else:
-                    today = timezone.now().date()
-            except Exception:
-                # Fallback to UTC if timezone is invalid
-                today = timezone.now().date()
-
-            page, created = PageRepository.get_or_create_daily_note(request.user, today)
-
-        # Get all root blocks with their nested children
-        blocks = []
-        for block in BlockRepository.get_root_blocks(page):
-            blocks.append(block_to_dict_with_children(block))
-
+    except ValidationError as e:
         return Response(
-            {"success": True, "data": {"page": model_to_dict(page), "blocks": blocks}}
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     except Exception as e:

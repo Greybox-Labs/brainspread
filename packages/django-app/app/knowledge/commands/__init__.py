@@ -3,6 +3,7 @@ from .create_page_command import CreatePageCommand
 from .delete_block_command import DeleteBlockCommand
 from .delete_page_command import DeletePageCommand
 from .get_historical_data_command import GetHistoricalDataCommand
+from .get_page_with_blocks_command import GetPageWithBlocksCommand
 from .get_user_pages_command import GetUserPagesCommand
 from .toggle_block_todo_command import ToggleBlockTodoCommand
 from .update_block_command import UpdateBlockCommand

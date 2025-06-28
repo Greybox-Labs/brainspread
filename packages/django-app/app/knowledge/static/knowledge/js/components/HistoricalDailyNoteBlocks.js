@@ -37,7 +37,7 @@ window.HistoricalDailyNoteBlocks = {
       if (!content.trim()) return;
 
       if (order === null) {
-        order = parentId ? 0 : this.blocks.filter((b) => !b.parent_id).length;
+        order = parentId ? 0 : this.blocks.filter((b) => !b.parent_uuid).length;
       }
 
       try {
@@ -159,7 +159,7 @@ window.HistoricalDailyNoteBlocks = {
     onBlockKeyDown(event, block) {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        this.createBlock("", block.parent_id, block.order + 1);
+        this.createBlock("", block.parent_uuid, block.order + 1);
       }
     },
   },

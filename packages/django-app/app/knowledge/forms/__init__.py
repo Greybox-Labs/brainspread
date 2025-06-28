@@ -3,6 +3,7 @@ from .create_page_form import CreatePageForm
 from .delete_block_form import DeleteBlockForm
 from .delete_page_form import DeletePageForm
 from .get_historical_data_form import GetHistoricalDataForm
+from .get_page_with_blocks_form import GetPageWithBlocksForm
 from .get_user_pages_form import GetUserPagesForm
 from .toggle_block_todo_form import ToggleBlockTodoForm
 from .update_block_form import UpdateBlockForm

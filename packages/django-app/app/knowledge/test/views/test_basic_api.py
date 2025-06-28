@@ -126,7 +126,7 @@ class BasicKnowledgeAPITestCase(TestCase):
             "/knowledge/api/pages/", create_data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_200_OK)
-        page_id = create_response.data["data"]["uuid"]
+        page_uuid = create_response.data["data"]["uuid"]
 
         # 2. List pages through API (tests GetUserPagesCommand + form + view + auth)
         list_response = self.client.get("/knowledge/api/pages/list/")
@@ -144,7 +144,7 @@ class BasicKnowledgeAPITestCase(TestCase):
         )
 
         # 3. Update page through API (tests UpdatePageCommand + form + view + auth)
-        update_data = {"page": page_id, "title": "Updated Integration Test"}
+        update_data = {"page": page_uuid, "title": "Updated Integration Test"}
         update_response = self.client.put(
             "/knowledge/api/pages/update/", update_data, format="json"
         )
