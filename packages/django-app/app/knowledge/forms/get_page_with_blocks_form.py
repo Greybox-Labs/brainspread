@@ -28,7 +28,6 @@ class GetPageWithBlocksForm(BaseForm):
             raise ValidationError("Page not found")
         return page
 
-
     def clean(self):
         cleaned_data = super().clean()
         page = cleaned_data.get("page")
