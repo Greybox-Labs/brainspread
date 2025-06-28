@@ -77,6 +77,21 @@ class GetHistoricalDataResponse(TypedDict):
     data: List[Dict[str, Any]]
 
 
+class GetTagContentResponse(TypedDict):
+    tag: Dict[str, Any]
+    blocks: List[Dict[str, Any]]
+    pages: List[Dict[str, Any]]
+    total_blocks: int
+    total_pages: int
+    total_content: int
+
+
+class GetPagesResponse(TypedDict):
+    pages: List[Dict[str, Any]]
+    total_count: int
+    has_more: bool
+
+
 def index(request, date=None, tag_name=None):
     return render(request, "knowledge/index.html")
 
@@ -238,19 +253,16 @@ def get_tag_content(request, tag_name):
             "uuid": str(result["tag"].uuid),
         }
 
-        return Response(
-            {
-                "success": True,
-                "data": {
-                    "tag": tag_dict,
-                    "blocks": blocks_data,
-                    "pages": pages_data,
-                    "total_blocks": len(blocks_data),
-                    "total_pages": len(pages_data),
-                    "total_content": len(blocks_data) + len(pages_data),
-                },
-            }
-        )
+        response_data: GetTagContentResponse = {
+            "tag": tag_dict,
+            "blocks": blocks_data,
+            "pages": pages_data,
+            "total_blocks": len(blocks_data),
+            "total_pages": len(pages_data),
+            "total_content": len(blocks_data) + len(pages_data),
+        }
+
+        return Response({"success": True, "data": response_data})
 
     except Exception as e:
         return Response(
@@ -335,16 +347,14 @@ def get_pages(request):
         if form.is_valid():
             command = GetUserPagesCommand(form)
             result = command.execute()
-            return Response(
-                {
-                    "success": True,
-                    "data": {
-                        "pages": [model_to_dict(page) for page in result["pages"]],
-                        "total_count": result["total_count"],
-                        "has_more": result["has_more"],
-                    },
-                }
-            )
+
+            response_data: GetPagesResponse = {
+                "pages": [model_to_dict(page) for page in result["pages"]],
+                "total_count": result["total_count"],
+                "has_more": result["has_more"],
+            }
+
+            return Response({"success": True, "data": response_data})
         else:
             return Response(
                 {"success": False, "errors": form.errors},

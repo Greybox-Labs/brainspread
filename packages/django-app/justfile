@@ -285,7 +285,7 @@ prepush:
   echo ""
   
   echo "3️⃣  Linting Python code..."
-  just lint-py
+  just lint-py-fix
   echo "✅ Python linting passed"
   echo ""
   

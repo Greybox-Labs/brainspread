@@ -38,9 +38,14 @@ const ChatPanel = {
   beforeUnmount() {
     this.removeResizeListener();
   },
-  updated() {
-    // Auto-scroll to bottom when messages are updated
-    this.scrollToBottom();
+  watch: {
+    messages: {
+      handler() {
+        // Auto-scroll when messages array changes (new messages added)
+        this.scrollToBottom();
+      },
+      deep: true,
+    },
   },
   methods: {
     loadOpenState() {
@@ -79,7 +84,6 @@ const ChatPanel = {
         created_at: new Date().toISOString(),
       };
       this.messages.push(userMsg);
-      this.scrollToBottom(); // Scroll after adding user message
       const payload = {
         message: this.message,
         model: this.selectedModel,
@@ -99,7 +103,6 @@ const ChatPanel = {
           if (result.data.session_id && !this.currentSessionId) {
             this.currentSessionId = result.data.session_id;
           }
-          this.scrollToBottom(); // Scroll after adding assistant response
         } else {
           // Handle error response
           const errorMsg = result.error || "Failed to send message";
@@ -129,7 +132,6 @@ const ChatPanel = {
         if (result.success) {
           this.messages = result.data.messages;
           this.currentSessionId = session.uuid;
-          this.scrollToBottom(); // Scroll to bottom after loading session messages
         }
       } catch (error) {
         console.error("Failed to load session:", error);
@@ -179,8 +181,16 @@ const ChatPanel = {
     scrollToBottom() {
       this.$nextTick(() => {
         const messagesContainer = this.$el.querySelector(".messages");
-        if (messagesContainer) {
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (messagesContainer && this.messages.length > 0) {
+          const messageElements = messagesContainer.querySelectorAll(
+            ".message-bubble:not(.loading)"
+          );
+          if (messageElements.length > 0) {
+            const lastMessage = messageElements[messageElements.length - 1];
+            lastMessage.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
         }
       });
     },

@@ -19,6 +19,11 @@
 - [ ] should be able to click on a historical daily note to go to that daily note's
   page
 
+# Optimizations
+
+- [ ] infinite scroll for ai chat history + 
+- [ ] infinite scroll for daily notes
+
 # Cleanup
 - [x] remove empty __init__.py files that are not needed
 - [x] python imports should not be done inside methods, they should be imported
@@ -40,6 +45,8 @@
   need to fix this issue for all forms in our app
 - [x] core commands's constructors should only take forms, not other args
 - [ ] fix ai_chat forms to take UUIDModelChoiceField, then fix frontend
+- [ ] not all view functions follow conventions. there is a fair amount of
+  business logic in view files
 
 # Questions
 
