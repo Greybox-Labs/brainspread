@@ -271,9 +271,9 @@ const ChatPanel = {
         const sessionsResult = await window.apiService.getChatSessions();
         if (sessionsResult.success) {
           const lastSession = sessionsResult.data.find(
-            session => session.uuid === lastSessionId
+            (session) => session.uuid === lastSessionId
           );
-          
+
           if (lastSession) {
             // Load the last viewed session
             await this.onSessionSelected(lastSession);
@@ -407,28 +407,28 @@ const ChatPanel = {
     },
 
     parseMarkdown(content) {
-      if (!content) return '';
-      
+      if (!content) return "";
+
       // Configure marked options
       marked.setOptions({
         breaks: true,
         gfm: true,
       });
-      
+
       // Parse markdown to HTML
       const html = marked.parse(content);
-      
+
       // Sanitize HTML to prevent XSS
       const cleanHtml = DOMPurify.sanitize(html);
-      
+
       return cleanHtml;
     },
 
     highlightCode() {
       // Apply syntax highlighting after DOM update
       this.$nextTick(() => {
-        const codeBlocks = this.$el.querySelectorAll('pre code');
-        codeBlocks.forEach(block => {
+        const codeBlocks = this.$el.querySelectorAll("pre code");
+        codeBlocks.forEach((block) => {
           Prism.highlightElement(block);
         });
       });
