@@ -156,8 +156,8 @@ class TestUpdateBlockCommand(TestCase):
 
         self.assertEqual(updated_block.block_type, "code")
 
-    def test_should_preserve_block_type_when_no_pattern_matches(self):
-        """Test that block type is preserved when content doesn't match patterns"""
+    def test_should_change_to_bullet_when_no_pattern_matches(self):
+        """Test that todo/done block types change to bullet when content doesn't match patterns"""
         # Start with a todo block
         form_data = {
             "user": self.user.id,
@@ -170,7 +170,7 @@ class TestUpdateBlockCommand(TestCase):
         todo_block = create_command.execute()
         self.assertEqual(todo_block.block_type, "todo")
 
-        # Update to regular content - should keep todo type
+        # Update to regular content - should change to bullet type
         form_data = {
             "user": self.user.id,
             "block": str(todo_block.uuid),
@@ -181,7 +181,7 @@ class TestUpdateBlockCommand(TestCase):
         command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
-        self.assertEqual(updated_block.block_type, "todo")
+        self.assertEqual(updated_block.block_type, "bullet")
 
     def test_should_not_auto_detect_when_content_not_updated(self):
         """Test that auto-detection only happens when content is updated"""

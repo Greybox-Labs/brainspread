@@ -100,8 +100,12 @@ class UpdateBlockCommand(AbstractBaseCommand):
             return "todo"
         elif content_stripped.startswith("☑"):
             return "done"
+        elif content_lower.startswith("done"):
+            return "done"
 
-        # If none of the patterns match, keep current type
+        # If none of the patterns match, return bullet for todo/done types
+        if current_block_type in ["todo", "done"]:
+            return "bullet"
         return current_block_type
 
     def _would_create_circular_reference(self, block, proposed_parent):
