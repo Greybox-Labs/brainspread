@@ -963,6 +963,10 @@ body {
     font-size: 1.2rem;
   }
 
+  .user-info {
+    display: none;
+  }
+
   .auth-container,
   .journal-container {
     padding: 1.5rem;
