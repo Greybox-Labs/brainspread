@@ -902,6 +902,44 @@ const DailyNote = {
       }
     },
 
+    async deleteHistoricalPage(historicalPage) {
+      if (!historicalPage || !historicalPage.uuid) {
+        return;
+      }
+
+      const confirmed = confirm(
+        `Are you sure you want to delete this daily note for ${this.formatDate(historicalPage.date)}? This will delete all blocks and cannot be undone.`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const result = await window.apiService.deletePage(historicalPage.uuid);
+
+        if (result.success) {
+          this.successMessage = "Daily note deleted successfully";
+          
+          // Remove the page from historicalData to update UI immediately
+          if (this.historicalData && this.historicalData.pages) {
+            const pageIndex = this.historicalData.pages.findIndex(p => p.uuid === historicalPage.uuid);
+            if (pageIndex !== -1) {
+              this.historicalData.pages.splice(pageIndex, 1);
+            }
+          }
+          
+          // Remove from cache if it exists
+          delete this.historicalBlocksCache[historicalPage.uuid];
+        } else {
+          this.error = "Failed to delete daily note";
+        }
+      } catch (error) {
+        console.error("Error deleting historical page:", error);
+        this.error = "Failed to delete daily note";
+      }
+    },
+
     getHistoricalBlocks(historicalPage) {
       // Return cached blocks if available, otherwise return empty array
       const cacheKey = historicalPage.uuid;
@@ -961,14 +999,6 @@ const DailyNote = {
             @change="onDateChange"
             class="form-control date-picker"
           />
-          <button
-            v-if="page && page.uuid"
-            @click="deletePage"
-            class="btn btn-danger delete-page-btn"
-            title="Delete this daily note"
-          >
-            del
-          </button>
         </div>
       </header>
 
@@ -1022,7 +1052,17 @@ const DailyNote = {
 
       <!-- Daily Note Content -->
       <div v-else-if="!isTagPage && page" class="daily-note-content">
-        <h2>{{ formatDate(currentDate) }}</h2>
+        <div class="daily-note-title current-note">
+          <h2>{{ formatDate(currentDate) }}</h2>
+          <button
+            v-if="page && page.uuid"
+            @click="deletePage"
+            class="btn btn-danger delete-page-btn"
+            title="Delete this daily note"
+          >
+            del
+          </button>
+        </div>
 
         <div class="blocks-container">
           <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :class="{ 'in-context': isBlockInContext(block.uuid) }" :data-block-uuid="block.uuid">
@@ -1175,7 +1215,16 @@ const DailyNote = {
           :key="'historical-' + historicalPage.uuid"
           class="historical-daily-note"
         >
-          <h2>{{ formatDate(historicalPage.date) }}</h2>
+          <div class="daily-note-title historical-note">
+            <h2>{{ formatDate(historicalPage.date) }}</h2>
+            <button
+              @click="deleteHistoricalPage(historicalPage)"
+              class="btn btn-danger delete-page-btn"
+              title="Delete this daily note"
+            >
+              del
+            </button>
+          </div>
 
           <!-- Load full block data for this historical page -->
           <div class="historical-blocks-container">

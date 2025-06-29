@@ -55,7 +55,8 @@
       "mcp__gitmcp__fetch_oscarr_documentation",
       "mcp__gitmcp__search_oscarr_documentation",
       "mcp__gitmcp__search_oscarr_code",
-      "mcp__gitmcp__fetch_generic_url_content"
+      "mcp__gitmcp__fetch_generic_url_content",
+      "mcp__sse-server__browser_handle_dialog"
     ],
     "deny": []
   }
