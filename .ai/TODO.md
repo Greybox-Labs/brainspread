@@ -49,7 +49,8 @@
 - [x] core commands's constructors should only take forms, not other args
 - [ ] fix ai_chat forms to take UUIDModelChoiceField, then fix frontend
 - [ ] not all view functions follow conventions. there is a fair amount of
-  business logic in ai_chat view files
+  business logic in ai_chat view files. knowledge views dont use response types
+- [ ] 
 
 # Questions
 
