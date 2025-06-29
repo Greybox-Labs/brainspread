@@ -920,15 +920,17 @@ const DailyNote = {
 
         if (result.success) {
           this.successMessage = "Daily note deleted successfully";
-          
+
           // Remove the page from historicalData to update UI immediately
           if (this.historicalData && this.historicalData.pages) {
-            const pageIndex = this.historicalData.pages.findIndex(p => p.uuid === historicalPage.uuid);
+            const pageIndex = this.historicalData.pages.findIndex(
+              (p) => p.uuid === historicalPage.uuid
+            );
             if (pageIndex !== -1) {
               this.historicalData.pages.splice(pageIndex, 1);
             }
           }
-          
+
           // Remove from cache if it exists
           delete this.historicalBlocksCache[historicalPage.uuid];
         } else {
