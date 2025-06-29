@@ -1,5 +1,7 @@
+from datetime import date
 from typing import Any, Dict, List, Optional
 
+from django.db import transaction
 from django.db.models import Max, QuerySet
 
 from common.repositories.base_repository import BaseRepository
@@ -170,3 +172,39 @@ class BlockRepository(BaseRepository):
     def get_recent_blocks_for_page(cls, page: Page, limit=3) -> QuerySet:
         """Get recent blocks for a specific page"""
         return cls.get_queryset().filter(page=page).order_by("-modified_at")[:limit]
+
+    @classmethod
+    def get_past_undone_todos(cls, user, before_date: date) -> QuerySet:
+        """Get undone TODO blocks from daily pages before the specified date"""
+        return (
+            cls.get_queryset()
+            .filter(
+                user=user,
+                block_type="todo",
+                page__page_type="daily",
+                page__date__lt=before_date,
+            )
+            .select_related("page")
+            .order_by("page__date", "order")
+        )
+
+    @classmethod
+    def move_blocks_to_page(cls, blocks: List[Block], target_page: Page) -> bool:
+        """Move blocks to target page and update their order"""
+        if not blocks:
+            return True
+
+        try:
+            with transaction.atomic():
+                # Get the current max order for the target page
+                max_order = cls.get_max_order(target_page)
+
+                # Update each block's page and order
+                for i, block in enumerate(blocks, start=1):
+                    block.page = target_page
+                    block.order = max_order + i
+                    block.save(update_fields=["page", "order"])
+
+                return True
+        except Exception:
+            return False

@@ -5,6 +5,7 @@ from .delete_page_command import DeletePageCommand
 from .get_historical_data_command import GetHistoricalDataCommand
 from .get_page_with_blocks_command import GetPageWithBlocksCommand
 from .get_user_pages_command import GetUserPagesCommand
+from .move_undone_todos_command import MoveUndoneTodosCommand
 from .toggle_block_todo_command import ToggleBlockTodoCommand
 from .update_block_command import UpdateBlockCommand
 from .update_page_command import UpdatePageCommand
