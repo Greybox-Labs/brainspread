@@ -18,14 +18,11 @@ class UpdateBlockCommand(AbstractBaseCommand):
 
         user = self.form.cleaned_data["user"]
         block = self.form.cleaned_data["block"]
-        parent = None
-        if "parent" in self.form.cleaned_data:
-            parent = self.form.cleaned_data["parent"]
 
         # Update fields
         content_updated = False
-
-        if parent:
+        if "parent" in self.form.cleaned_data:
+            parent = self.form.cleaned_data["parent"]
             # Check for circular references
             if self._would_create_circular_reference(block, parent):
                 raise ValidationError(

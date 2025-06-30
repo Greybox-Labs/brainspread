@@ -7,6 +7,7 @@ from .models import Block, BlockReference, Page, PageLink
 class PageAdmin(admin.ModelAdmin):
     list_display = (
         "title",
+        "short_uuid",
         "user",
         "slug",
         "page_type",
@@ -16,7 +17,7 @@ class PageAdmin(admin.ModelAdmin):
     )
     list_filter = ("page_type", "created_at", "modified_at")
     search_fields = ("title", "user__email", "slug")
-    readonly_fields = ("uuid", "created_at", "modified_at")
+    readonly_fields = ("id", "uuid", "created_at", "modified_at")
     raw_id_fields = ("user",)
     prepopulated_fields = {"slug": ("title",)}
     ordering = ("title",)
@@ -31,6 +32,7 @@ class PageAdmin(admin.ModelAdmin):
 class BlockAdmin(admin.ModelAdmin):
     list_display = (
         "content_preview",
+        "short_uuid",
         "user",
         "page",
         "parent",
@@ -41,7 +43,7 @@ class BlockAdmin(admin.ModelAdmin):
     )
     list_filter = ("block_type", "content_type", "created_at", "modified_at")
     search_fields = ("content", "user__email", "page__title")
-    readonly_fields = ("uuid", "created_at", "modified_at")
+    readonly_fields = ("id", "uuid", "created_at", "modified_at")
     raw_id_fields = ("user", "parent", "page")
     ordering = ("page", "order")
 
@@ -67,7 +69,10 @@ class BlockAdmin(admin.ModelAdmin):
         ),
         (
             "Metadata",
-            {"fields": ("uuid", "created_at", "modified_at"), "classes": ("collapse",)},
+            {
+                "fields": ("id", "uuid", "created_at", "modified_at"),
+                "classes": ("collapse",),
+            },
         ),
     )
 
@@ -89,17 +94,17 @@ class BlockAdmin(admin.ModelAdmin):
 
 @admin.register(PageLink)
 class PageLinkAdmin(admin.ModelAdmin):
-    list_display = ("source_block", "target_page", "created_at")
+    list_display = ("source_block", "short_uuid", "target_page", "created_at")
     list_filter = ("created_at",)
     search_fields = ("source_block__content", "target_page__title")
-    readonly_fields = ("uuid", "created_at", "modified_at")
+    readonly_fields = ("id", "uuid", "created_at", "modified_at")
     raw_id_fields = ("source_block", "target_page")
 
 
 @admin.register(BlockReference)
 class BlockReferenceAdmin(admin.ModelAdmin):
-    list_display = ("source_block", "target_block", "created_at")
+    list_display = ("source_block", "short_uuid", "target_block", "created_at")
     list_filter = ("created_at",)
     search_fields = ("source_block__content", "target_block__content")
-    readonly_fields = ("uuid", "created_at", "modified_at")
+    readonly_fields = ("id", "uuid", "created_at", "modified_at")
     raw_id_fields = ("source_block", "target_block")

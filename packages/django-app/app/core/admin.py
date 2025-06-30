@@ -130,6 +130,8 @@ class UserAdmin(DjangoUserAdmin):
             {
                 "fields": (
                     "is_active",
+                    "id",
+                    "uuid",
                     "created_at",
                     "modified_at",
                     "deleted_at",
@@ -140,6 +142,7 @@ class UserAdmin(DjangoUserAdmin):
 
     list_display = [
         "id",
+        "short_uuid",
         "is_active",
         "is_staff",
         "is_superuser",
@@ -156,6 +159,6 @@ class UserAdmin(DjangoUserAdmin):
 
     ordering = ["id"]
 
-    readonly_fields = ["created_at", "deleted_at", "modified_at"]
+    readonly_fields = ["id", "uuid", "created_at", "deleted_at", "modified_at"]
 
     search_fields = ("email",)

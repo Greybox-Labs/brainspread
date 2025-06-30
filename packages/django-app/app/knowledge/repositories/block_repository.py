@@ -196,8 +196,10 @@ class BlockRepository(BaseRepository):
 
         try:
             with transaction.atomic():
-                # Get the current max order for the target page
-                max_order = cls.get_max_order(target_page)
+                # Get the current max order for ALL blocks on the target page (not just root blocks)
+                queryset = cls.get_queryset().filter(page=target_page)
+                max_order = queryset.aggregate(max_order=Max("order"))["max_order"]
+                max_order = max_order if max_order is not None else 0
 
                 # Update each block's page and order
                 for i, block in enumerate(blocks, start=1):

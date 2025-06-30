@@ -1,6 +1,16 @@
 # Features
 
-- [ ] should be able to drag and move block ordering and nestings around
+## ai features
+- [ ] 
+- [ ] should be able to copy content from code blocks in ai chat view
+- [ ] ai chat messages should have a context menu popover with option to copy
+  content
+- [ ] when a user submits a web link, it should be accessed and summarized with
+  tags auto-generated from the content
+- [ ] when a user submits a web link use semantic search to find similar blocks
+  and pages and show them in sidebar
+
+## general usage
 - [ ] ui/ux for pages
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
@@ -8,19 +18,17 @@
     that
   - maybe can use Twilio? though Sam did say recently that you have to jump
     through some hoops to get a phone number now
-- [ ] when a user submits a web link, it should be accessed and summarized with
-  tags auto-generated from the content
-- [ ] when a user submits a web link use semantic search to find similar blocks
-  and pages and show them in sidebar
 - [ ] blocks should have a context menu popover. right now a cool option would
   be to move to current day
+- [ ] should be able to drag and move block ordering and nestings around
 - [ ] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
 - [ ] should be able to click on a historical daily note to go to that daily note's
   page
-- [ ] should be able to copy content from code blocks in ai chat view
-- [ ] ai chat messages should have a context menu popover with option to copy
-  content
+
+## mobile usage
+- [ ] ability to reorder blocks. drag n drop would be great, but maybe just an 
+  "editing view" w/ up/down arrow would be sufficient for now
 
 # Optimizations
 

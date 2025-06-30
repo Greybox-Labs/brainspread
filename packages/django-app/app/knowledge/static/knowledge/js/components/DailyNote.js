@@ -283,6 +283,14 @@ const DailyNote = {
     },
 
     async deleteBlock(block) {
+      const confirmed = confirm(
+        `Are you sure you want to delete this block? This will also delete any child blocks and cannot be undone.`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
       try {
         const result = await window.apiService.deleteBlock(block.uuid);
 
@@ -1144,141 +1152,21 @@ const DailyNote = {
         </div>
 
         <div class="blocks-container">
-          <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :class="{ 'in-context': isBlockInContext(block.uuid) }" :data-block-uuid="block.uuid">
-            <div class="block">
-              <div
-                class="block-bullet"
-                :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
-                @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
-              >
-                <span v-if="block.block_type === 'todo'">☐</span>
-                <span v-else-if="block.block_type === 'done'">☑</span>
-                <span v-else>•</span>
-              </div>
-              <div
-                v-if="!block.isEditing"
-                class="block-content-display"
-                :class="{ 'completed': block.block_type === 'done' }"
-                @click="startEditing(block)"
-                v-html="formatContentWithTags(block.content)"
-              ></div>
-              <textarea
-                v-else
-                :value="block.content"
-                @input="onBlockContentChange(block, $event.target.value)"
-                @keydown="onBlockKeyDown($event, block)"
-                @blur="stopEditing(block)"
-                class="block-content"
-                :class="{ 'completed': block.block_type === 'done' }"
-                rows="1"
-                placeholder="Start writing..."
-                ref="blockTextarea"
-              ></textarea>
-              <button
-                @click="onBlockAddToContext(block)"
-                class="block-context"
-                title="Add to chat context"
-              >+</button>
-              <button
-                @click="deleteBlock(block)"
-                class="block-delete"
-                title="Delete block"
-              >del</button>
-            </div>
-
-            <!-- Render children blocks recursively -->
-            <div v-if="block.children && block.children.length" class="block-children">
-              <div v-for="child in block.children" :key="child.uuid" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(child.uuid) }" :data-block-uuid="child.uuid">
-                <div class="block">
-                  <div
-                    class="block-bullet"
-                    :class="{ 'todo': child.block_type === 'todo', 'done': child.block_type === 'done' }"
-                    @click="child.block_type === 'todo' || child.block_type === 'done' ? toggleBlockTodo(child) : null"
-                  >
-                    <span v-if="child.block_type === 'todo'">☐</span>
-                    <span v-else-if="child.block_type === 'done'">☑</span>
-                    <span v-else>•</span>
-                  </div>
-                  <div
-                    v-if="!child.isEditing"
-                    class="block-content-display"
-                    :class="{ 'completed': child.block_type === 'done' }"
-                    @click="startEditing(child)"
-                    v-html="formatContentWithTags(child.content)"
-                  ></div>
-                  <textarea
-                    v-else
-                    :value="child.content"
-                    @input="onBlockContentChange(child, $event.target.value)"
-                    @keydown="onBlockKeyDown($event, child)"
-                    @blur="stopEditing(child)"
-                    class="block-content"
-                    :class="{ 'completed': child.block_type === 'done' }"
-                    rows="1"
-                    placeholder="Start writing..."
-                    ref="blockTextarea"
-                  ></textarea>
-                  <button
-                    @click="onBlockAddToContext(child)"
-                    class="block-context"
-                    title="Add to chat context"
-                  >+</button>
-                  <button
-                    @click="deleteBlock(child)"
-                    class="block-delete"
-                    title="Delete block"
-                  >del</button>
-                </div>
-                
-                <!-- Render grandchildren -->
-                <div v-if="child.children && child.children.length" class="block-children">
-                  <div v-for="grandchild in child.children" :key="grandchild.uuid" class="block-wrapper child-block" :class="{ 'in-context': isBlockInContext(grandchild.uuid) }" :data-block-uuid="grandchild.uuid">
-                    <div class="block">
-                      <div
-                        class="block-bullet"
-                        :class="{ 'todo': grandchild.block_type === 'todo', 'done': grandchild.block_type === 'done' }"
-                        @click="grandchild.block_type === 'todo' || grandchild.block_type === 'done' ? toggleBlockTodo(grandchild) : null"
-                      >
-                        <span v-if="grandchild.block_type === 'todo'">☐</span>
-                        <span v-else-if="grandchild.block_type === 'done'">☑</span>
-                        <span v-else>•</span>
-                      </div>
-                      <div
-                        v-if="!grandchild.isEditing"
-                        class="block-content-display"
-                        :class="{ 'completed': grandchild.block_type === 'done' }"
-                        @click="startEditing(grandchild)"
-                        v-html="formatContentWithTags(grandchild.content)"
-                      ></div>
-                      <textarea
-                        v-else
-                        :value="grandchild.content"
-                        @input="onBlockContentChange(grandchild, $event.target.value)"
-                        @keydown="onBlockKeyDown($event, grandchild)"
-                        @blur="stopEditing(grandchild)"
-                        class="block-content"
-                        :class="{ 'completed': grandchild.block_type === 'done' }"
-                        rows="1"
-                        placeholder="Start writing..."
-                        ref="blockTextarea"
-                      ></textarea>
-                      <button
-                        @click="onBlockAddToContext(grandchild)"
-                        class="block-context"
-                        title="Add to chat context"
-                      >+</button>
-                      <button
-                        @click="deleteBlock(grandchild)"
-                        class="block-delete"
-                        title="Delete block"
-                      >del</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+          <BlockComponent
+            v-for="block in blocks"
+            :key="block.uuid"
+            :block="block"
+            :onBlockContentChange="onBlockContentChange"
+            :onBlockKeyDown="onBlockKeyDown"
+            :startEditing="startEditing"
+            :stopEditing="stopEditing"
+            :deleteBlock="deleteBlock"
+            :toggleBlockTodo="toggleBlockTodo"
+            :formatContentWithTags="formatContentWithTags"
+            :isBlockInContext="isBlockInContext"
+            :onBlockAddToContext="onBlockAddToContext"
+            :onBlockRemoveFromContext="onBlockRemoveFromContext"
+          />
           <button @click="addNewBlock" class="add-block-btn">
             + add new block
           </button>
