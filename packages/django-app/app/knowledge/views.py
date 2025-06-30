@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from common.forms.user_form import UserForm
 from knowledge.commands import (
     CreateBlockCommand,
     CreatePageCommand,
@@ -15,6 +16,7 @@ from knowledge.commands import (
     GetHistoricalDataCommand,
     GetPageWithBlocksCommand,
     GetUserPagesCommand,
+    MoveUndoneTodosCommand,
     ToggleBlockTodoCommand,
     UpdateBlockCommand,
     UpdatePageCommand,
@@ -94,6 +96,12 @@ class GetPagesResponse(TypedDict):
 class GetPageWithBlocksResponse(TypedDict):
     page: Dict[str, Any]
     blocks: List[Dict[str, Any]]
+
+
+class MoveUndoneTodosResponse(TypedDict):
+    moved_count: int
+    target_page: Dict[str, Any]
+    message: str
 
 
 def index(request, date=None, tag_name=None):
@@ -585,6 +593,38 @@ def get_historical_data(request):
                 },
             }
         )
+
+    except Exception as e:
+        return Response(
+            {"success": False, "errors": {"non_field_errors": [str(e)]}},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def move_undone_todos(request):
+    """Move past undone TODOs to current day"""
+    try:
+        form_data = {"user": request.user}
+        form = UserForm(data=form_data)
+
+        if not form.is_valid():
+            return Response(
+                {"success": False, "errors": form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        command = MoveUndoneTodosCommand(form)
+        result = command.execute()
+
+        response_data: MoveUndoneTodosResponse = {
+            "moved_count": result["moved_count"],
+            "target_page": model_to_dict(result["target_page"]),
+            "message": result["message"],
+        }
+
+        return Response({"success": True, "data": response_data})
 
     except Exception as e:
         return Response(

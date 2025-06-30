@@ -188,6 +188,12 @@ class ApiService {
     });
   }
 
+  async moveUndoneTodos() {
+    return await this.request("/knowledge/api/blocks/move-undone-todos/", {
+      method: "POST",
+    });
+  }
+
   async getHistoricalData(daysBack = 30, limit = 50) {
     return await this.request(
       `/knowledge/api/historical/?days_back=${daysBack}&limit=${limit}`

@@ -35,6 +35,8 @@ const DailyNote = {
       isTagPage: false,
       // Track blocks being deleted to prevent save conflicts
       deletingBlocks: new Set(),
+      // Context menu state
+      showContextMenu: false,
     };
   },
 
@@ -49,6 +51,9 @@ const DailyNote = {
     // Add event delegation for clickable tags
     document.addEventListener("click", this.handleTagClick);
 
+    // Add event listener to close context menu when clicking outside
+    document.addEventListener("click", this.handleDocumentClick);
+
     // Check if we're on a tag page
     this.currentTag = this.getTagFromURL();
     this.isTagPage = !!this.currentTag;
@@ -62,8 +67,9 @@ const DailyNote = {
   },
 
   beforeUnmount() {
-    // Clean up event listener
+    // Clean up event listeners
     document.removeEventListener("click", this.handleTagClick);
+    document.removeEventListener("click", this.handleDocumentClick);
   },
 
   methods: {
@@ -701,6 +707,16 @@ const DailyNote = {
       }
     },
 
+    handleDocumentClick(event) {
+      // Close context menu if clicking outside of it
+      const contextMenuContainer = event.target.closest(
+        ".context-menu-container"
+      );
+      if (!contextMenuContainer && this.showContextMenu) {
+        this.closeContextMenu();
+      }
+    },
+
     goToTag(tagName) {
       // Navigate to the tag page without full page reload
       const url = `/knowledge/tag/${encodeURIComponent(tagName)}/`;
@@ -979,6 +995,47 @@ const DailyNote = {
     onBlockRemoveFromContext(blockId) {
       this.$emit("block-remove-from-context", blockId);
     },
+
+    // Context menu methods
+    toggleContextMenu() {
+      this.showContextMenu = !this.showContextMenu;
+    },
+
+    closeContextMenu() {
+      this.showContextMenu = false;
+    },
+
+    async moveUndoneTodosToToday() {
+      this.loading = true;
+      this.error = null;
+      this.closeContextMenu();
+
+      try {
+        const result = await window.apiService.moveUndoneTodos();
+
+        if (result.success) {
+          const data = result.data;
+          this.successMessage = data.message;
+
+          // Reload the current page to show the moved TODOs
+          await this.loadPage();
+
+          // Clear success message after a few seconds
+          setTimeout(() => {
+            this.successMessage = "";
+          }, 3000);
+        } else {
+          this.error =
+            result.errors?.non_field_errors?.[0] ||
+            "Failed to move undone TODOs";
+        }
+      } catch (error) {
+        console.error("Failed to move undone TODOs:", error);
+        this.error = "Failed to move undone TODOs. Please try again.";
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 
   template: `
@@ -1055,7 +1112,27 @@ const DailyNote = {
       <!-- Daily Note Content -->
       <div v-else-if="!isTagPage && page" class="daily-note-content">
         <div class="daily-note-title current-note">
-          <h2>{{ formatDate(currentDate) }}</h2>
+          <div class="title-left">
+            <h2>{{ formatDate(currentDate) }}</h2>
+            <div class="context-menu-container">
+              <button 
+                @click="toggleContextMenu" 
+                class="btn btn-outline context-menu-btn"
+                title="Daily note options"
+              >
+                ⋮
+              </button>
+              <div v-if="showContextMenu" class="context-menu" @click.stop>
+                <button 
+                  @click="moveUndoneTodosToToday" 
+                  class="context-menu-item"
+                  :disabled="loading"
+                >
+                  Move unfinished TODOs to this page
+                </button>
+              </div>
+            </div>
+          </div>
           <button
             v-if="page && page.uuid"
             @click="deletePage"
