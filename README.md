@@ -1,29 +1,35 @@
 # Brainspread
 
-A local-first personal data aggregation and AI-powered knowledge management system.
+A web-based knowledge management system with hierarchical note-taking, daily journaling, and AI chat integration.
 
-## Problem
+## Features
 
-We generate massive amounts of digital data daily - web history, Spotify plays, YouTube videos, chats, todo lists, notes. Most of it is tracked but scattered across different platforms. There's not much you can do with this data beyond what each company provides in isolation.
+Brainspread is a Django web application that provides:
 
-## Solution
+### Knowledge Management
+- **Hierarchical notes**: Create and organize nested blocks of content
+- **Daily notes**: Automatic daily note pages for journaling and task tracking
+- **TODO management**: Built-in todo functionality with ability to move undone items between days
+- **Pages and blocks**: Flexible content organization with pages containing nested blocks
+- **Historical view**: Browse past daily notes and track progress over time
 
-Brainspread is a local-first text and blob database with importers/syncers for many different apps and media types, augmented with an AI feature builder. It replaces the collection of note taking apps, bash scripts, one-off apps, plugins, and manual workflows with a unified research assistant and idea surfacer.
+### AI Integration
+- **Multi-provider support**: Integrates with OpenAI, Anthropic, and Google AI services
+- **Chat interface**: Built-in AI chat with conversation history
+- **Configurable models**: Support for different AI models per provider
 
-Key features:
-- **Local-first**: Your data stays on your machine
-- **Universal importers**: Web history, media consumption, notes, chats, etc.
-- **Auto-zettelkastening**: Automatic linking and connections between imported data
-- **AI-powered feature builder**: Create custom applets and plugins
-- **Research assistant**: Surface ideas and connections across your data
+### User Experience
+- **Modern web interface**: Clean, responsive UI built with vanilla JavaScript
+- **Real-time interactions**: Dynamic content updates without page refreshes  
+- **User authentication**: Secure user accounts with customizable themes and timezones
+- **Settings management**: Configurable AI provider settings and preferences
 
-## MVP Scope
+## Architecture
 
-The initial MVP focuses on:
-- Simple notes app with rich text editing
-- Web history importer and analyzer
-- Automatic zettelkastening (linking) of imported data
-- AI-powered feature/applet/plugin builder
+- **Backend**: Django with PostgreSQL database
+- **Frontend**: Vanilla JavaScript with modular components
+- **Deployment**: Docker Compose setup with separate web and database containers
+- **Patterns**: Command pattern for business logic, repository pattern for data access
 
 ## Development Setup
 
