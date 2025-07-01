@@ -222,18 +222,23 @@ window.HistoricalSidebar = {
                   @click="openDailyNote(page)"
                   :title="'Click to open ' + page.title"
                 >
-                  <div class="item-header">
-                    <span class="item-title">{{ page.title }}</span>
-                    <span class="item-type">{{ page.page_type }}</span>
-                  </div>
-                  <div class="item-meta">{{ formatDate(page.modified_at) }}</div>
-                  <div v-if="page.content" class="item-content">
-                    {{ truncateContent(page.content, 80) }}
-                  </div>
-                  <div v-if="page.recent_blocks && page.recent_blocks.length" class="recent-blocks-preview">
-                    <span class="preview-label">Recent blocks:</span>
-                    <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.uuid" class="block-preview">
-                      {{ truncateContent(block.content, 40) }}
+                  <div class="page-card-vertical">
+                    <!-- First row: title on left, label on right -->
+                    <div class="page-header-row">
+                      <div class="item-title">{{ page.title }}</div>
+                      <div class="item-type">{{ page.page_type }}</div>
+                    </div>
+                    
+                    <!-- Second row: date (only for non-daily pages) -->
+                    <div v-if="page.page_type !== 'daily'" class="page-date-row">
+                      <div class="item-date">{{ formatDate(page.modified_at) }}</div>
+                    </div>
+                    
+                    <!-- Content rows: recent blocks -->
+                    <div v-if="page.recent_blocks && page.recent_blocks.length" class="page-content-rows">
+                      <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.uuid" class="block-preview">
+                        {{ truncateContent(block.content, 60) }}
+                      </div>
                     </div>
                   </div>
                 </div>

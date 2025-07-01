@@ -23,7 +23,6 @@ const KnowledgeApp = createApp({
     DailyNote: window.DailyNote,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
-    HistoricalDailyNoteBlocks: window.HistoricalDailyNoteBlocks,
     SettingsModal: window.SettingsModal,
     ChatPanel: window.ChatPanel,
   },

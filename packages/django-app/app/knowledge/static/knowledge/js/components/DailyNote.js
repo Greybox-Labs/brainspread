@@ -42,13 +42,6 @@ const DailyNote = {
   },
 
   async mounted() {
-    // Register component when it's available
-    if (window.HistoricalDailyNoteBlocks) {
-      this.$options.components = this.$options.components || {};
-      this.$options.components.HistoricalDailyNoteBlocks =
-        window.HistoricalDailyNoteBlocks;
-    }
-
     // Add event delegation for clickable tags
     document.addEventListener("click", this.handleTagClick);
 
