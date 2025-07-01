@@ -97,7 +97,7 @@ const BlockComponent = {
           class="block-context"
           :class="{ active: blockInContext }"
           :title="blockInContext ? 'Remove from chat context' : 'Add to chat context'"
-        >{{ blockInContext ? '📎' : '+' }}</button>
+        >{{ blockInContext ? '-' : '+' }}</button>
         <button
           @click="deleteBlock(block)"
           class="block-delete"
