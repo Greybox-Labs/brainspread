@@ -1077,7 +1077,6 @@ const DailyNote = {
 
       <!-- Daily Note Header -->
       <header v-else class="daily-note-header">
-        <h1>daily note</h1>
         <div class="header-controls">
           <input
             v-model="currentDate"

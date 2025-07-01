@@ -650,17 +650,15 @@ body {
 /* Daily Note Styles */
 .daily-note {
   max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
 }
 
 .daily-note-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
 }
 
 .daily-note-header h1 {
@@ -710,7 +708,7 @@ body {
 
 .daily-note-content h2 {
   color: var(--text-primary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   font-size: 1.5rem;
 }
 
@@ -718,7 +716,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .title-left {
@@ -755,7 +753,7 @@ body {
 
 /* Block Styles */
 .blocks-container {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .block-wrapper {
@@ -765,8 +763,8 @@ body {
 .block {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
+  gap: 0.25rem;
+  padding: 0.125rem 0;
   min-height: 1.5rem;
   position: relative;
 }
@@ -824,7 +822,7 @@ body {
   font-family: inherit;
   font-size: 1rem;
   line-height: 1.5;
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.25rem;
   transition: none;
   min-height: 1.5rem;
   overflow: hidden;
@@ -837,7 +835,7 @@ body {
   font-family: inherit;
   font-size: 1rem;
   line-height: 1.5;
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.25rem;
   transition: none;
   min-height: 1.5rem;
   cursor: text;
@@ -915,9 +913,9 @@ body {
 }
 
 .child-block {
-  margin-left: 1.5rem;
+  margin-left: 1rem;
   border-left: 2px solid var(--border-primary);
-  padding-left: 1rem;
+  padding-left: 0.5rem;
   position: relative;
 }
 
@@ -959,11 +957,11 @@ body {
   background: var(--bg-primary);
   border: 3px solid var(--border-primary);
   color: var(--text-primary);
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: bold;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   width: 100%;
   transition: none;
   font-family: inherit;
@@ -991,7 +989,11 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .main-content {
-    padding: 1rem;
+    padding: 0;
+  }
+
+  .main-content-area {
+    padding: 0;
   }
 
   .nav-content {
@@ -1012,13 +1014,13 @@ body {
   }
 
   .daily-note {
-    padding: 1rem;
+    padding: 0;
   }
 
   .daily-note-header {
     flex-direction: column;
     gap: 1rem;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .child-block {
@@ -1028,6 +1030,36 @@ body {
 
   .child-block::before {
     display: none;
+  }
+
+  /* AI Sidebar mobile responsiveness */
+  .chat-panel {
+    width: 90vw !important; /* Override any dynamic width for mobile */
+    max-width: 90vw !important;
+  }
+
+  .chat-panel.open {
+    transform: translateX(0);
+  }
+
+  .chat-toggle {
+    left: -45px; /* Ensure toggle button stays accessible */
+    z-index: 1001; /* Keep above other content */
+  }
+
+  /* Always show delete button on mobile */
+  .block-delete {
+    opacity: 1 !important;
+  }
+
+  /* Show abbreviated brand name on mobile */
+  .brand-link {
+    font-size: 0;
+  }
+  
+  .brand-link::before {
+    content: "brnsprd";
+    font-size: 1.2rem;
   }
 }
 
@@ -1107,17 +1139,17 @@ body {
 .pages-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .page-card {
   border: 1px solid var(--border-primary);
-  padding: 1.5rem;
+  padding: 1rem;
   background: var(--card-bg);
 }
 
 .page-header {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .page-header h4 {
@@ -1271,7 +1303,7 @@ body {
 .sidebar-toggle-btn {
   position: fixed;
   top: 50%;
-  left: 20px;
+  left: 0;
   transform: translateY(-50%);
   background: var(--text-primary);
   color: var(--bg-primary);
@@ -1500,29 +1532,28 @@ body {
 
 /* Historical Daily Notes in Main View */
 .historical-notes {
-  margin-top: 3rem;
-  border-top: 1px solid var(--border-secondary);
-  padding-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 0;
 }
 
 .historical-daily-note {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border: 1px solid var(--border-secondary);
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .historical-daily-note h3 {
   color: var(--text-secondary);
   font-size: 1.1rem;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   border-bottom: 1px solid var(--border-secondary);
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .historical-blocks-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .historical-block .block {
@@ -1544,7 +1575,7 @@ body {
   }
 
   .main-content-area {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .sidebar-toggle-btn {
@@ -2364,7 +2395,7 @@ body {
   background: var(--bg-primary);
   border: 1px solid var(--border-secondary);
   color: var(--text-primary);
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.25rem;
   font-size: 0.8rem;
   font-family: inherit;
   cursor: pointer;
