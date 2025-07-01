@@ -27,8 +27,9 @@ class GetHistoricalDataCommand(AbstractBaseCommand):
         end_date = timezone.now()
         start_date = end_date - timedelta(days=days_back)
 
-        pages = PageRepository.get_pages_by_date_range(
-            user=user, start_date=start_date, end_date=end_date, limit=limit
+        # For the historical data view, we mainly care about daily pages with blocks
+        pages = PageRepository.get_recent_daily_pages_with_blocks(
+            user=user, limit=days_back
         )
 
         blocks = BlockRepository.get_blocks_by_date_range(

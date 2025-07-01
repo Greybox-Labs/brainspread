@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Any, Dict, Optional
 
-from django.db.models import QuerySet
+from django.db.models import Count, QuerySet
 
 from common.repositories.base_repository import BaseRepository
 
@@ -130,3 +130,19 @@ class PageRepository(BaseRepository):
             .filter(user=user, modified_at__gte=start_date, modified_at__lte=end_date)
             .order_by("-date", "-modified_at")[:limit]
         )
+
+    @classmethod
+    def get_recent_daily_pages_with_blocks(cls, user, limit=7) -> QuerySet:
+        """Get the most recent daily pages that have blocks, ordered by creation date (not modification date)"""
+
+        # Get pages that have blocks, ordered by their actual date (creation date)
+        pages_with_blocks = (
+            cls.get_queryset()
+            .filter(user=user, page_type="daily")
+            .annotate(block_count=Count("blocks"))
+            .filter(block_count__gt=0)
+            .order_by("-date")[
+                :limit
+            ]  # Order by date field (creation date), not modified_at
+        )
+        return pages_with_blocks

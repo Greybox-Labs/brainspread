@@ -25,6 +25,7 @@ const DailyNote = {
       blocks: [],
       historicalData: null,
       historicalBlocksCache: {},
+      historicalDaysLoaded: 7,
       loading: false,
       error: null,
       successMessage: "",
@@ -860,12 +861,24 @@ const DailyNote = {
 
     async loadHistoricalData() {
       try {
-        const result = await window.apiService.getHistoricalData(7, 20);
+        const result = await window.apiService.getHistoricalData(
+          this.historicalDaysLoaded,
+          50
+        );
         if (result.success) {
           this.historicalData = result.data;
         }
       } catch (error) {
         console.error("Failed to load historical data:", error);
+      }
+    },
+
+    async loadMoreHistoricalData() {
+      try {
+        this.historicalDaysLoaded += 7;
+        await this.loadHistoricalData();
+      } catch (error) {
+        console.error("Failed to load more historical data:", error);
       }
     },
 
@@ -1055,7 +1068,7 @@ const DailyNote = {
           <button @click="goBackToDailyNotes" class="btn btn-outline">← back to daily notes</button>
         </div>
       </header>
-      
+
       <!-- Daily Note Header -->
       <header v-else class="daily-note-header">
         <h1>daily note</h1>
@@ -1076,7 +1089,7 @@ const DailyNote = {
         <div class="tag-stats">
           <span class="tag-display inline-tag">{{ currentTag }}</span>
           <span class="stats-text">
-            {{ tagData.total_content }} items 
+            {{ tagData.total_content }} items
             ({{ tagData.total_blocks }} blocks, {{ tagData.total_pages }} pages)
           </span>
         </div>
@@ -1123,16 +1136,16 @@ const DailyNote = {
           <div class="title-left">
             <h2>{{ formatDate(currentDate) }}</h2>
             <div class="context-menu-container">
-              <button 
-                @click="toggleContextMenu" 
+              <button
+                @click="toggleContextMenu"
                 class="btn btn-outline context-menu-btn"
                 title="Daily note options"
               >
                 ⋮
               </button>
               <div v-if="showContextMenu" class="context-menu" @click.stop>
-                <button 
-                  @click="moveUndoneTodosToToday" 
+                <button
+                  @click="moveUndoneTodosToToday"
                   class="context-menu-item"
                   :disabled="loading"
                 >
@@ -1232,6 +1245,13 @@ const DailyNote = {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div v-if="!isTagPage && historicalData && historicalData.pages && historicalData.pages.length" class="load-more-container">
+          <button @click="loadMoreHistoricalData" class="add-block-btn">
+            + load more notes
+          </button>
         </div>
       </div>
 
