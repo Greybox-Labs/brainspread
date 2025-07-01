@@ -444,7 +444,7 @@ const ChatPanel = {
       preElements.forEach((pre) => {
         // Skip if copy button already exists
         if (pre.querySelector(".copy-button")) return;
-        
+
         // Wrap pre element in container if not already wrapped
         if (!pre.parentElement.classList.contains("code-block-container")) {
           const container = document.createElement("div");
@@ -452,13 +452,15 @@ const ChatPanel = {
           pre.parentNode.insertBefore(container, pre);
           container.appendChild(pre);
         }
-        
+
         // Create copy button
         const copyButton = document.createElement("button");
         copyButton.className = "copy-button";
         copyButton.textContent = "Copy";
-        copyButton.addEventListener("click", () => this.copyToClipboard(pre.textContent, copyButton));
-        
+        copyButton.addEventListener("click", () =>
+          this.copyToClipboard(pre.textContent, copyButton)
+        );
+
         // Add button to container
         pre.parentElement.appendChild(copyButton);
       });
@@ -511,17 +513,19 @@ const ChatPanel = {
 
     setupDocumentListener() {
       this.documentClickHandler = this.handleDocumentClick.bind(this);
-      document.addEventListener('click', this.documentClickHandler);
+      document.addEventListener("click", this.documentClickHandler);
     },
 
     removeDocumentListener() {
       if (this.documentClickHandler) {
-        document.removeEventListener('click', this.documentClickHandler);
+        document.removeEventListener("click", this.documentClickHandler);
       }
     },
 
     handleDocumentClick(event) {
-      const messageMenuContainer = event.target.closest('.message-menu-container');
+      const messageMenuContainer = event.target.closest(
+        ".message-menu-container"
+      );
       if (!messageMenuContainer) {
         this.closeAllMessageMenus();
       }
@@ -532,21 +536,21 @@ const ChatPanel = {
         await navigator.clipboard.writeText(message.content);
         // Close menu after copying
         this.closeAllMessageMenus();
-        
+
         // Show temporary feedback (could be enhanced with a toast notification)
-        console.log('Message copied to clipboard');
+        console.log("Message copied to clipboard");
       } catch (err) {
         // Fallback for browsers that don't support clipboard API
-        const textArea = document.createElement('textarea');
+        const textArea = document.createElement("textarea");
         textArea.value = message.content;
         document.body.appendChild(textArea);
         textArea.select();
         try {
-          document.execCommand('copy');
+          document.execCommand("copy");
           this.closeAllMessageMenus();
-          console.log('Message copied to clipboard');
+          console.log("Message copied to clipboard");
         } catch (fallbackErr) {
-          console.error('Failed to copy message:', fallbackErr);
+          console.error("Failed to copy message:", fallbackErr);
         }
         document.body.removeChild(textArea);
       }

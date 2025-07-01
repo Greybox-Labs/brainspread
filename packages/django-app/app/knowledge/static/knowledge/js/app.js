@@ -175,10 +175,10 @@ const KnowledgeApp = createApp({
           parent_uuid: parentUuid,
         });
       }
-      
+
       // Recursively add all child blocks
       if (block.children && block.children.length) {
-        block.children.forEach(child => {
+        block.children.forEach((child) => {
           this.addBlockToContext(child, block.uuid);
         });
       }
@@ -187,7 +187,7 @@ const KnowledgeApp = createApp({
     removeBlockFromContext(blockUuid) {
       // Get all block UUIDs to remove (block + all descendants)
       const uuidsToRemove = this.getBlockAndDescendantUuids(blockUuid);
-      
+
       // Remove all blocks (parent + descendants) from context
       this.chatContextBlocks = this.chatContextBlocks.filter(
         (b) => !uuidsToRemove.includes(b.uuid)
@@ -196,23 +196,23 @@ const KnowledgeApp = createApp({
 
     getBlockAndDescendantUuids(blockUuid) {
       const uuidsToRemove = [blockUuid];
-      
+
       // Use the stored parent relationships to find descendants
       const findDescendantsInContext = (parentUuid) => {
-        const children = this.chatContextBlocks.filter(block => 
-          block.parent_uuid === parentUuid
+        const children = this.chatContextBlocks.filter(
+          (block) => block.parent_uuid === parentUuid
         );
-        
-        children.forEach(child => {
+
+        children.forEach((child) => {
           uuidsToRemove.push(child.uuid);
           // Recursively find grandchildren
           findDescendantsInContext(child.uuid);
         });
       };
-      
+
       // Find all descendants using the context relationships
       findDescendantsInContext(blockUuid);
-      
+
       return uuidsToRemove;
     },
 
