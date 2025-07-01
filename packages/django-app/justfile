@@ -58,16 +58,21 @@ generate-secret-key:
   docker-compose run --rm -w /code/app web python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 
 # Run tests in web container
-test *ARGS:
-  @if [ "{{ARGS}}" = "" ]; then \
-    docker-compose run --rm -w /code/app web pytest -m "not integration" --cov=. --verbose; \
-  else \
-    docker-compose run --rm -w /code/app web pytest {{ARGS}}; \
+# Examples:
+#   just test path/to/test_file.py                           # specific file
+#   just test path/to/test_file.py::TestClass                # specific class
+#   just test path/to/test_file.py::TestClass::test_method   # specific method
+#   just test path/to/app                                    # specific django app
+#   just test -k "pattern"                                   # name pattern
+#   just test -m "marker"                                    # specific marker
+#   just test path/to/tests/ --cov=module                    # with coverage
+test +ARGS="":
+  #!/usr/bin/env bash
+  if [ -z "{{ARGS}}" ]; then
+    docker-compose run --rm -w /code/app web pytest --cov=. --verbose
+  else
+    docker-compose run --rm -w /code/app web pytest {{ARGS}}
   fi
-
-# Run all tests including integration tests
-test-all:
-  docker-compose run --rm -w /code/app web pytest --cov=. --verbose
 
 # Run shell commands in new web container
 run +ARGS:
