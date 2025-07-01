@@ -76,7 +76,7 @@
 
 # Bugs
 
-- [ ] currently we can only move undone blocks to current day, but the option is there when
+- [x] currently we can only move undone blocks to current day, but the option is there when
   viewing any daily note. create a MoveUndoneTodosForm that has a `user` field
   and an optional field named `target_date`, with no default value. Next, you 
   need to refactor MoveUndoneTodosCommand to use this form, and then update the

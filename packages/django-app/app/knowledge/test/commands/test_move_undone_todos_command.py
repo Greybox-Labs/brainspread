@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from common.forms.user_form import UserForm
 from knowledge.commands import MoveUndoneTodosCommand
+from knowledge.forms import MoveUndoneTodosForm
 from knowledge.models import Block
 
 from ..helpers import BlockFactory, PageFactory, UserFactory
@@ -82,7 +82,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Execute the move command
         form_data = {"user": self.user}
-        form = UserForm(data=form_data)
+        form = MoveUndoneTodosForm(form_data)
         self.assertTrue(form.is_valid())
 
         command = MoveUndoneTodosCommand(form)
@@ -148,7 +148,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Execute the move command
         form_data = {"user": self.user}
-        form = UserForm(data=form_data)
+        form = MoveUndoneTodosForm(form_data)
         self.assertTrue(form.is_valid())
 
         command = MoveUndoneTodosCommand(form)
@@ -194,7 +194,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Execute the move command
         form_data = {"user": self.user}
-        form = UserForm(data=form_data)
+        form = MoveUndoneTodosForm(form_data)
         self.assertTrue(form.is_valid())
 
         command = MoveUndoneTodosCommand(form)
@@ -255,7 +255,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Execute the move command
         form_data = {"user": self.user}
-        form = UserForm(data=form_data)
+        form = MoveUndoneTodosForm(form_data)
         self.assertTrue(form.is_valid())
 
         command = MoveUndoneTodosCommand(form)
@@ -348,7 +348,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Execute the move command
         form_data = {"user": self.user}
-        form = UserForm(data=form_data)
+        form = MoveUndoneTodosForm(form_data)
         self.assertTrue(form.is_valid())
 
         command = MoveUndoneTodosCommand(form)
@@ -397,3 +397,122 @@ class TestMoveUndoneTodosCommand(TestCase):
         self.assertEqual(
             len(all_orders), len(set(all_orders))
         )  # All orders should be unique
+
+    @patch("knowledge.commands.move_undone_todos_command.date")
+    def test_should_move_undone_todos_to_specified_target_date(self, mock_date):
+        """Test that undone TODOs can be moved to a specific target date"""
+        # Mock today's date to be 2025-06-30
+        today = date(2025, 6, 30)
+        mock_date.today.return_value = today
+
+        # Create target date (2025-07-01)
+        target_date = date(2025, 7, 1)
+
+        # Create yesterday's page with undone TODOs
+        yesterday = date(2025, 6, 29)
+        yesterday_page = PageFactory(
+            user=self.user,
+            date=yesterday,
+            page_type="daily",
+        )
+
+        # Create undone TODOs from yesterday
+        todo1 = BlockFactory(
+            user=self.user,
+            page=yesterday_page,
+            content="TODO task 1",
+            block_type="todo",
+            order=1,
+        )
+        todo2 = BlockFactory(
+            user=self.user,
+            page=yesterday_page,
+            content="TODO task 2",
+            block_type="todo",
+            order=2,
+        )
+
+        # Execute move command with target_date
+        form_data = {"user": self.user, "target_date": target_date}
+        form = MoveUndoneTodosForm(form_data)
+        self.assertTrue(form.is_valid())
+
+        command = MoveUndoneTodosCommand(form)
+        result = command.execute()
+
+        # Verify TODOs were moved to target date
+        self.assertEqual(result["moved_count"], 2)
+        self.assertEqual(result["target_page"].date, target_date)
+
+        # Verify blocks are now on target date page
+        todo1.refresh_from_db()
+        todo2.refresh_from_db()
+        self.assertEqual(todo1.page.date, target_date)
+        self.assertEqual(todo2.page.date, target_date)
+
+    @patch("knowledge.commands.move_undone_todos_command.date")
+    def test_should_default_to_current_date_when_no_target_date_provided(
+        self, mock_date
+    ):
+        """Test that command defaults to current date when target_date is not provided"""
+        # Mock today's date to be 2025-06-30
+        today = date(2025, 6, 30)
+        mock_date.today.return_value = today
+
+        # Create yesterday's page with undone TODO
+        yesterday = date(2025, 6, 29)
+        yesterday_page = PageFactory(
+            user=self.user,
+            date=yesterday,
+            page_type="daily",
+        )
+
+        todo = BlockFactory(
+            user=self.user,
+            page=yesterday_page,
+            content="TODO task",
+            block_type="todo",
+            order=1,
+        )
+
+        # Execute move command without target_date
+        form_data = {"user": self.user}
+        form = MoveUndoneTodosForm(form_data)
+        self.assertTrue(form.is_valid())
+
+        command = MoveUndoneTodosCommand(form)
+        result = command.execute()
+
+        # Verify TODO was moved to current date (today)
+        self.assertEqual(result["moved_count"], 1)
+        self.assertEqual(result["target_page"].date, today)
+
+        # Verify block is now on today's page
+        todo.refresh_from_db()
+        self.assertEqual(todo.page.date, today)
+
+    def test_form_should_accept_optional_target_date(self):
+        """Test that MoveUndoneTodosForm accepts optional target_date field"""
+        target_date = date(2025, 7, 1)
+
+        # Test form with target_date
+        form_data = {"user": self.user, "target_date": target_date}
+        form = MoveUndoneTodosForm(form_data)
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["target_date"], target_date)
+
+        # Test form without target_date
+        form_data = {"user": self.user}
+        form = MoveUndoneTodosForm(form_data)
+        self.assertTrue(form.is_valid())
+        self.assertIsNone(form.cleaned_data.get("target_date"))
+
+    def test_form_should_require_user_field(self):
+        """Test that MoveUndoneTodosForm requires user field"""
+        target_date = date(2025, 7, 1)
+
+        # Test form without user
+        form_data = {"target_date": target_date}
+        form = MoveUndoneTodosForm(form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("user", form.errors)

@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         # Create form and command
         form_data = {"user": user}
-        form = UserForm(data=form_data)
+        form = UserForm(form_data)
 
         if not form.is_valid():
             raise CommandError(f"Form validation failed: {form.errors}")

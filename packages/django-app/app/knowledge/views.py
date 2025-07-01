@@ -7,7 +7,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from common.forms.user_form import UserForm
 from knowledge.commands import (
     CreateBlockCommand,
     CreatePageCommand,
@@ -29,6 +28,7 @@ from knowledge.forms import (
     GetHistoricalDataForm,
     GetPageWithBlocksForm,
     GetUserPagesForm,
+    MoveUndoneTodosForm,
     ToggleBlockTodoForm,
     UpdateBlockForm,
     UpdatePageForm,
@@ -604,10 +604,15 @@ def get_historical_data(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def move_undone_todos(request):
-    """Move past undone TODOs to current day"""
+    """Move past undone TODOs to current day or specified date"""
     try:
         form_data = {"user": request.user}
-        form = UserForm(data=form_data)
+
+        # Check if target_date is provided in request data
+        if hasattr(request, "data") and "target_date" in request.data:
+            form_data["target_date"] = request.data["target_date"]
+
+        form = MoveUndoneTodosForm(form_data)
 
         if not form.is_valid():
             return Response(
