@@ -1056,7 +1056,7 @@ body {
   .brand-link {
     font-size: 0;
   }
-  
+
   .brand-link::before {
     content: "brnsprd";
     font-size: 1.2rem;

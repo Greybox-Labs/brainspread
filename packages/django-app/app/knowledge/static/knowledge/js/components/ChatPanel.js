@@ -180,11 +180,13 @@ const ChatPanel = {
       if (!this.isResizing) return;
       const deltaX = this.startX - e.clientX; // Reversed for right sidebar
       const newWidth = this.startWidth + deltaX;
-      
+
       // On mobile (768px or less), limit width to 90% of viewport
       const isMobile = window.innerWidth <= 768;
-      const effectiveMaxWidth = isMobile ? window.innerWidth * 0.9 : this.maxWidth;
-      
+      const effectiveMaxWidth = isMobile
+        ? window.innerWidth * 0.9
+        : this.maxWidth;
+
       if (newWidth >= this.minWidth && newWidth <= effectiveMaxWidth) {
         this.width = newWidth;
       }
