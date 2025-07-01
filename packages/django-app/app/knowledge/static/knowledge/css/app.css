@@ -2558,18 +2558,15 @@ body {
 }
 
 .block-context.active {
-  color: var(--bg-primary);
-  background: var(--context-color);
-  border-color: var(--context-color);
+  color: var(--context-color);
+  background: transparent;
+  border-color: var(--border-primary);
   opacity: 1;
-  box-shadow: 2px 2px 0 var(--context-color);
+  box-shadow: 2px 2px 0 var(--border-primary);
 }
 
-.block-wrapper.in-context {
+.block-wrapper.in-context > .block {
   background: rgba(255, 170, 0, 0.1);
-  border-left: 3px solid var(--context-color);
-  padding-left: 0.5rem;
-  margin-left: -0.5rem;
 }
 
 .block-wrapper.in-context .block-bullet {
@@ -2638,6 +2635,83 @@ body {
 }
 
 .context-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Message Menu Styles */
+.message-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.message-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.message-menu-btn {
+  background: transparent !important;
+  border: 1px solid var(--border-secondary) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0;
+  box-shadow: none !important;
+  transition: none;
+  font-weight: normal !important;
+  letter-spacing: normal !important;
+}
+
+.message-menu-btn:hover {
+  background: var(--hover-bg) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-primary) !important;
+  transform: none;
+  box-shadow: none !important;
+}
+
+.message-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: var(--bg-primary) !important;
+  border: 2px solid var(--border-primary) !important;
+  box-shadow: 4px 4px 0 var(--border-primary) !important;
+  z-index: 1000;
+  min-width: 200px;
+  margin-bottom: 0.25rem;
+}
+
+.message-menu-item {
+  display: block;
+  width: 100%;
+  background: none !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit !important;
+  font-size: 0.9rem !important;
+  border-bottom: 1px solid var(--border-secondary) !important;
+  font-weight: normal !important;
+  letter-spacing: normal !important;
+}
+
+.message-menu-item:last-child {
+  border-bottom: none !important;
+}
+
+.message-menu-item:hover:not(:disabled) {
+  background: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.message-menu-item:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

@@ -29,15 +29,18 @@ const ChatPanel = {
       aiSettings: null,
       selectedModel: null,
       showContextArea: false,
+      messageMenus: {},
     };
   },
   mounted() {
     this.setupResizeListener();
     this.loadAISettings();
     this.loadLastChatSession();
+    this.setupDocumentListener();
   },
   beforeUnmount() {
     this.removeResizeListener();
+    this.removeDocumentListener();
   },
   watch: {
     messages: {
@@ -493,6 +496,61 @@ const ChatPanel = {
         document.body.removeChild(textArea);
       }
     },
+
+    // Message menu methods
+    toggleMessageMenu(messageIndex) {
+      // Close all other menus first
+      const newMenus = {};
+      newMenus[messageIndex] = !this.messageMenus[messageIndex];
+      this.messageMenus = newMenus;
+    },
+
+    closeAllMessageMenus() {
+      this.messageMenus = {};
+    },
+
+    setupDocumentListener() {
+      this.documentClickHandler = this.handleDocumentClick.bind(this);
+      document.addEventListener('click', this.documentClickHandler);
+    },
+
+    removeDocumentListener() {
+      if (this.documentClickHandler) {
+        document.removeEventListener('click', this.documentClickHandler);
+      }
+    },
+
+    handleDocumentClick(event) {
+      const messageMenuContainer = event.target.closest('.message-menu-container');
+      if (!messageMenuContainer) {
+        this.closeAllMessageMenus();
+      }
+    },
+
+    async copyMessageContent(message, messageIndex) {
+      try {
+        await navigator.clipboard.writeText(message.content);
+        // Close menu after copying
+        this.closeAllMessageMenus();
+        
+        // Show temporary feedback (could be enhanced with a toast notification)
+        console.log('Message copied to clipboard');
+      } catch (err) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = message.content;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          this.closeAllMessageMenus();
+          console.log('Message copied to clipboard');
+        } catch (fallbackErr) {
+          console.error('Failed to copy message:', fallbackErr);
+        }
+        document.body.removeChild(textArea);
+      }
+    },
   },
   template: `
     <div class="chat-panel" :class="{ open: isOpen }" :style="isOpen ? { width: width + 'px' } : {}">
@@ -509,7 +567,26 @@ const ChatPanel = {
         <div class="messages">
           <div v-for="(msg, index) in messages" :key="index" :class="['message-bubble', msg.role]">
             <div class="message-content" v-html="parseMarkdown(msg.content)"></div>
-            <div class="message-timestamp">{{ formatTimestamp(msg.created_at) }}</div>
+            <div class="message-footer">
+              <div class="message-timestamp">{{ formatTimestamp(msg.created_at) }}</div>
+              <div class="message-menu-container" v-if="msg.role === 'assistant'">
+                <button
+                  @click="toggleMessageMenu(index)"
+                  class="message-menu-btn"
+                  title="Message options"
+                >
+                  ⋮
+                </button>
+                <div v-if="messageMenus[index]" class="message-menu" @click.stop>
+                  <button
+                    @click="copyMessageContent(msg, index)"
+                    class="message-menu-item"
+                  >
+                    Copy message
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <div v-if="loading" class="message-bubble assistant loading">
             <div class="message-content loading-content">

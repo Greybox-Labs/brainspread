@@ -11,6 +11,9 @@
 
 ## general usage
 - [ ] ui/ux for pages
+  - [ ] create new page
+  - [x] history sidebar already has pages sorted by most recently modified
+- [ ] cmd + space like mac spotlight to search for pages and blocks
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
   - maybe can use something like Pusher? i still think you need APN details for
