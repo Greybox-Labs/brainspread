@@ -431,7 +431,67 @@ const ChatPanel = {
         codeBlocks.forEach((block) => {
           Prism.highlightElement(block);
         });
+        this.addCopyButtons();
       });
+    },
+
+    addCopyButtons() {
+      // Add copy buttons to code blocks
+      const preElements = this.$el.querySelectorAll(".message-content pre");
+      preElements.forEach((pre) => {
+        // Skip if copy button already exists
+        if (pre.querySelector(".copy-button")) return;
+        
+        // Wrap pre element in container if not already wrapped
+        if (!pre.parentElement.classList.contains("code-block-container")) {
+          const container = document.createElement("div");
+          container.className = "code-block-container";
+          pre.parentNode.insertBefore(container, pre);
+          container.appendChild(pre);
+        }
+        
+        // Create copy button
+        const copyButton = document.createElement("button");
+        copyButton.className = "copy-button";
+        copyButton.textContent = "Copy";
+        copyButton.addEventListener("click", () => this.copyToClipboard(pre.textContent, copyButton));
+        
+        // Add button to container
+        pre.parentElement.appendChild(copyButton);
+      });
+    },
+
+    async copyToClipboard(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied!";
+        button.classList.add("copied");
+        setTimeout(() => {
+          button.textContent = "Copy";
+          button.classList.remove("copied");
+        }, 2000);
+      } catch (err) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          button.textContent = "Copied!";
+          button.classList.add("copied");
+          setTimeout(() => {
+            button.textContent = "Copy";
+            button.classList.remove("copied");
+          }, 2000);
+        } catch (fallbackErr) {
+          button.textContent = "Failed";
+          setTimeout(() => {
+            button.textContent = "Copy";
+          }, 2000);
+        }
+        document.body.removeChild(textArea);
+      }
     },
   },
   template: `

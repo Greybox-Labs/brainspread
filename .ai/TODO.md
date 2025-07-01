@@ -1,8 +1,7 @@
 # Features
 
 ## ai features
-- [ ] 
-- [ ] should be able to copy content from code blocks in ai chat view
+- [x] should be able to copy content from code blocks in ai chat view
 - [ ] ai chat messages should have a context menu popover with option to copy
   content
 - [ ] when a user submits a web link, it should be accessed and summarized with
