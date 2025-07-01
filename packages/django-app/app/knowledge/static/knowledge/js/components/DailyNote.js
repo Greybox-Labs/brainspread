@@ -986,8 +986,11 @@ const DailyNote = {
         return this.historicalBlocksCache[cacheKey];
       }
 
-      // Load blocks for this historical page asynchronously
-      this.loadHistoricalPageBlocks(historicalPage);
+      // Only load blocks if not already loading for this page
+      if (!this.historicalBlocksCache[cacheKey + '_loading']) {
+        this.historicalBlocksCache[cacheKey + '_loading'] = true;
+        this.loadHistoricalPageBlocks(historicalPage);
+      }
       return [];
     },
 
@@ -1005,6 +1008,9 @@ const DailyNote = {
         }
       } catch (error) {
         console.error("Failed to load historical blocks:", error);
+      } finally {
+        // Clear loading flag
+        delete this.historicalBlocksCache[cacheKey + '_loading'];
       }
     },
 
