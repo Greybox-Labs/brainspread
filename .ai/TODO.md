@@ -2,7 +2,7 @@
 
 ## ai features
 - [x] should be able to copy content from code blocks in ai chat view
-- [ ] ai chat messages should have a context menu popover with option to copy
+- [x] ai chat messages should have a context menu popover with option to copy
   content
 - [ ] when a user submits a web link, it should be accessed and summarized with
   tags auto-generated from the content
@@ -29,6 +29,9 @@
   page
 
 ## mobile usage
+- [ ] better use of space on mobile
+  - [ ] daily note view 
+  - [ ] ai chat 
 - [ ] ability to reorder blocks. drag n drop would be great, but maybe just an 
   "editing view" w/ up/down arrow would be sufficient for now
 
@@ -73,6 +76,13 @@
 
 # Bugs
 
+- [ ] currently we can only move undone blocks to current day, but the option is there when
+  viewing any daily note. create a MoveUndoneTodosForm that has a `user` field
+  and an optional field named `target_date`, with no default value. Next, you 
+  need to refactor MoveUndoneTodosCommand to use this form, and then update the
+  command logic to handle the `target_date` field. If the field is not provided,
+  it should default to the current date. If it is provided, it should move the
+  undone blocks to that date instead of the current date.
 - [ ] hitting "enter" to create a new block when on a note from a previous day,
   it incorrectly creates a new block for the current day instead of under the
   active block

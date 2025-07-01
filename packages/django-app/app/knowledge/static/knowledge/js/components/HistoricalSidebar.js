@@ -110,7 +110,11 @@ window.HistoricalSidebar = {
       const deltaX = e.clientX - this.startX;
       const newWidth = this.startWidth + deltaX; // Add because dragging right should make left sidebar wider
 
-      if (newWidth >= this.minWidth && newWidth <= this.maxWidth) {
+      // On mobile (768px or less), limit width to 90% of viewport
+      const isMobile = window.innerWidth <= 768;
+      const effectiveMaxWidth = isMobile ? window.innerWidth : this.maxWidth;
+
+      if (newWidth >= this.minWidth && newWidth <= effectiveMaxWidth) {
         this.width = newWidth;
       }
     },

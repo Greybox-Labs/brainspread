@@ -1061,6 +1061,22 @@ body {
     content: "brnsprd";
     font-size: 1.2rem;
   }
+
+  /* History sidebar mobile responsiveness */
+  .historical-sidebar {
+    width: 100vw !important; /* Override any dynamic width for mobile */
+    max-width: 100vw !important;
+  }
+
+  .sidebar-toggle-btn.active {
+    left: calc(90vw - 45px); /* Adjust toggle button position */
+  }
+
+  /* Remove sidebar content padding on mobile */
+  .sidebar-content {
+    padding: 0.5rem;
+    padding-left: 0.5rem;
+  }
 }
 
 /* Historical View Styles */
@@ -1322,7 +1338,7 @@ body {
 }
 
 .sidebar-toggle-btn.active {
-  left: 420px;
+  left: 400px;
   transition: left 0.3s ease;
 }
 
