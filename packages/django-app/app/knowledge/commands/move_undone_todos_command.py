@@ -25,14 +25,14 @@ class MoveUndoneTodosCommand(AbstractBaseCommand):
             user, target_date
         )
 
-        # Find all past undone TODO blocks
-        past_todos = list(BlockRepository.get_past_undone_todos(user, target_date))
+        # Find all undone TODO blocks
+        past_todos = list(BlockRepository.get_undone_todos(user))
 
         if not past_todos:
             return {
                 "moved_count": 0,
                 "target_page": target_page,
-                "message": "No past undone TODOs found to move",
+                "message": "No undone TODOs found to move",
             }
 
         # Move the blocks to target page

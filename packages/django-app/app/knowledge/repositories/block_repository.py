@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Any, Dict, List, Optional
 
 from django.db import transaction
@@ -174,7 +173,7 @@ class BlockRepository(BaseRepository):
         return cls.get_queryset().filter(page=page).order_by("-modified_at")[:limit]
 
     @classmethod
-    def get_past_undone_todos(cls, user, before_date: date) -> QuerySet:
+    def get_undone_todos(cls, user) -> QuerySet:
         """Get undone TODO blocks from daily pages before the specified date"""
         return (
             cls.get_queryset()
@@ -182,7 +181,6 @@ class BlockRepository(BaseRepository):
                 user=user,
                 block_type="todo",
                 page__page_type="daily",
-                page__date__lt=before_date,
             )
             .select_related("page")
             .order_by("page__date", "order")

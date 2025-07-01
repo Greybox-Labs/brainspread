@@ -202,7 +202,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Verify no TODOs were moved
         self.assertEqual(result["moved_count"], 0)
-        self.assertEqual(result["message"], "No past undone TODOs found to move")
+        self.assertEqual(result["message"], "No undone TODOs found to move")
 
     @patch("knowledge.commands.move_undone_todos_command.date")
     def test_should_preserve_relative_order_of_moved_todos(self, mock_date):

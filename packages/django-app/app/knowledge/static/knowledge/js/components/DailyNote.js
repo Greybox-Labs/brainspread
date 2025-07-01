@@ -1025,13 +1025,15 @@ const DailyNote = {
       this.showContextMenu = false;
     },
 
-    async moveUndoneTodosToToday() {
+    async moveUndoneTodosToThisPage() {
       this.loading = true;
       this.error = null;
       this.closeContextMenu();
 
       try {
-        const result = await window.apiService.moveUndoneTodos();
+        // Use the current page's date as target_date
+        const targetDate = this.page?.date || null;
+        const result = await window.apiService.moveUndoneTodos(targetDate);
 
         if (result.success) {
           const data = result.data;
@@ -1143,7 +1145,7 @@ const DailyNote = {
               </button>
               <div v-if="showContextMenu" class="context-menu" @click.stop>
                 <button
-                  @click="moveUndoneTodosToToday"
+                  @click="moveUndoneTodosToThisPage"
                   class="context-menu-item"
                   :disabled="loading"
                 >

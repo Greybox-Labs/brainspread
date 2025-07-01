@@ -188,9 +188,14 @@ class ApiService {
     });
   }
 
-  async moveUndoneTodos() {
+  async moveUndoneTodos(targetDate = null) {
+    const body = targetDate ? { target_date: targetDate } : {};
     return await this.request("/knowledge/api/blocks/move-undone-todos/", {
       method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
 
