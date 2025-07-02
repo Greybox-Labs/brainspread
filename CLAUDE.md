@@ -5,38 +5,26 @@ This is a Django + PostgreSQL project using Docker Compose and Just as the task 
 ### Working Directory
 Navigate to `packages/django-app/` for most development tasks.
 
-### Development Setup
-- `just init` - Initialize project (create volumes, build, setup database)
-- `just copy-env` - Copy environment template file
-- `just generate-secret-key` - Generate Django secret key for .env
-- `just create-superuser` - Create Django admin user
-
 ### Django Commands
 - `just django-admin <command>` - Run Django management commands with safety checks
 - `just migrate` - Run database migrations
 - `just makemigrations` - Create new migrations
 - `just shell` - Django shell
-- `just runserver` - Start development server
+- `just up-d` - Start services in detached mode
 
 ### Testing
 - `just test` - Run tests (excludes integration tests marked with `@pytest.mark.integration`)
 - Tests use pytest with `--reuse-db` and coverage reporting
 - Test files: `tests.py`, `test_*.py`, `*_test.py`, `*_tests.py`
+- Can test specific files or directories, e.g. `just test tests/test_commands.py`
 - Use browser MCP for testing frontend functionality
 - Always run `just prepush` after your work and iterate until everything passes
 
-### Database Management
-- `just reload-db [DATA]` - Reload database with fixture (defaults to dev_data.json)
-- `just dump-data` - Export database data to stdout
-- `just create-json-backup [location]` - Create JSON backup
-- `just create-pgdump [location]` - Create PostgreSQL dump backup
-
 ### Docker Management
-- `just up` - Start services
 - `just up-d` - Start services in background
 - `just down` - Stop services
 - `just build` - Build Docker images
-- `just tail-logs [service] 250` - View logs
+- `just tail-logs [service] 250` - View last N lines of logs
 
 ## Architecture
 

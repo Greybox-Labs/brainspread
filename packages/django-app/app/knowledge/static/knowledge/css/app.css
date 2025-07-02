@@ -1076,6 +1076,11 @@ body {
   .sidebar-content {
     padding: 0.5rem;
   }
+
+  /* Simple fix - use margin-bottom only when chat is open and visible */
+  .chat-panel.open .message-input {
+    margin-bottom: 60px;
+  }
 }
 
 /* Historical View Styles */
@@ -2453,8 +2458,9 @@ body {
 .message-input {
   display: flex;
   gap: 0.5rem;
-  padding: 0.5rem;
   order: 2;
+  /* Fix for Android navigation bar covering input */
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 60px));
 }
 
 .message-input textarea {
