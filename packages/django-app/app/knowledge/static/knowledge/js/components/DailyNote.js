@@ -23,9 +23,6 @@ const DailyNote = {
       currentDate: this.getDateFromURL() || this.getLocalDateString(),
       page: null,
       blocks: [],
-      historicalData: null,
-      historicalBlocksCache: {},
-      historicalDaysLoaded: 7,
       loading: false,
       error: null,
       successMessage: "",
@@ -56,7 +53,6 @@ const DailyNote = {
       await this.loadTagContent();
     } else {
       await this.loadPage();
-      await this.loadHistoricalData();
     }
   },
 
@@ -852,29 +848,6 @@ const DailyNote = {
       }
     },
 
-    async loadHistoricalData() {
-      try {
-        const result = await window.apiService.getHistoricalData(
-          this.historicalDaysLoaded,
-          50
-        );
-        if (result.success) {
-          this.historicalData = result.data;
-        }
-      } catch (error) {
-        console.error("Failed to load historical data:", error);
-      }
-    },
-
-    async loadMoreHistoricalData() {
-      try {
-        this.historicalDaysLoaded += 7;
-        await this.loadHistoricalData();
-      } catch (error) {
-        console.error("Failed to load more historical data:", error);
-      }
-    },
-
     formatDate(dateString) {
       // Handle date strings properly to avoid timezone issues
       if (
@@ -929,81 +902,6 @@ const DailyNote = {
       } catch (error) {
         console.error("Error deleting page:", error);
         this.error = "Failed to delete daily note";
-      }
-    },
-
-    async deleteHistoricalPage(historicalPage) {
-      if (!historicalPage || !historicalPage.uuid) {
-        return;
-      }
-
-      const confirmed = confirm(
-        `Are you sure you want to delete this daily note for ${this.formatDate(historicalPage.date)}? This will delete all blocks and cannot be undone.`
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      try {
-        const result = await window.apiService.deletePage(historicalPage.uuid);
-
-        if (result.success) {
-          this.successMessage = "Daily note deleted successfully";
-
-          // Remove the page from historicalData to update UI immediately
-          if (this.historicalData && this.historicalData.pages) {
-            const pageIndex = this.historicalData.pages.findIndex(
-              (p) => p.uuid === historicalPage.uuid
-            );
-            if (pageIndex !== -1) {
-              this.historicalData.pages.splice(pageIndex, 1);
-            }
-          }
-
-          // Remove from cache if it exists
-          delete this.historicalBlocksCache[historicalPage.uuid];
-        } else {
-          this.error = "Failed to delete daily note";
-        }
-      } catch (error) {
-        console.error("Error deleting historical page:", error);
-        this.error = "Failed to delete daily note";
-      }
-    },
-
-    getHistoricalBlocks(historicalPage) {
-      // Return cached blocks if available, otherwise return empty array
-      const cacheKey = historicalPage.uuid;
-      if (this.historicalBlocksCache[cacheKey]) {
-        return this.historicalBlocksCache[cacheKey];
-      }
-
-      // Only load blocks if not already loading for this page
-      if (!this.historicalBlocksCache[cacheKey + "_loading"]) {
-        this.historicalBlocksCache[cacheKey + "_loading"] = true;
-        this.loadHistoricalPageBlocks(historicalPage);
-      }
-      return [];
-    },
-
-    async loadHistoricalPageBlocks(historicalPage) {
-      const cacheKey = historicalPage.uuid;
-
-      try {
-        const result = await window.apiService.getPageWithBlocks(
-          null,
-          historicalPage.date
-        );
-        if (result.success) {
-          this.historicalBlocksCache[cacheKey] = result.data.blocks || [];
-          this.$forceUpdate(); // Force re-render to show the loaded blocks
-        }
-      } catch (error) {
-        console.error("Failed to load historical blocks:", error);
-      } finally {
-        // Clear loading flag
-        delete this.historicalBlocksCache[cacheKey + "_loading"];
       }
     },
 
@@ -1182,75 +1080,6 @@ const DailyNote = {
           />
           <button @click="addNewBlock" class="add-block-btn">
             + add new block
-          </button>
-        </div>
-      </div>
-
-      <!-- Historical Daily Notes -->
-      <div v-if="!isTagPage && historicalData && historicalData.pages && historicalData.pages.length" class="historical-notes">
-        <div
-          v-for="historicalPage in historicalData.pages
-            .filter(p => p.page_type === 'daily' && p.date !== currentDate)
-            .sort((a, b) => new Date(b.date || b.modified_at) - new Date(a.date || a.modified_at))"
-          :key="'historical-' + historicalPage.uuid"
-          class="historical-daily-note"
-        >
-          <div class="daily-note-title historical-note">
-            <h2>{{ formatDate(historicalPage.date) }}</h2>
-            <button
-              @click="deleteHistoricalPage(historicalPage)"
-              class="btn btn-danger delete-page-btn"
-              title="Delete this daily note"
-            >
-              del
-            </button>
-          </div>
-
-          <!-- Load full block data for this historical page -->
-          <div class="historical-blocks-container">
-            <div v-for="block in getHistoricalBlocks(historicalPage)" :key="block.uuid" class="block-wrapper" :data-block-uuid="block.uuid">
-              <div class="block">
-                <div
-                  class="block-bullet"
-                  :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
-                  @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
-                >
-                  <span v-if="block.block_type === 'todo'">☐</span>
-                  <span v-else-if="block.block_type === 'done'">☑</span>
-                  <span v-else>•</span>
-                </div>
-                <div
-                  v-if="!block.isEditing"
-                  class="block-content-display"
-                  :class="{ 'completed': block.block_type === 'done' }"
-                  @click="startEditing(block)"
-                  v-html="formatContentWithTags(block.content)"
-                ></div>
-                <textarea
-                  v-else
-                  :value="block.content"
-                  @input="onBlockContentChange(block, $event.target.value)"
-                  @keydown="onBlockKeyDown($event, block)"
-                  @blur="stopEditing(block)"
-                  class="block-content"
-                  :class="{ 'completed': block.block_type === 'done' }"
-                  rows="1"
-                  placeholder="Start writing..."
-                ></textarea>
-                <button
-                  @click="deleteBlock(block)"
-                  class="block-delete"
-                  title="Delete block"
-                >del</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Load More Button -->
-        <div v-if="!isTagPage && historicalData && historicalData.pages && historicalData.pages.length" class="load-more-container">
-          <button @click="loadMoreHistoricalData" class="add-block-btn">
-            + load more notes
           </button>
         </div>
       </div>
