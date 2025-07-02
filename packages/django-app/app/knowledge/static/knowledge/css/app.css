@@ -1753,7 +1753,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-left: 4px; /* Account for resize handle */
 }
 
 .chat-content .messages {
@@ -2445,7 +2444,6 @@ body {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-bottom: 1px solid var(--border-secondary);
   background: var(--accent-bg);
   order: 1;
   min-height: 40px;
@@ -2456,7 +2454,6 @@ body {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--bg-primary);
   order: 2;
 }
 
