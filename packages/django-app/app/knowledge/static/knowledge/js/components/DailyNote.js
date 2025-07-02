@@ -27,10 +27,6 @@ const DailyNote = {
       error: null,
       successMessage: "",
       isNavigating: false,
-      // Tag page data
-      currentTag: null,
-      tagData: null,
-      isTagPage: false,
       // Track blocks being deleted to prevent save conflicts
       deletingBlocks: new Set(),
       // Context menu state
@@ -39,21 +35,13 @@ const DailyNote = {
   },
 
   async mounted() {
-    // Add event delegation for clickable tags
+    // Add event delegation for clickable hashtags in content
     document.addEventListener("click", this.handleTagClick);
 
     // Add event listener to close context menu when clicking outside
     document.addEventListener("click", this.handleDocumentClick);
 
-    // Check if we're on a tag page
-    this.currentTag = this.getTagFromURL();
-    this.isTagPage = !!this.currentTag;
-
-    if (this.isTagPage) {
-      await this.loadTagContent();
-    } else {
-      await this.loadPage();
-    }
+    await this.loadPage();
   },
 
   beforeUnmount() {
@@ -86,16 +74,6 @@ const DailyNote = {
       return null;
     },
 
-    getTagFromURL() {
-      // Extract tag from URL like /knowledge/tag/tagname/
-      const pathParts = window.location.pathname.split("/");
-      const tagIndex = pathParts.indexOf("tag");
-      if (tagIndex !== -1 && pathParts[tagIndex + 1]) {
-        return decodeURIComponent(pathParts[tagIndex + 1]);
-      }
-      return null;
-    },
-
     updateURL(date) {
       // Update URL without page reload
       const newPath = `/knowledge/daily/${date}/`;
@@ -122,27 +100,6 @@ const DailyNote = {
       } catch (error) {
         console.error("Failed to load page:", error);
         this.error = "Failed to load page";
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async loadTagContent() {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const result = await window.apiService.getTagContent(this.currentTag);
-        if (result.success) {
-          this.tagData = result.data;
-          this.blocks = this.setupParentReferences(result.data.blocks || []);
-          this.page = null; // No page for tag view
-        } else {
-          this.error = "Failed to load tag content";
-        }
-      } catch (error) {
-        console.error("Failed to load tag content:", error);
-        this.error = "Failed to load tag content";
       } finally {
         this.loading = false;
       }
@@ -261,9 +218,9 @@ const DailyNote = {
             block.block_type = result.data.block_type;
           }
 
-          // Only reload if explicitly requested (rare cases when tags need refresh)
+          // Only reload if explicitly requested
           if (!skipReload) {
-            await this.loadPage(); // Reload to get updated tags
+            await this.loadPage();
           }
         }
       } catch (error) {
@@ -403,34 +360,6 @@ const DailyNote = {
 
       // Create the new block at the desired position
       await this.createBlock("", currentBlock.parent, newOrder);
-    },
-
-    async refreshTagsOnly() {
-      // Refresh page data but preserve current editing state
-      try {
-        const currentlyEditing = this.getAllBlocks().filter((b) => b.isEditing);
-        await this.loadPage();
-
-        // Restore editing state after reload
-        currentlyEditing.forEach((block) => {
-          const refreshedBlock = this.getAllBlocks().find(
-            (b) => b.uuid === block.uuid
-          );
-          if (refreshedBlock) {
-            refreshedBlock.isEditing = true;
-            this.$nextTick(() => {
-              const textarea = document.querySelector(
-                `[data-block-uuid="${refreshedBlock.uuid}"] textarea`
-              );
-              if (textarea) {
-                textarea.focus();
-              }
-            });
-          }
-        });
-      } catch (error) {
-        console.error("Failed to refresh tags:", error);
-      }
     },
 
     formatDate(dateString) {
@@ -716,26 +645,9 @@ const DailyNote = {
     },
 
     goToTag(tagName) {
-      // Navigate to the tag page without full page reload
+      // Navigate to the tag page with full page redirect
       const url = `/knowledge/tag/${encodeURIComponent(tagName)}/`;
-      window.history.pushState({}, "", url);
-
-      // Update the current component state for tag page
-      this.currentTag = tagName;
-      this.isTagPage = true;
-      this.loadTagContent();
-    },
-
-    goBackToDailyNotes() {
-      // Navigate back to daily notes without page reload
-      const url = "/knowledge/";
-      window.history.pushState({}, "", url);
-
-      // Reset to daily note view
-      this.isTagPage = false;
-      this.currentTag = null;
-      this.tagData = null;
-      this.loadPage();
+      window.location.href = url;
     },
 
     getPageUrl(page) {
@@ -960,16 +872,8 @@ const DailyNote = {
 
   template: `
     <div class="daily-note">
-      <!-- Tag Page Header -->
-      <header v-if="isTagPage" class="daily-note-header">
-        <h1>tag: {{ currentTag }}</h1>
-        <div class="header-controls">
-          <button @click="goBackToDailyNotes" class="btn btn-outline">← back to daily notes</button>
-        </div>
-      </header>
-
       <!-- Daily Note Header -->
-      <header v-else class="daily-note-header">
+      <header class="daily-note-header">
         <div class="header-controls">
           <input
             v-model="currentDate"
@@ -980,56 +884,10 @@ const DailyNote = {
         </div>
       </header>
 
-      <div v-if="loading" class="loading">Loading{{ isTagPage ? ' tag content' : ' page' }}...</div>
-
-      <!-- Tag Page Content -->
-      <div v-else-if="isTagPage && tagData" class="tag-page-content">
-        <div class="tag-stats">
-          <span class="tag-display inline-tag">{{ currentTag }}</span>
-          <span class="stats-text">
-            {{ tagData.total_content }} items
-            ({{ tagData.total_blocks }} blocks, {{ tagData.total_pages }} pages)
-          </span>
-        </div>
-
-        <div v-if="blocks.length > 0" class="blocks-container">
-          <div v-for="block in blocks" :key="block.uuid" class="block-wrapper" :data-block-uuid="block.uuid">
-            <div class="block">
-              <div
-                class="block-bullet"
-                :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
-                @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
-              >
-                <span v-if="block.block_type === 'todo'">☐</span>
-                <span v-else-if="block.block_type === 'done'">☑</span>
-                <span v-else>•</span>
-              </div>
-              <div class="block-content-display" :class="{ 'completed': block.block_type === 'done' }">
-                <div class="block-meta">
-                  <span class="page-title">{{ block.page_title }}</span>
-                  <span v-if="block.page_date" class="page-date">{{ formatDate(block.page_date) }}</span>
-                </div>
-                <div v-html="formatContentWithTags(block.content)" class="block-text"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="tagData.pages && tagData.pages.length > 0" class="pages-container">
-          <h3>Pages with this tag:</h3>
-          <div v-for="page in tagData.pages" :key="page.uuid" class="page-item">
-            <a :href="getPageUrl(page)" class="page-link">{{ page.title }}</a>
-            <span v-if="page.date" class="page-date">{{ formatDate(page.date) }}</span>
-          </div>
-        </div>
-
-        <div v-if="blocks.length === 0 && (!tagData.pages || tagData.pages.length === 0)" class="no-content">
-          No content found for tag #{{ currentTag }}
-        </div>
-      </div>
+      <div v-if="loading" class="loading">Loading page...</div>
 
       <!-- Daily Note Content -->
-      <div v-else-if="!isTagPage && page" class="daily-note-content">
+      <div v-else-if="page" class="daily-note-content">
         <div class="daily-note-title current-note">
           <div class="title-left">
             <h2>{{ formatDate(currentDate) }}</h2>

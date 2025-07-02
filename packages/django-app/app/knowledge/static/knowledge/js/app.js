@@ -21,10 +21,30 @@ const KnowledgeApp = createApp({
 
   components: {
     DailyNote: window.DailyNote,
+    TagPage: window.TagPage,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
     SettingsModal: window.SettingsModal,
     ChatPanel: window.ChatPanel,
+  },
+
+  computed: {
+    currentPageType() {
+      const path = window.location.pathname;
+
+      // Extract page type from URL path
+      const pathParts = path.split("/").filter((part) => part);
+
+      if (pathParts.length >= 2 && pathParts[0] === "knowledge") {
+        const pageType = pathParts[1];
+        // Valid page types: tag, daily, search, archive, etc.
+        if (["tag", "daily", "page"].includes(pageType)) {
+          return pageType;
+        }
+      }
+
+      return "daily"; // Default fallback for /knowledge/
+    },
   },
 
   async mounted() {
@@ -261,9 +281,18 @@ const KnowledgeApp = createApp({
                         <div class="loading">Loading...</div>
                     </div>
                     <div v-else class="content-layout">
-                        <HistoricalSidebar v-if="!$refs.dailyNote?.isTagPage" @navigate-to-date="onNavigateToDate" />
+                        <HistoricalSidebar v-if="currentPageType === 'daily'" @navigate-to-date="onNavigateToDate" />
                         <div class="main-content-area">
+                            <TagPage
+                                v-if="currentPageType === 'tag'"
+                                :chat-context-blocks="chatContextBlocks"
+                                :is-block-in-context="isBlockInContext"
+                                @block-add-to-context="onBlockAddToContext"
+                                @block-remove-from-context="onBlockRemoveFromContext"
+                                @visible-blocks-changed="updateVisibleBlocks"
+                            />
                             <DailyNote
+                                v-else-if="currentPageType === 'daily'"
                                 ref="dailyNote"
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
@@ -271,6 +300,10 @@ const KnowledgeApp = createApp({
                                 @block-remove-from-context="onBlockRemoveFromContext"
                                 @visible-blocks-changed="updateVisibleBlocks"
                             />
+                            <!-- Add new page components here:
+                            <SearchPage v-else-if="currentPageType === 'search'" ... />
+                            <ArchivePage v-else-if="currentPageType === 'archive'" ... />
+                            -->
                         </div>
                         <ChatPanel
                             :chat-context-blocks="chatContextBlocks"

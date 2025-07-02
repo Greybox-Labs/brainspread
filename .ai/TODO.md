@@ -36,7 +36,7 @@
   "editing view" w/ up/down arrow would be sufficient for now
 
 # Optimizations
-
+- [ ] need to cleanup frontend routes, django templates, and the vue app
 - [ ] infinite scroll for ai chat history
 - [ ] infinite scroll for daily notes
 
