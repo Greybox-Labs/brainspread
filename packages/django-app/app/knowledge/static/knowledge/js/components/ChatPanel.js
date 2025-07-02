@@ -284,7 +284,7 @@ const ChatPanel = {
       try {
         // Try to load the session directly, handle 404 gracefully
         const sessionData =
-          await window.apiService.getChatSession(lastSessionId);
+          await window.apiService.getChatSessionDetail(lastSessionId);
         if (sessionData.success) {
           await this.onSessionSelected(sessionData.data);
         }
