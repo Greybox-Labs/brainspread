@@ -231,13 +231,18 @@ const ChatPanel = {
         return date.toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
+          second: "2-digit",
         });
       } else {
         // Show date and time for older messages
         return (
           date.toLocaleDateString() +
           " " +
-          date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
         );
       }
     },
