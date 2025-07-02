@@ -282,22 +282,15 @@ const ChatPanel = {
       }
 
       try {
-        // First verify the session still exists by loading all sessions
-        const sessionsResult = await window.apiService.getChatSessions();
-        if (sessionsResult.success) {
-          const lastSession = sessionsResult.data.find(
-            (session) => session.uuid === lastSessionId
-          );
-
-          if (lastSession) {
-            // Load the last viewed session
-            await this.onSessionSelected(lastSession);
-          } else {
-            // Session no longer exists, clear the stored ID
-            this.saveLastSessionId(null);
-          }
+        // Try to load the session directly, handle 404 gracefully
+        const sessionData =
+          await window.apiService.getChatSession(lastSessionId);
+        if (sessionData.success) {
+          await this.onSessionSelected(sessionData.data);
         }
       } catch (error) {
+        // Session no longer exists or other error, clear the stored ID
+        this.saveLastSessionId(null);
         console.error("Failed to load last chat session:", error);
       }
     },
