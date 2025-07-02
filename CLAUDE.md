@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+You can remember 20 TODOs at a time in your memory.
+
 This is a Django + PostgreSQL project using Docker Compose and Just as the task runner.
 
 ### Working Directory
