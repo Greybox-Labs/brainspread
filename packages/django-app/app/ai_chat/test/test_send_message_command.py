@@ -122,7 +122,8 @@ class SendMessageCommandTestCase(TestCase):
             model="gpt-4",
         )
         mock_service.send_message.assert_called_once_with(
-            [{"role": "user", "content": "Hello, AI!"}]
+            [{"role": "user", "content": "Hello, AI!"}],
+            [{"type": "web_search_preview", "search_context_size": "medium"}],
         )
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
@@ -232,11 +233,16 @@ class SendMessageCommandTestCase(TestCase):
         self.assertIn("AI service error", str(context.exception))
 
         # Verify error message was added to session
-        mock_add_message.assert_called_with(
-            session,
-            "assistant",
+        # The last call should include the AI model parameter
+        calls = mock_add_message.call_args_list
+        last_call = calls[-1]
+        self.assertEqual(last_call[0][0], session)
+        self.assertEqual(last_call[0][1], "assistant")
+        self.assertEqual(
+            last_call[0][2],
             "Sorry, I'm experiencing technical difficulties: API rate limit exceeded",
         )
+        self.assertEqual(last_call[0][3], self.gpt4_model)
 
     @patch("ai_chat.services.ai_service_factory.AIServiceFactory.create_service")
     @patch(

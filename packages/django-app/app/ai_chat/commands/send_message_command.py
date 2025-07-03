@@ -1,12 +1,17 @@
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from ai_chat.services.ai_service_factory import AIServiceFactory, AIServiceFactoryError
 from ai_chat.services.base_ai_service import AIServiceError
+from ai_chat.tools.web_search import WebSearchTools
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms import SendMessageForm
-from ..repositories import ChatMessageRepository, ChatSessionRepository
+from ..repositories import (
+    AIModelRepository,
+    ChatMessageRepository,
+    ChatSessionRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,21 +63,52 @@ class SendMessageCommand(AbstractBaseCommand):
                 api_key=api_key,
                 model=model,
             )
-            response_content = service.send_message(messages)
+            # Configure web search tools if enabled
+            tools = self._get_web_search_tools(provider_name)
+
+            response_content = service.send_message(messages, tools)
+
+            # Get the AI model to store with the assistant response
+            ai_model = AIModelRepository.get_by_name(model)
 
             # Add assistant response to database
-            ChatMessageRepository.add_message(session, "assistant", response_content)
+            assistant_message = ChatMessageRepository.add_message(
+                session, "assistant", response_content, ai_model
+            )
 
-            return {"response": response_content, "session_id": str(session.uuid)}
+            # Return complete message data including AI model info
+            return {
+                "response": response_content,
+                "session_id": str(session.uuid),
+                "message": {
+                    "role": assistant_message.role,
+                    "content": assistant_message.content,
+                    "created_at": assistant_message.created_at.isoformat(),
+                    "ai_model": (
+                        {
+                            "name": ai_model.name,
+                            "display_name": ai_model.display_name,
+                            "provider": ai_model.provider.name,
+                        }
+                        if ai_model
+                        else None
+                    ),
+                },
+            }
 
         except (AIServiceError, AIServiceFactoryError) as e:
             logger.error(f"AI service error for user {user.id}: {str(e)}")
             # Still save the user message even if AI fails
             if session:
-                ChatMessageRepository.add_message(
+                ai_model = AIModelRepository.get_by_name(model)
+                error_message = (
+                    f"Sorry, I'm experiencing technical difficulties: {str(e)}"
+                )
+                assistant_message = ChatMessageRepository.add_message(
                     session,
                     "assistant",
-                    f"Sorry, I'm experiencing technical difficulties: {str(e)}",
+                    error_message,
+                    ai_model,
                 )
             raise SendMessageCommandError(f"AI service error: {str(e)}") from e
 
@@ -120,3 +156,17 @@ class SendMessageCommand(AbstractBaseCommand):
 {message}"""
 
         return formatted_message
+
+    def _get_web_search_tools(
+        self, provider_name: str
+    ) -> Optional[List[Dict[str, Any]]]:
+        """Get web search tools configuration for the specified provider."""
+        # Enable web search for all providers
+        if provider_name == "anthropic":
+            return [WebSearchTools.anthropic_web_search()]
+        elif provider_name == "openai":
+            return [WebSearchTools.openai_web_search()]
+        elif provider_name == "google":
+            return [WebSearchTools.google_search()]
+
+        return None

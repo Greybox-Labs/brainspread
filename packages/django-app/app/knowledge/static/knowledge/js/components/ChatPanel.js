@@ -111,11 +111,17 @@ const ChatPanel = {
       try {
         const result = await window.apiService.sendAIMessage(payload);
         if (result.success) {
-          this.messages.push({
-            role: "assistant",
-            content: result.data.response,
-            created_at: new Date().toISOString(),
-          });
+          // Use the complete message data from the API response
+          if (result.data.message) {
+            this.messages.push(result.data.message);
+          } else {
+            // Fallback for backward compatibility
+            this.messages.push({
+              role: "assistant",
+              content: result.data.response,
+              created_at: new Date().toISOString(),
+            });
+          }
           if (result.data.session_id && !this.currentSessionId) {
             this.currentSessionId = result.data.session_id;
             this.saveLastSessionId(result.data.session_id);
@@ -577,7 +583,12 @@ const ChatPanel = {
           <div v-for="(msg, index) in messages" :key="index" :class="['message-bubble', msg.role]">
             <div class="message-content" v-html="parseMarkdown(msg.content)"></div>
             <div class="message-footer">
-              <div class="message-timestamp">{{ formatTimestamp(msg.created_at) }}</div>
+              <div class="message-timestamp">
+                {{ formatTimestamp(msg.created_at) }}
+                <span v-if="msg.role === 'assistant' && msg.ai_model" class="model-info">
+                  · {{ msg.ai_model.display_name || msg.ai_model.name }}
+                </span>
+              </div>
               <div class="message-menu-container" v-if="msg.role === 'assistant'">
                 <button
                   @click="toggleMessageMenu(index)"

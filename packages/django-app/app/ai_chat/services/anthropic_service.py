@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import anthropic
 
@@ -25,12 +25,17 @@ class AnthropicService(BaseAIService):
                 f"Failed to initialize Anthropic client: {e}"
             ) from e
 
-    def send_message(self, messages: List[Dict[str, str]]) -> str:
+    def send_message(
+        self,
+        messages: List[Dict[str, str]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+    ) -> str:
         """
         Send messages to Anthropic API and return the response content.
 
         Args:
             messages: List of message dictionaries with 'role' and 'content' keys
+            tools: Optional list of tools to make available to the model
 
         Returns:
             str: The assistant's response content
@@ -65,16 +70,42 @@ class AnthropicService(BaseAIService):
             if system_message:
                 kwargs["system"] = system_message
 
+            # Add tools if provided
+            if tools:
+                kwargs["tools"] = tools
+
             # Make the API call
             response = self.client.messages.create(**kwargs)
 
             # Extract the content from the response
             if response.content and len(response.content) > 0:
-                content = response.content[0].text
-                if content:
-                    return content
+                # Handle different content block types
+                content_parts = []
+                for block in response.content:
+                    # Handle text blocks
+                    if hasattr(block, "text") and block.text:
+                        content_parts.append(block.text)
+                    # Handle tool use blocks (should be skipped)
+                    elif hasattr(block, "type") and block.type == "tool_use":
+                        continue
+                    # Handle any other block types by trying to access text
+                    elif hasattr(block, "__dict__"):
+                        # Log the block structure for debugging
+                        logger.debug(
+                            f"Unknown block type: {type(block)}, attributes: {block.__dict__}"
+                        )
+                        # Try to extract text content if available
+                        if hasattr(block, "text"):
+                            content_parts.append(str(block.text))
+
+                if content_parts:
+                    return "\n".join(content_parts)
                 else:
-                    raise AnthropicServiceError("No content in Anthropic response")
+                    # If no text content found, return a fallback message
+                    logger.warning(
+                        f"No text content found in Anthropic response with {len(response.content)} blocks"
+                    )
+                    return "I apologize, but I encountered an issue processing the response. Please try again."
             else:
                 raise AnthropicServiceError("No content blocks in Anthropic response")
 
@@ -86,23 +117,6 @@ class AnthropicService(BaseAIService):
                 raise AnthropicServiceError(
                     f"Anthropic API call failed: {str(e)}"
                 ) from e
-
-    def get_available_models(self) -> List[str]:
-        """
-        Get list of available Anthropic models.
-
-        Returns:
-            List[str]: List of available model names
-        """
-        return [
-            "claude-opus-4-20250514",
-            "claude-sonnet-4-20250514",
-            "claude-3-5-sonnet-20241022",
-            "claude-3-5-haiku-20241022",
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307",
-        ]
 
     def validate_api_key(self) -> bool:
         """

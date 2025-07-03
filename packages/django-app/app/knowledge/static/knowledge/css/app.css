@@ -2776,3 +2776,10 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.message-timestamp .model-info {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.25rem;
+}

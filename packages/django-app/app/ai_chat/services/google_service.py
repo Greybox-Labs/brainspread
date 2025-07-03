@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
@@ -23,12 +23,17 @@ class GoogleService(BaseAIService):
         genai.configure(api_key=api_key)
         self.client = genai.GenerativeModel(model)
 
-    def send_message(self, messages: List[Dict[str, str]]) -> str:
+    def send_message(
+        self,
+        messages: List[Dict[str, str]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+    ) -> str:
         """
         Send messages to Google AI service and return the response content.
 
         Args:
             messages: List of message dictionaries with 'role' and 'content' keys
+            tools: Optional list of tools to make available to the model
 
         Returns:
             str: The assistant's response content
@@ -39,11 +44,43 @@ class GoogleService(BaseAIService):
         try:
             self.validate_messages(messages)
 
+            # Configure generation with tools if provided
+            tool_config = None
+
+            if tools:
+                # Convert tools to Google AI format
+                google_tools = self._convert_tools_to_google_format(tools)
+                tool_config = google_tools
+
             # Convert messages to Google AI format
             formatted_messages = self._format_messages_for_google(messages)
 
             # Generate response
-            response = self.client.generate_content(formatted_messages)
+            if tool_config:
+                try:
+                    # Try direct tools parameter first
+                    response = self.client.generate_content(
+                        formatted_messages, tools=tool_config
+                    )
+                except google_exceptions.GoogleAPIError as e:
+                    if (
+                        "Search Grounding is not supported" in str(e)
+                        or "not supported" in str(e).lower()
+                    ):
+                        logger.warning(
+                            f"Google Search Grounding not supported, falling back to regular generation: {e}"
+                        )
+                        # Fallback to regular generation without tools
+                        response = self.client.generate_content(formatted_messages)
+                    else:
+                        raise e
+                except Exception as e:
+                    logger.warning(
+                        f"Google Search tool failed, falling back to regular generation: {e}"
+                    )
+                    response = self.client.generate_content(formatted_messages)
+            else:
+                response = self.client.generate_content(formatted_messages)
 
             if not response.text:
                 raise GoogleServiceError("Empty response from Google AI")
@@ -56,24 +93,6 @@ class GoogleService(BaseAIService):
         except Exception as e:
             logger.error(f"Unexpected error in Google AI service: {e}")
             raise GoogleServiceError(f"Unexpected error: {e}")
-
-    def get_available_models(self) -> List[str]:
-        """
-        Get list of available Gemini models.
-        Ordered by capability and performance.
-
-        Returns:
-            List[str]: List of available model names
-        """
-        return [
-            "gemini-2.5-pro",  # Most advanced model - best for complex tasks
-            "gemini-2.5-flash-preview",  # Latest fast model with advanced capabilities
-            "gemini-2.0-pro",  # High-end model for complex reasoning
-            "gemini-2.0-flash",  # Balanced performance and speed
-            "gemini-1.5-pro",  # Proven reliable model
-            "gemini-1.5-flash",  # Fast and efficient
-            "gemini-1.5-flash-8b",  # Lightweight model for simple tasks
-        ]
 
     def validate_api_key(self) -> bool:
         """
@@ -119,3 +138,53 @@ class GoogleService(BaseAIService):
                 formatted_parts.append(f"Assistant: {content}")
 
         return "\n\n".join(formatted_parts)
+
+    def _convert_tools_to_google_format(
+        self, tools: List[Dict[str, Any]]
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Convert tools to Google AI format.
+
+        Args:
+            tools: List of tool configurations
+
+        Returns:
+            Optional[List[Dict[str, Any]]]: Tools in Google AI format, or None if not supported
+        """
+        try:
+            google_tools = []
+
+            for tool in tools:
+                if "google_search" in tool:
+                    # Try different formats for Google Search grounding
+                    try:
+                        # Method 1: Try the direct dictionary format
+                        google_search_tool = {"google_search_retrieval": {}}
+                        google_tools.append(google_search_tool)
+                        logger.info(
+                            "Google Search grounding tool added (dictionary format)"
+                        )
+                    except Exception as e:
+                        logger.warning(f"Google Search grounding method 1 failed: {e}")
+                        try:
+                            # Method 2: Try alternative format
+                            google_search_tool = {"google_search": {}}
+                            google_tools.append(google_search_tool)
+                            logger.info(
+                                "Google Search grounding tool added (alternative format)"
+                            )
+                        except Exception as e2:
+                            logger.warning(
+                                f"Google Search grounding method 2 failed: {e2}"
+                            )
+                            continue
+                elif "url_context" in tool:
+                    # Handle URL context if needed
+                    logger.info("URL context tool not implemented yet")
+                    continue
+
+            return google_tools if google_tools else None
+
+        except Exception as e:
+            logger.warning(f"Google tools conversion failed: {e}")
+            return None

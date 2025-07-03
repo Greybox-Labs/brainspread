@@ -87,44 +87,6 @@ class AIServiceFactoryTestCase(TestCase):
         self.assertIn("Unsupported AI provider: unsupported", str(context.exception))
         self.assertIn("Supported providers:", str(context.exception))
 
-    def test_get_available_models_openai(self):
-        """Test getting available models for OpenAI"""
-        with patch.object(AIServiceFactory, "_services") as mock_services:
-            mock_service_class = Mock()
-            mock_instance = Mock()
-            mock_instance.get_available_models.return_value = ["gpt-4", "gpt-3.5-turbo"]
-            mock_service_class.return_value = mock_instance
-            mock_services.__getitem__.return_value = mock_service_class
-            mock_services.__contains__.return_value = True
-
-            models = AIServiceFactory.get_available_models("openai")
-            self.assertEqual(models, ["gpt-4", "gpt-3.5-turbo"])
-            mock_service_class.assert_called_once_with(api_key="dummy", model="dummy")
-            mock_instance.get_available_models.assert_called_once()
-
-    def test_get_available_models_anthropic(self):
-        """Test getting available models for Anthropic"""
-        with patch.object(AIServiceFactory, "_services") as mock_services:
-            mock_service_class = Mock()
-            mock_instance = Mock()
-            mock_instance.get_available_models.return_value = [
-                "claude-3-sonnet",
-                "claude-3-haiku",
-            ]
-            mock_service_class.return_value = mock_instance
-            mock_services.__getitem__.return_value = mock_service_class
-            mock_services.__contains__.return_value = True
-
-            models = AIServiceFactory.get_available_models("anthropic")
-            self.assertEqual(models, ["claude-3-sonnet", "claude-3-haiku"])
-            mock_service_class.assert_called_once_with(api_key="dummy", model="dummy")
-            mock_instance.get_available_models.assert_called_once()
-
-    def test_get_available_models_unsupported_provider(self):
-        """Test getting models for unsupported provider returns empty list"""
-        models = AIServiceFactory.get_available_models("unsupported")
-        self.assertEqual(models, [])
-
 
 class UserSettingsRepositoryTestCase(TestCase):
     """Test user settings repository functionality"""

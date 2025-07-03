@@ -57,7 +57,13 @@
       "mcp__gitmcp__search_oscarr_code",
       "mcp__gitmcp__fetch_generic_url_content",
       "mcp__sse-server__browser_handle_dialog",
-      "mcp__sse-server__browser_resize"
+      "mcp__sse-server__browser_resize",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": []
   }

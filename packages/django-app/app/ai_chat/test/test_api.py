@@ -328,11 +328,8 @@ class AIChatAPITestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch("ai_chat.services.ai_service_factory.AIServiceFactory.get_available_models")
-    def test_ai_settings_get(self, mock_get_models):
+    def test_ai_settings_get(self):
         """Test getting AI settings"""
-        mock_get_models.return_value = ["gpt-4", "gpt-3.5-turbo"]
-
         response = self.client.get("/api/ai-chat/settings/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

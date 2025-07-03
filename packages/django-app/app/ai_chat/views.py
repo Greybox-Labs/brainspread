@@ -136,13 +136,22 @@ def chat_session_detail(request, session_id):
     """
     try:
         session = ChatSession.objects.get(uuid=session_id, user=request.user)
-        messages = session.messages.all()
+        messages = session.messages.select_related("ai_model__provider").all()
 
         messages_data = [
             {
                 "role": msg.role,
                 "content": msg.content,
                 "created_at": msg.created_at.isoformat(),
+                "ai_model": (
+                    {
+                        "name": msg.ai_model.name,
+                        "display_name": msg.ai_model.display_name,
+                        "provider": msg.ai_model.provider.name,
+                    }
+                    if msg.ai_model
+                    else None
+                ),
             }
             for msg in messages
         ]

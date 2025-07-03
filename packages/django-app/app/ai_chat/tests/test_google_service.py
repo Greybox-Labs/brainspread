@@ -13,23 +13,6 @@ class TestGoogleService:
         assert service.api_key == "test-key"
         assert service.model == "gemini-1.5-pro"
 
-    def test_get_available_models(self):
-        """Test getting available models"""
-        service = GoogleService(api_key="test-key", model="gemini-1.5-pro")
-        models = service.get_available_models()
-
-        expected_models = [
-            "gemini-2.5-pro",  # Most advanced model - best for complex tasks
-            "gemini-2.5-flash-preview",  # Latest fast model with advanced capabilities
-            "gemini-2.0-pro",  # High-end model for complex reasoning
-            "gemini-2.0-flash",  # Balanced performance and speed
-            "gemini-1.5-pro",  # Proven reliable model
-            "gemini-1.5-flash",  # Fast and efficient
-            "gemini-1.5-flash-8b",  # Lightweight model for simple tasks
-        ]
-
-        assert models == expected_models
-
     @patch("google.generativeai.GenerativeModel")
     def test_send_message_success(self, mock_model_class):
         """Test successful message sending"""

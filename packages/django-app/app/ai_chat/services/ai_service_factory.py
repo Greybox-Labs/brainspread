@@ -63,31 +63,6 @@ class AIServiceFactory:
         return list(cls._services.keys())
 
     @classmethod
-    def get_available_models(cls, provider_name: str) -> List[str]:
-        """
-        Get available models for a specific provider.
-
-        Args:
-            provider_name: Name of the AI provider
-
-        Returns:
-            List[str]: List of available model names for the provider
-
-        Raises:
-            AIServiceFactoryError: If provider is not supported
-        """
-        provider_key = provider_name.lower()
-
-        if provider_key not in cls._services:
-            return []
-
-        # Create a temporary instance to get available models
-        service_class = cls._services[provider_key]
-        # Use dummy values for temporary instance
-        temp_service = service_class(api_key="dummy", model="dummy")
-        return temp_service.get_available_models()
-
-    @classmethod
     def register_service(
         cls, provider_name: str, service_class: Type[BaseAIService]
     ) -> None:

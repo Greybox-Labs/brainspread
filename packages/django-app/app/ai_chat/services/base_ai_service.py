@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class AIServiceError(Exception):
@@ -16,28 +16,23 @@ class BaseAIService(ABC):
         self.model = model
 
     @abstractmethod
-    def send_message(self, messages: List[Dict[str, str]]) -> str:
+    def send_message(
+        self,
+        messages: List[Dict[str, str]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+    ) -> str:
         """
         Send messages to AI service and return the response content.
 
         Args:
             messages: List of message dictionaries with 'role' and 'content' keys
+            tools: Optional list of tools/functions to make available to the model
 
         Returns:
             str: The assistant's response content
 
         Raises:
             AIServiceError: If the API call fails
-        """
-        pass
-
-    @abstractmethod
-    def get_available_models(self) -> List[str]:
-        """
-        Get list of available models for this service.
-
-        Returns:
-            List[str]: List of available model names
         """
         pass
 
