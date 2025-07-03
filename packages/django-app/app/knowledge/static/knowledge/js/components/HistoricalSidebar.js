@@ -125,9 +125,16 @@ window.HistoricalSidebar = {
       document.removeEventListener("mouseup", this.stopResizeHandler);
     },
 
-    openDailyNote(page) {
-      // Emit event to parent component to navigate to this date
-      this.$emit("navigate-to-date", page.date);
+    openPage(page) {
+      // Emit event to parent component to navigate to this slug
+      // All pages now use the unified /knowledge/page/{slug}/ pattern
+      this.$emit("navigate-to-slug", page.slug);
+    },
+
+    openBlockPage(block) {
+      // Navigate to the page containing this block
+      // All pages now use the unified /knowledge/page/{slug}/ pattern
+      this.$emit("navigate-to-slug", block.page_slug);
     },
 
     // Click outside to close sidebar
@@ -219,7 +226,7 @@ window.HistoricalSidebar = {
                   v-for="page in historicalData.pages"
                   :key="page.uuid"
                   class="sidebar-item page-item clickable"
-                  @click="openDailyNote(page)"
+                  @click="openPage(page)"
                   :title="'Click to open ' + page.title"
                 >
                   <div class="page-card-vertical">
@@ -252,7 +259,9 @@ window.HistoricalSidebar = {
                 <div
                   v-for="block in historicalData.blocks"
                   :key="block.uuid"
-                  class="sidebar-item block-item"
+                  class="sidebar-item block-item clickable"
+                  @click="openBlockPage(block)"
+                  :title="'Click to open ' + block.page_title"
                 >
                   <div class="item-header">
                     <span v-if="block.block_type === 'todo'" class="item-type block-type">{{ block.block_type }}</span>

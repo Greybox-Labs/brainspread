@@ -10,9 +10,12 @@
   and pages and show them in sidebar
 
 ## general usage
-- [ ] ui/ux for pages
-  - [ ] create new page
+- [x] ui/ux for pages
+  - [x] create new page
   - [x] history sidebar already has pages sorted by most recently modified
+  - [x] only one path for page (instead of page vs daily note, bc they're all 
+    pages)
+  - 
 - [ ] cmd + space like mac spotlight to search for pages and blocks
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?

@@ -21,6 +21,7 @@ const PagePage = {
   data() {
     return {
       pageSlug: this.getSlugFromURL(),
+      currentDate: this.getDateFromURL(),
       page: null,
       blocks: [],
       loading: false,
@@ -45,7 +46,7 @@ const PagePage = {
 
   methods: {
     getSlugFromURL() {
-      // Extract slug from URL like /knowledge/page/my-page-slug/
+      // Extract slug from URL like /knowledge/page/my-page-slug/ or /knowledge/page/2025-07-03/
       const pathParts = window.location.pathname.split("/");
       const pageIndex = pathParts.indexOf("page");
       if (pageIndex !== -1 && pathParts[pageIndex + 1]) {
@@ -54,16 +55,63 @@ const PagePage = {
       return null;
     },
 
+    getDateFromURL() {
+      // Check if the slug is a date (YYYY-MM-DD format)
+      const slug = this.getSlugFromURL();
+      if (slug && /^\d{4}-\d{2}-\d{2}$/.test(slug)) {
+        return slug;
+      }
+      return null;
+    },
+
+    getLocalDateString() {
+      // Get user's local date, not UTC date
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    },
+
+    updateURL(slug) {
+      // Update URL without page reload
+      const newPath = `/knowledge/page/${slug}/`;
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, "", newPath);
+      }
+    },
+
+    formatDate(dateString) {
+      // Parse the date string manually to avoid timezone conversion issues
+      const [year, month, day] = dateString.split("-");
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.toLocaleDateString();
+    },
+
+    isDaily() {
+      return this.page && this.page.page_type === "daily";
+    },
+
     async loadPage() {
       this.loading = true;
       this.error = null;
 
       try {
-        const result = await window.apiService.getPageWithBlocks(
-          null,
-          null,
-          this.pageSlug
-        );
+        // If the slug looks like a date, treat it as a daily note
+        let result;
+        if (this.currentDate) {
+          result = await window.apiService.getPageWithBlocks(
+            null,
+            this.currentDate
+          );
+        } else {
+          result = await window.apiService.getPageWithBlocks(
+            null,
+            null,
+            this.pageSlug
+          );
+        }
+
         if (result.success) {
           this.page = result.data.page;
           this.blocks = this.setupParentReferences(result.data.blocks || []);
@@ -77,6 +125,12 @@ const PagePage = {
       } finally {
         this.loading = false;
       }
+    },
+
+    async onDateChange() {
+      this.updateURL(this.currentDate);
+      this.pageSlug = this.currentDate;
+      await this.loadPage();
     },
 
     async handleCreateBlock({ content, parent, order, autoFocus }) {
@@ -430,8 +484,13 @@ const PagePage = {
         return;
       }
 
+      const pageTypeText = this.isDaily() ? "daily note" : "page";
+      const pageIdentifier = this.isDaily()
+        ? `this ${pageTypeText} for ${this.formatDate(this.currentDate || this.page.date)}`
+        : `"${this.page.title}"`;
+
       const confirmed = confirm(
-        `Are you sure you want to delete "${this.page.title}"? This will delete all blocks and cannot be undone.`
+        `Are you sure you want to delete ${pageIdentifier}? This will delete all blocks and cannot be undone.`
       );
 
       if (!confirmed) {
@@ -442,18 +501,52 @@ const PagePage = {
         const result = await window.apiService.deletePage(this.page.uuid);
 
         if (result.success) {
-          this.successMessage = "Page deleted successfully";
+          this.successMessage = `${pageTypeText.charAt(0).toUpperCase() + pageTypeText.slice(1)} deleted successfully`;
 
           // Redirect to knowledge base
           setTimeout(() => {
             window.location.href = "/knowledge/";
           }, 1000);
         } else {
-          this.error = "Failed to delete page";
+          this.error = `Failed to delete ${pageTypeText}`;
         }
       } catch (error) {
         console.error("Error deleting page:", error);
-        this.error = "Failed to delete page";
+        this.error = `Failed to delete ${pageTypeText}`;
+      }
+    },
+
+    async moveUndoneTodosToThisPage() {
+      this.loading = true;
+      this.error = null;
+      this.closeContextMenu();
+
+      try {
+        // Use the current page's date as target_date
+        const targetDate = this.page?.date || null;
+        const result = await window.apiService.moveUndoneTodos(targetDate);
+
+        if (result.success) {
+          const data = result.data;
+          this.successMessage = data.message;
+
+          // Reload the current page to show the moved TODOs
+          await this.loadPage();
+
+          // Clear success message after a few seconds
+          setTimeout(() => {
+            this.successMessage = "";
+          }, 3000);
+        } else {
+          this.error =
+            result.errors?.non_field_errors?.[0] ||
+            "Failed to move undone TODOs";
+        }
+      } catch (error) {
+        console.error("Failed to move undone TODOs:", error);
+        this.error = "Failed to move undone TODOs. Please try again.";
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -487,10 +580,28 @@ const PagePage = {
 
   template: `
     <div class="page-page">
+      <!-- Daily Note Header (for daily pages) -->
+      <header v-if="isDaily()" class="daily-note-header">
+        <div class="header-controls">
+          <input
+            v-model="currentDate"
+            type="date"
+            @change="onDateChange"
+            class="form-control date-picker"
+          />
+        </div>
+      </header>
+
       <!-- Page Header -->
       <div v-if="page" class="page-header">
         <div class="page-title-container">
-          <div v-if="!isEditingTitle" class="page-title-display">
+          <!-- Daily Note Title -->
+          <div v-if="isDaily()" class="page-title-display">
+            <h1 class="page-title-text">{{ formatDate(currentDate || page.date) }}</h1>
+          </div>
+          
+          <!-- Regular Page Title -->
+          <div v-else-if="!isEditingTitle" class="page-title-display">
             <h1 @click="startEditingTitle" class="page-title-text">{{ page.title || 'Untitled Page' }}</h1>
             <button @click="startEditingTitle" class="btn btn-outline edit-title-btn" title="Edit page title">
               ✎
@@ -519,16 +630,27 @@ const PagePage = {
               <button
                 @click="toggleContextMenu"
                 class="btn btn-outline context-menu-btn"
-                title="Page options"
+                :title="isDaily() ? 'Daily note options' : 'Page options'"
               >
                 ⋮
               </button>
               <div v-if="showContextMenu" class="context-menu" @click.stop>
+                <!-- Daily note specific options -->
+                <button
+                  v-if="isDaily()"
+                  @click="moveUndoneTodosToThisPage"
+                  class="context-menu-item"
+                  :disabled="loading"
+                >
+                  Move unfinished TODOs to this page
+                </button>
+                
+                <!-- Delete option for all page types -->
                 <button
                   @click="deletePage"
                   class="context-menu-item context-menu-danger"
                 >
-                  Delete page
+                  Delete {{ isDaily() ? 'daily note' : 'page' }}
                 </button>
               </div>
             </div>

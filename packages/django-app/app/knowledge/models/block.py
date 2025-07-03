@@ -1,5 +1,5 @@
 import re
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 from django.conf import settings
 from django.db import models
@@ -186,10 +186,15 @@ class BlockData(TypedDict):
     block_type: str
     order: int
     collapsed: bool
-    parent_block_uuid: str | None
+    parent_block_uuid: Optional[str]
     page_uuid: str
     user_uuid: str
     created_at: str
     updated_at: str
     media_url: str
     properties: dict
+    # Page context fields (when included in API responses)
+    page_title: Optional[str]
+    page_type: Optional[str]
+    page_slug: Optional[str]
+    page_date: Optional[str]

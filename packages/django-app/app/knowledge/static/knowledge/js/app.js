@@ -13,21 +13,24 @@ const KnowledgeApp = createApp({
       loading: isAuth && !cachedUser, // Only show loading if we have token but no cached user
       showSettings: false, // Settings modal state
       settingsActiveTab: "general", // Default tab for settings modal
+      showMenu: false, // Menu popover state
       // Chat context management
       chatContextBlocks: [], // Array of blocks in chat context
       visibleBlocks: [], // Array of currently visible blocks
+      // Toast notifications
+      toasts: [], // Array of toast notifications
+      toastIdCounter: 0, // Counter for unique toast IDs
     };
   },
 
   components: {
-    DailyNote: window.DailyNote,
-    DailyNotePage: window.DailyNotePage,
     PagePage: window.PagePage,
     TagPage: window.TagPage,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
     SettingsModal: window.SettingsModal,
     ChatPanel: window.ChatPanel,
+    ToastNotifications: window.ToastNotifications,
   },
 
   computed: {
@@ -39,13 +42,18 @@ const KnowledgeApp = createApp({
 
       if (pathParts.length >= 2 && pathParts[0] === "knowledge") {
         const pageType = pathParts[1];
-        // Valid page types: tag, daily, search, archive, etc.
-        if (["tag", "daily", "page"].includes(pageType)) {
+        // Valid page types: tag, page
+        if (["tag", "page"].includes(pageType)) {
           return pageType;
         }
       }
 
-      return "daily"; // Default fallback for /knowledge/
+      return "page"; // Default fallback for /knowledge/ - redirect to today's date
+    },
+
+    shouldShowHistoricalSidebar() {
+      // Show historical sidebar for all page types
+      return this.currentPageType === "page";
     },
   },
 
@@ -54,6 +62,9 @@ const KnowledgeApp = createApp({
 
     // Apply initial theme
     this.applyTheme();
+
+    // Add event listener for click-outside-to-close menu
+    document.addEventListener("click", this.handleDocumentClick);
 
     // If we have cached user data, we can show the app immediately
     if (this.isAuthenticated && this.user) {
@@ -68,8 +79,19 @@ const KnowledgeApp = createApp({
       this.checkTimezoneChange();
     }
 
+    // Redirect to today's page if we're on the root knowledge page
+    if (this.isAuthenticated && window.location.pathname === "/knowledge/") {
+      this.redirectToToday();
+      return;
+    }
+
     // Reapply theme after auth check in case user data was updated
     this.applyTheme();
+  },
+
+  beforeUnmount() {
+    // Clean up event listeners
+    document.removeEventListener("click", this.handleDocumentClick);
   },
 
   methods: {
@@ -152,8 +174,23 @@ const KnowledgeApp = createApp({
     },
 
     onNavigateToDate(date) {
-      // Navigate to the daily note URL
-      window.location.href = `/knowledge/daily/${date}/`;
+      // Navigate to the unified page URL with date as slug
+      window.location.href = `/knowledge/page/${date}/`;
+    },
+    onNavigateToSlug(slug) {
+      window.location.href = `/knowledge/page/${slug}/`;
+    },
+
+    redirectToToday() {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayString = `${year}-${month}-${day}`;
+
+      // Redirect to today's page
+      window.location.href = `/knowledge/page/${todayString}/`;
     },
 
     // Theme and settings methods
@@ -291,6 +328,71 @@ const KnowledgeApp = createApp({
         alert("Failed to create page. Please try again.");
       }
     },
+
+    // Menu methods
+    toggleMenu() {
+      this.showMenu = !this.showMenu;
+    },
+
+    closeMenu() {
+      this.showMenu = false;
+    },
+
+    handleDocumentClick(event) {
+      // Close menu if clicking outside of it
+      const menuContainer = event.target.closest(".menu-container");
+      if (!menuContainer && this.showMenu) {
+        this.closeMenu();
+      }
+    },
+
+    // Menu action methods
+    onMenuCreatePage() {
+      this.closeMenu();
+      this.createNewPage();
+    },
+
+    onMenuSettings() {
+      this.closeMenu();
+      this.openSettings();
+    },
+
+    onMenuLogout() {
+      this.closeMenu();
+      this.handleLogout();
+    },
+
+    // Toast notification methods
+    addToast(message, type = "info", duration = 5000) {
+      const toast = {
+        id: this.toastIdCounter++,
+        message,
+        type,
+        duration,
+      };
+
+      this.toasts.push(toast);
+
+      // Auto-remove after duration
+      if (duration > 0) {
+        setTimeout(() => {
+          this.removeToast(toast.id);
+        }, duration);
+      }
+
+      return toast.id;
+    },
+
+    removeToast(toastId) {
+      const index = this.toasts.findIndex((toast) => toast.id === toastId);
+      if (index > -1) {
+        this.toasts.splice(index, 1);
+      }
+    },
+
+    clearAllToasts() {
+      this.toasts = [];
+    },
   },
 
   template: `
@@ -307,31 +409,44 @@ const KnowledgeApp = createApp({
                         <h1><a href="/knowledge/" class="brand-link">brainspread</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
-                            <button @click="createNewPage" class="btn btn-outline">+ page</button>
-                            <button @click="openSettings()" class="settings-btn">settings</button>
-                            <button @click="handleLogout" class="btn btn-outline">LOGOUT</button>
+                            <div class="menu-container">
+                                <button @click="toggleMenu" class="menu-btn">
+                                    menu
+                                </button>
+                                <div v-if="showMenu" class="menu-popover" @click.stop>
+                                    <button @click="onMenuCreatePage" class="menu-item">
+                                        + page
+                                    </button>
+                                    <button @click="onMenuSettings" class="menu-item">
+                                        settings
+                                    </button>
+                                    <button @click="onMenuLogout" class="menu-item">
+                                        logout
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </nav>
+
+                <!-- Toast Notifications -->
+                <ToastNotifications 
+                    :toasts="toasts" 
+                    @remove-toast="removeToast" 
+                />
 
                 <main class="main-content">
                     <div v-if="loading" class="loading-container">
                         <div class="loading">Loading...</div>
                     </div>
                     <div v-else class="content-layout">
-                        <HistoricalSidebar v-if="currentPageType === 'daily'" @navigate-to-date="onNavigateToDate" />
+                        <HistoricalSidebar 
+                            v-if="shouldShowHistoricalSidebar" 
+                            @navigate-to-date="onNavigateToDate"
+                            @navigate-to-slug="onNavigateToSlug" />
                         <div class="main-content-area">
                             <TagPage
                                 v-if="currentPageType === 'tag'"
-                                :chat-context-blocks="chatContextBlocks"
-                                :is-block-in-context="isBlockInContext"
-                                @block-add-to-context="onBlockAddToContext"
-                                @block-remove-from-context="onBlockRemoveFromContext"
-                                @visible-blocks-changed="updateVisibleBlocks"
-                            />
-                            <DailyNotePage
-                                v-else-if="currentPageType === 'daily'"
-                                ref="dailyNote"
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
                                 @block-add-to-context="onBlockAddToContext"

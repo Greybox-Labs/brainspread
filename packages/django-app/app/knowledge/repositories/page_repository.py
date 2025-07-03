@@ -132,13 +132,13 @@ class PageRepository(BaseRepository):
         )
 
     @classmethod
-    def get_recent_daily_pages_with_blocks(cls, user, limit=7) -> QuerySet:
+    def get_recent_pages_with_blocks(cls, user, limit=7) -> QuerySet:
         """Get the most recent daily pages that have blocks, ordered by creation date (not modification date)"""
 
         # Get pages that have blocks, ordered by their actual date (creation date)
         pages_with_blocks = (
             cls.get_queryset()
-            .filter(user=user, page_type="daily")
+            .filter(user=user)
             .annotate(block_count=Count("blocks"))
             .filter(block_count__gt=0)
             .order_by("-date")[

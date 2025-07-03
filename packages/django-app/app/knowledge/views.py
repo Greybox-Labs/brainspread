@@ -247,6 +247,8 @@ def get_tag_content(request, tag_name):
             block_dict = model_to_dict(block)
             # Add page information for context
             block_dict["page_title"] = block.page.title
+            block_dict["page_type"] = block.page.page_type
+            block_dict["page_slug"] = block.page.slug
             block_dict["page_date"] = (
                 block.page.date.isoformat()
                 if hasattr(block.page, "date") and block.page.date
@@ -577,6 +579,10 @@ def get_historical_data(request):
         for block in result["blocks"]:
             block_data = model_to_dict(block)
             block_data["page_title"] = block.page.title
+            block_data["page_type"] = block.page.page_type
+            block_data["page_slug"] = block.page.slug
+            if block.page.date:
+                block_data["page_date"] = block.page.date.isoformat()
             blocks_data.append(block_data)
 
         return Response(

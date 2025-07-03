@@ -621,6 +621,146 @@ body {
   border: 1px solid var(--border-primary);
 }
 
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 80px; /* Below navbar */
+  right: 1rem;
+  z-index: 2000;
+  pointer-events: none;
+  max-width: 400px;
+  width: 100%;
+}
+
+.toast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  padding: 1rem;
+  box-shadow: 4px 4px 0 var(--border-primary);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  min-width: 300px;
+}
+
+.toast:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--border-primary);
+}
+
+.toast-success {
+  border-color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.toast-error {
+  border-color: var(--error-color);
+  background: var(--bg-primary);
+}
+
+.toast-warning {
+  border-color: #ff9500;
+  background: var(--bg-primary);
+}
+
+.toast-info {
+  border-color: var(--text-secondary);
+  background: var(--bg-primary);
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+}
+
+.toast-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+  color: var(--text-primary);
+}
+
+.toast-error .toast-icon {
+  color: var(--error-color);
+}
+
+.toast-warning .toast-icon {
+  color: #ff9500;
+}
+
+.toast-info .toast-icon {
+  color: var(--text-secondary);
+}
+
+.toast-message {
+  flex: 1;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  color: var(--text-primary);
+}
+
+/* Toast Transitions */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-move {
+  transition: transform 0.3s ease;
+}
+
+/* Mobile responsiveness for toasts */
+@media (max-width: 768px) {
+  .toast-container {
+    top: 70px;
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+
+  .toast {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
 /* Journal Entry Specific */
 .journal-entry h2 {
   margin: 0 0 2rem 0;
@@ -2899,5 +3039,91 @@ body {
 
   .page-actions {
     align-self: flex-end;
+  }
+}
+
+/* Menu Components */
+.menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-btn {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 3px solid var(--border-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  transition: none;
+  box-shadow: 4px 4px 0 var(--border-primary);
+  position: relative;
+}
+
+.menu-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--border-primary);
+}
+
+.menu-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--border-primary);
+}
+
+.menu-popover {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  min-width: 150px;
+  z-index: 9999;
+  box-shadow: 4px 4px 0 var(--shadow-color);
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: normal;
+  border-bottom: 1px solid var(--border-secondary);
+  transition: none;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background: var(--hover-bg);
+}
+
+.menu-item:active {
+  background: var(--selected-bg);
+}
+
+/* Responsive menu adjustments */
+@media (max-width: 768px) {
+  .menu-popover {
+    right: 0;
+    min-width: 120px;
+  }
+
+  .menu-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
   }
 }
