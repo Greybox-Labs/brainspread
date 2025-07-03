@@ -32,9 +32,9 @@
   page
 
 ## mobile usage
-- [ ] better use of space on mobile
-  - [ ] daily note view 
-  - [ ] ai chat 
+- [x] better use of space on mobile
+  - [x] daily note view 
+  - [x] ai chat 
 - [ ] ability to reorder blocks. drag n drop would be great, but maybe just an 
   "editing view" w/ up/down arrow would be sufficient for now
 
@@ -65,8 +65,8 @@
 - [x] core commands's constructors should only take forms, not other args
 - [ ] fix ai_chat forms to take UUIDModelChoiceField, then fix frontend
 - [ ] not all view functions follow conventions. there is a fair amount of
-  business logic in ai_chat view files. knowledge views dont use response types
-- [ ] 
+  business logic in ai_chat view files
+- [x] knowledge views dont use response types
 
 # Questions
 
@@ -99,3 +99,8 @@
 # Maybe later
 
 - [ ] implement sentence-transformer and chromadb
+- [ ] refactor the data models
+  - instead of having a Page, Block, Tag, could we just have Page and Block, and
+  to support "tags", we would allow a Block to belong to many Pages. a "tag"
+  would mean a block belongs to that Page and the frontend would render and
+  parse the information as "tags" visually.
