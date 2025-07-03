@@ -34,6 +34,8 @@ const TagPage = {
   async mounted() {
     // Add event listener to close context menu when clicking outside
     document.addEventListener("click", this.handleDocumentClick);
+    // Add event delegation for clickable hashtags in content
+    document.addEventListener("click", this.handleTagClick);
 
     if (this.currentTag) {
       await this.loadTagContent();
@@ -45,6 +47,7 @@ const TagPage = {
   beforeUnmount() {
     // Clean up event listeners
     document.removeEventListener("click", this.handleDocumentClick);
+    document.removeEventListener("click", this.handleTagClick);
   },
 
   computed: {
@@ -163,13 +166,26 @@ const TagPage = {
       this.$emit("block-remove-from-context", block);
     },
 
-    goToDailyNote() {
-      window.location.href = `/knowledge/`;
-    },
-
     goToPage(pageUuid) {
       // Navigate to a specific page
       window.location.href = `/knowledge/page/${pageUuid}/`;
+    },
+
+    handleTagClick(event) {
+      // Check if the clicked element is a clickable tag
+      if (event.target.classList.contains("clickable-tag")) {
+        event.preventDefault();
+        const tagName = event.target.getAttribute("data-tag");
+        if (tagName) {
+          this.goToTag(tagName);
+        }
+      }
+    },
+
+    goToTag(tagName) {
+      // Navigate to the tag page with full page redirect
+      const url = `/knowledge/tag/${encodeURIComponent(tagName)}/`;
+      window.location.href = url;
     },
 
     formatContentWithTags(content) {
@@ -208,9 +224,6 @@ const TagPage = {
       <!-- Header matching original exactly -->
       <header class="daily-note-header">
         <h1>tag: {{ currentTag }}</h1>
-        <div class="header-controls">
-          <button @click="goToDailyNote()" class="btn btn-outline">← back to daily notes</button>
-        </div>
       </header>
 
       <!-- Loading State -->
