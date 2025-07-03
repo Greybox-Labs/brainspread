@@ -26,7 +26,6 @@ const PagePage = {
       blocks: [],
       loading: false,
       error: null,
-      successMessage: "",
       isEditingTitle: false,
       newTitle: "",
       showContextMenu: false,
@@ -447,12 +446,7 @@ const PagePage = {
         if (result.success) {
           this.page.title = this.newTitle.trim();
           this.isEditingTitle = false;
-          this.successMessage = "Page title updated successfully";
-
-          // Clear success message after a few seconds
-          setTimeout(() => {
-            this.successMessage = "";
-          }, 3000);
+          this.$parent.addToast("Page title updated successfully", "success");
         } else {
           this.error = "Failed to update page title";
         }
@@ -501,7 +495,10 @@ const PagePage = {
         const result = await window.apiService.deletePage(this.page.uuid);
 
         if (result.success) {
-          this.successMessage = `${pageTypeText.charAt(0).toUpperCase() + pageTypeText.slice(1)} deleted successfully`;
+          this.$parent.addToast(
+            `${pageTypeText.charAt(0).toUpperCase() + pageTypeText.slice(1)} deleted successfully`,
+            "success"
+          );
 
           // Redirect to knowledge base
           setTimeout(() => {
@@ -528,15 +525,10 @@ const PagePage = {
 
         if (result.success) {
           const data = result.data;
-          this.successMessage = data.message;
+          this.$parent.addToast(data.message, "success");
 
           // Reload the current page to show the moved TODOs
           await this.loadPage();
-
-          // Clear success message after a few seconds
-          setTimeout(() => {
-            this.successMessage = "";
-          }, 3000);
         } else {
           this.error =
             result.errors?.non_field_errors?.[0] ||
@@ -665,7 +657,6 @@ const PagePage = {
         :blocks="blocks"
         :loading="loading"
         :error="error"
-        :success-message="successMessage"
         :chat-context-blocks="chatContextBlocks"
         :is-block-in-context="isBlockInContext"
         @create-block="handleCreateBlock"

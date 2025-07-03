@@ -90,7 +90,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Verify the result
         self.assertEqual(result["moved_count"], 2)
-        self.assertEqual(result["target_page"], today_page)
+        self.assertEqual(result["target_page"]["uuid"], str(today_page.uuid))
         self.assertIn("2 undone TODOs", result["message"])
 
         # Refresh blocks from database
@@ -271,14 +271,14 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # All TODOs should now be on today's page
         today_page = result["target_page"]
-        self.assertEqual(todo_day1_first.page, today_page)
-        self.assertEqual(todo_day1_second.page, today_page)
-        self.assertEqual(todo_day2_first.page, today_page)
+        self.assertEqual(str(todo_day1_first.page.uuid), today_page["uuid"])
+        self.assertEqual(str(todo_day1_second.page.uuid), today_page["uuid"])
+        self.assertEqual(str(todo_day2_first.page.uuid), today_page["uuid"])
 
         # Verify the relative order is preserved (older dates first, then by original order)
-        moved_blocks = Block.objects.filter(page=today_page, parent=None).order_by(
-            "order"
-        )
+        moved_blocks = Block.objects.filter(
+            page__uuid=today_page["uuid"], parent=None
+        ).order_by("order")
         expected_order = [todo_day1_first, todo_day1_second, todo_day2_first]
 
         for i, expected_block in enumerate(expected_order):
@@ -442,7 +442,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Verify TODOs were moved to target date
         self.assertEqual(result["moved_count"], 2)
-        self.assertEqual(result["target_page"].date, target_date)
+        self.assertEqual(result["target_page"]["date"], target_date.isoformat())
 
         # Verify blocks are now on target date page
         todo1.refresh_from_db()
@@ -485,7 +485,7 @@ class TestMoveUndoneTodosCommand(TestCase):
 
         # Verify TODO was moved to current date (today)
         self.assertEqual(result["moved_count"], 1)
-        self.assertEqual(result["target_page"].date, today)
+        self.assertEqual(result["target_page"]["date"], today.isoformat())
 
         # Verify block is now on today's page
         todo.refresh_from_db()

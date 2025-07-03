@@ -1,8 +1,10 @@
 from datetime import date
+from typing import List, Optional, TypedDict
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms.move_undone_todos_form import MoveUndoneTodosForm
+from ..models import BlockData, PageData
 from ..repositories import BlockRepository
 from ..repositories.page_repository import PageRepository
 
@@ -13,7 +15,7 @@ class MoveUndoneTodosCommand(AbstractBaseCommand):
     def __init__(self, form: MoveUndoneTodosForm) -> None:
         self.form = form
 
-    def execute(self) -> dict:
+    def execute(self) -> "MoveUndoneTodosData":
         """Execute the command"""
         super().execute()  # This validates the form
 
@@ -31,7 +33,8 @@ class MoveUndoneTodosCommand(AbstractBaseCommand):
         if not past_todos:
             return {
                 "moved_count": 0,
-                "target_page": target_page,
+                "target_page": target_page.to_dict(),
+                "moved_blocks": None,
                 "message": "No undone TODOs found to move",
             }
 
@@ -43,7 +46,14 @@ class MoveUndoneTodosCommand(AbstractBaseCommand):
 
         return {
             "moved_count": len(past_todos),
-            "target_page": target_page,
+            "target_page": target_page.to_dict(),
             "moved_blocks": past_todos,
             "message": f"Moved {len(past_todos)} undone TODOs to {target_date.strftime('%Y-%m-%d')} page",
         }
+
+
+class MoveUndoneTodosData(TypedDict):
+    moved_count: int
+    target_page: PageData
+    moved_blocks: Optional[List[BlockData]]
+    message: str

@@ -238,7 +238,7 @@ window.HistoricalSidebar = {
                     
                     <!-- Second row: date (only for non-daily pages) -->
                     <div v-if="page.page_type !== 'daily'" class="page-date-row">
-                      <div class="item-date">{{ formatDate(page.modified_at) }}</div>
+                      <div class="item-date">{{ formatDate(page.modified_at || page.created_at) }}</div>
                     </div>
                     
                     <!-- Content rows: recent blocks -->

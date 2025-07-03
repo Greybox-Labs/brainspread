@@ -1,4 +1,5 @@
 import re
+from typing import Any, Dict, List, TypedDict
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -7,6 +8,22 @@ from django.db import models
 
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
+
+
+# TypedDict definitions for API responses
+class TagData(TypedDict):
+    name: str
+    color: str
+    uuid: str
+
+
+class TagContentData(TypedDict):
+    tag: TagData
+    blocks: List[Dict[str, Any]]
+    pages: List[Dict[str, Any]]
+    total_blocks: int
+    total_pages: int
+    total_content: int
 
 
 class Tag(UUIDModelMixin, CRUDTimestampsMixin):
@@ -21,6 +38,14 @@ class Tag(UUIDModelMixin, CRUDTimestampsMixin):
 
     def __str__(self):
         return f"#{self.name}"
+
+    def to_dict(self) -> TagData:
+        """Convert Tag instance to TagData TypedDict"""
+        return TagData(
+            name=self.name,
+            color=self.color,
+            uuid=str(self.uuid),
+        )
 
 
 class TaggedItem(UUIDModelMixin, CRUDTimestampsMixin):

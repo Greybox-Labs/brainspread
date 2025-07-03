@@ -28,10 +28,6 @@ const Page = {
       type: String,
       default: null,
     },
-    successMessage: {
-      type: String,
-      default: "",
-    },
   },
   emits: [
     "block-add-to-context",
@@ -437,7 +433,6 @@ const Page = {
       </div>
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
-      <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
     </div>
   `,
 };

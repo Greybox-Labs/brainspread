@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
@@ -20,6 +20,8 @@ from knowledge.commands import (
     UpdateBlockCommand,
     UpdatePageCommand,
 )
+from knowledge.commands.get_historical_data_command import HistoricalData
+from knowledge.commands.move_undone_todos_command import MoveUndoneTodosData
 from knowledge.forms import (
     CreateBlockForm,
     CreatePageForm,
@@ -34,74 +36,100 @@ from knowledge.forms import (
     UpdatePageForm,
 )
 from knowledge.models import BlockData, PageData
-from knowledge.repositories import BlockRepository
 from tagging.commands import GetTagContentCommand
 from tagging.forms import GetTagContentForm
+from tagging.models import TagContentData
 
 
-# API Response Types for this view
-class CreatePageResponse(TypedDict):
-    page: PageData
-
-
-class UpdatePageResponse(TypedDict):
-    page: PageData
-
-
-class GetUserPagesResponse(TypedDict):
+# Data type definitions for response data fields
+class GetPagesData(TypedDict):
     pages: List[PageData]
-
-
-class DeletePageResponse(TypedDict):
-    success: bool
-    message: str
-
-
-class CreateBlockResponse(TypedDict):
-    block: BlockData
-
-
-class UpdateBlockResponse(TypedDict):
-    block: BlockData
-
-
-class ToggleBlockTodoResponse(TypedDict):
-    block: BlockData
-
-
-class DeleteBlockResponse(TypedDict):
-    success: bool
-    message: str
-
-
-class GetHistoricalDataResponse(TypedDict):
-    data: List[Dict[str, Any]]
-
-
-class GetTagContentResponse(TypedDict):
-    tag: Dict[str, Any]
-    blocks: List[Dict[str, Any]]
-    pages: List[Dict[str, Any]]
-    total_blocks: int
-    total_pages: int
-    total_content: int
-
-
-class GetPagesResponse(TypedDict):
-    pages: List[Dict[str, Any]]
     total_count: int
     has_more: bool
 
 
-class GetPageWithBlocksResponse(TypedDict):
+class GetPageWithBlocksData(TypedDict):
     page: PageData
     blocks: List[BlockData]
 
 
+# API Response Types with specific data types
+class CreatePageResponse(TypedDict):
+    success: bool
+    data: Optional[PageData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class UpdatePageResponse(TypedDict):
+    success: bool
+    data: Optional[PageData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class GetUserPagesResponse(TypedDict):
+    success: bool
+    data: Optional[GetPagesData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class DeletePageResponse(TypedDict):
+    success: bool
+    data: Optional[Dict[str, str]]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class CreateBlockResponse(TypedDict):
+    success: bool
+    data: Optional[BlockData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class UpdateBlockResponse(TypedDict):
+    success: bool
+    data: Optional[BlockData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class ToggleBlockTodoResponse(TypedDict):
+    success: bool
+    data: Optional[BlockData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class DeleteBlockResponse(TypedDict):
+    success: bool
+    data: Optional[Dict[str, str]]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class GetHistoricalDataResponse(TypedDict):
+    success: bool
+    data: Optional[HistoricalData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class GetTagContentResponse(TypedDict):
+    success: bool
+    data: Optional[TagContentData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class GetPagesResponse(TypedDict):
+    success: bool
+    data: Optional[GetPagesData]
+    errors: Optional[Dict[str, List[str]]]
+
+
+class GetPageWithBlocksResponse(TypedDict):
+    success: bool
+    data: Optional[GetPageWithBlocksData]
+    errors: Optional[Dict[str, List[str]]]
+
+
 class MoveUndoneTodosResponse(TypedDict):
-    moved_count: int
-    target_page: Dict[str, Any]
-    message: str
+    success: bool
+    data: Optional[MoveUndoneTodosData]
+    errors: Optional[Dict[str, List[str]]]
 
 
 def index(request, date=None, tag_name=None, slug=None):
@@ -121,24 +149,37 @@ def create_page(request):
         if form.is_valid():
             command = CreatePageCommand(form)
             page = command.execute()
-            return Response({"success": True, "data": page.to_dict()})
+
+            response: CreatePageResponse = {
+                "success": True,
+                "data": page.to_dict(),
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: CreatePageResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        response: CreatePageResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: CreatePageResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -174,14 +215,8 @@ def get_tag_content(request, tag_name):
         for page in result["pages"]:
             pages_data.append(page.to_dict())
 
-        tag_dict = {
-            "name": result["tag"].name,
-            "color": result["tag"].color,
-            "uuid": str(result["tag"].uuid),
-        }
-
-        response_data: GetTagContentResponse = {
-            "tag": tag_dict,
+        tag_content_data: TagContentData = {
+            "tag": result["tag"].to_dict(),
             "blocks": blocks_data,
             "pages": pages_data,
             "total_blocks": len(blocks_data),
@@ -189,13 +224,21 @@ def get_tag_content(request, tag_name):
             "total_content": len(blocks_data) + len(pages_data),
         }
 
-        return Response({"success": True, "data": response_data})
+        response: GetTagContentResponse = {
+            "success": True,
+            "data": tag_content_data,
+            "errors": None,
+        }
+
+        return Response(response)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: GetTagContentResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])
@@ -210,12 +253,21 @@ def update_page(request):
         if form.is_valid():
             command = UpdatePageCommand(form)
             page = command.execute()
-            return Response({"success": True, "data": page.to_dict()})
+
+            response: UpdatePageResponse = {
+                "success": True,
+                "data": page.to_dict(),
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: UpdatePageResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
         return Response(
@@ -224,10 +276,12 @@ def update_page(request):
         )
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: UpdatePageResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])
@@ -241,25 +295,38 @@ def delete_page(request):
 
         if form.is_valid():
             command = DeletePageCommand(form)
-            result = command.execute()
-            return Response({"success": True, "data": {"deleted": result}})
+            command.execute()
+
+            response: DeletePageResponse = {
+                "success": True,
+                "data": {"message": "Page deleted successfully"},
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: DeletePageResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        response: DeletePageResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: DeletePageResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -275,24 +342,34 @@ def get_pages(request):
             command = GetUserPagesCommand(form)
             result = command.execute()
 
-            response_data: GetPagesResponse = {
+            pages_data: GetPagesData = {
                 "pages": [page.to_dict() for page in result["pages"]],
                 "total_count": result["total_count"],
                 "has_more": result["has_more"],
             }
 
-            return Response({"success": True, "data": response_data})
+            response: GetPagesResponse = {
+                "success": True,
+                "data": pages_data,
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: GetPagesResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: GetPagesResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # New block-centric API endpoints
@@ -309,17 +386,25 @@ def get_page_with_blocks(request):
             command = GetPageWithBlocksCommand(form)
             page, blocks = command.execute()
 
-            response_data: GetPageWithBlocksResponse = {
+            page_with_blocks_data: GetPageWithBlocksData = {
                 "page": page.to_dict(),
                 "blocks": [block.to_dict_with_children() for block in blocks],
             }
 
-            return Response({"success": True, "data": response_data})
+            response: GetPageWithBlocksResponse = {
+                "success": True,
+                "data": page_with_blocks_data,
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: GetPageWithBlocksResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
         return Response(
@@ -328,10 +413,12 @@ def get_page_with_blocks(request):
         )
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: GetPageWithBlocksResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -347,18 +434,29 @@ def create_block(request):
         if form.is_valid():
             command = CreateBlockCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": block.to_dict()})
+
+            response: CreateBlockResponse = {
+                "success": True,
+                "data": block.to_dict(),
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: CreateBlockResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: CreateBlockResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])
@@ -374,12 +472,21 @@ def update_block(request):
         if form.is_valid():
             command = UpdateBlockCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": block.to_dict()})
+
+            response: UpdateBlockResponse = {
+                "success": True,
+                "data": block.to_dict(),
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: UpdateBlockResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
         return Response(
@@ -388,10 +495,12 @@ def update_block(request):
         )
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: UpdateBlockResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])
@@ -406,25 +515,38 @@ def delete_block(request):
 
         if form.is_valid():
             command = DeleteBlockCommand(form)
-            result = command.execute()
-            return Response({"success": True, "data": {"deleted": result}})
+            command.execute()
+
+            response: DeleteBlockResponse = {
+                "success": True,
+                "data": {"message": "Block deleted successfully"},
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: DeleteBlockResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        response: DeleteBlockResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: DeleteBlockResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -440,12 +562,21 @@ def toggle_block_todo(request):
         if form.is_valid():
             command = ToggleBlockTodoCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": block.to_dict()})
+
+            response: ToggleBlockTodoResponse = {
+                "success": True,
+                "data": block.to_dict(),
+                "errors": None,
+            }
+
+            return Response(response)
         else:
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: ToggleBlockTodoResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
         return Response(
@@ -454,10 +585,12 @@ def toggle_block_todo(request):
         )
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: ToggleBlockTodoResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
@@ -470,48 +603,32 @@ def get_historical_data(request):
         form_data["user"] = request.user.pk
         form = GetHistoricalDataForm(form_data)
         if not form.is_valid():
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: GetHistoricalDataResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
         # Use command to get historical data
         command = GetHistoricalDataCommand(form=form)
-        result = command.execute()
+        result: HistoricalData = command.execute()
 
-        # Format the data
-        pages_data = []
-        for page in result["pages"]:
-            page_data = page.to_dict()
-            # Get a few recent blocks from this page
-            page_blocks = BlockRepository.get_recent_blocks_for_page(page, 3)
-            page_data["recent_blocks"] = [block.to_dict() for block in page_blocks]
-            pages_data.append(page_data)
+        response: GetHistoricalDataResponse = {
+            "success": True,
+            "data": result,
+            "errors": None,
+        }
 
-        blocks_data = []
-        for block in result["blocks"]:
-            blocks_data.append(block.to_dict(include_page_context=True))
-
-        return Response(
-            {
-                "success": True,
-                "data": {
-                    "pages": pages_data,
-                    "blocks": blocks_data,
-                    "date_range": {
-                        "start": result["date_range"]["start"].isoformat(),
-                        "end": result["date_range"]["end"].isoformat(),
-                        "days_back": result["date_range"]["days_back"],
-                    },
-                },
-            }
-        )
+        return Response(response)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: GetHistoricalDataResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -528,24 +645,35 @@ def move_undone_todos(request):
         form = MoveUndoneTodosForm(form_data)
 
         if not form.is_valid():
-            return Response(
-                {"success": False, "errors": form.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            response: MoveUndoneTodosResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
         command = MoveUndoneTodosCommand(form)
         result = command.execute()
 
-        response_data: MoveUndoneTodosResponse = {
+        todos_data: MoveUndoneTodosData = {
             "moved_count": result["moved_count"],
-            "target_page": result["target_page"].to_dict(),
+            "target_page": result["target_page"],
+            "moved_blocks": result["moved_blocks"],
             "message": result["message"],
         }
 
-        return Response({"success": True, "data": response_data})
+        response: MoveUndoneTodosResponse = {
+            "success": True,
+            "data": todos_data,
+            "errors": None,
+        }
+
+        return Response(response)
 
     except Exception as e:
-        return Response(
-            {"success": False, "errors": {"non_field_errors": [str(e)]}},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        response: MoveUndoneTodosResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

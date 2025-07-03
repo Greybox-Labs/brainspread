@@ -1,10 +1,11 @@
+from datetime import date
 from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 
-from common.forms.user_form import UserForm
 from core.models import User
 from knowledge.commands import MoveUndoneTodosCommand
+from knowledge.forms import MoveUndoneTodosForm
 
 
 class Command(BaseCommand):
@@ -27,8 +28,8 @@ class Command(BaseCommand):
             raise CommandError(f"User with email '{user_email}' does not exist")
 
         # Create form and command
-        form_data = {"user": user}
-        form = UserForm(form_data)
+        form_data = {"user": user, "target_date": date.today()}
+        form = MoveUndoneTodosForm(form_data)
 
         if not form.is_valid():
             raise CommandError(f"Form validation failed: {form.errors}")
@@ -44,5 +45,5 @@ class Command(BaseCommand):
 
         if result["moved_count"] > 0:
             self.stdout.write(
-                f"Target page: {result['target_page'].title} ({result['target_page'].uuid})"
+                f"Target page: {result['target_page']['title']} ({result['target_page']['uuid']})"
             )

@@ -23,7 +23,6 @@ const TagPage = {
       blocks: [],
       loading: false,
       error: null,
-      successMessage: "",
       // Track blocks being deleted to prevent save conflicts
       deletingBlocks: new Set(),
       // Context menu state
@@ -236,10 +235,6 @@ const TagPage = {
         {{ error }}
       </div>
 
-      <!-- Success Message -->
-      <div v-if="successMessage" class="success">
-        {{ successMessage }}
-      </div>
 
       <!-- Tag Content (matching original DailyNote styling exactly) -->
       <div v-else-if="tagData" class="tag-page-content">

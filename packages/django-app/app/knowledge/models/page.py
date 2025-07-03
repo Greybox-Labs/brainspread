@@ -1,11 +1,12 @@
 import re
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, List, Optional, TypedDict
 
 from django.conf import settings
 from django.db import models
 
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
+from knowledge.models import BlockData
 from tagging.models import TaggableMixin
 
 if TYPE_CHECKING:
@@ -72,6 +73,7 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             "updated_at": self.modified_at.isoformat(),
             "user_uuid": str(self.user.uuid),
             "tags": [{"name": tag.name, "color": tag.color} for tag in self.get_tags()],
+            "recent_blocks": None,  # fill these in later
         }
 
 
@@ -88,3 +90,4 @@ class PageData(TypedDict):
     updated_at: str
     user_uuid: str
     tags: list
+    recent_blocks: Optional[List[BlockData]]
