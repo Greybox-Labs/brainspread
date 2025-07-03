@@ -50,11 +50,6 @@ const KnowledgeApp = createApp({
 
       return "page"; // Default fallback for /knowledge/ - redirect to today's date
     },
-
-    shouldShowHistoricalSidebar() {
-      // Show historical sidebar for all page types
-      return this.currentPageType === "page";
-    },
   },
 
   async mounted() {
@@ -441,7 +436,6 @@ const KnowledgeApp = createApp({
                     </div>
                     <div v-else class="content-layout">
                         <HistoricalSidebar 
-                            v-if="shouldShowHistoricalSidebar" 
                             @navigate-to-date="onNavigateToDate"
                             @navigate-to-slug="onNavigateToSlug" />
                         <div class="main-content-area">
