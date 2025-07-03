@@ -177,6 +177,51 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             }
         return None
 
+    def to_dict(self, include_page_context: bool = False) -> "BlockData":
+        """Convert block to dictionary with proper typing"""
+        data: BlockData = {
+            "uuid": str(self.uuid),
+            "content": self.content,
+            "content_type": self.content_type,
+            "block_type": self.block_type,
+            "order": self.order,
+            "collapsed": self.collapsed,
+            "parent_block_uuid": str(self.parent.uuid) if self.parent else None,
+            "page_uuid": str(self.page.uuid),
+            "user_uuid": str(self.user.uuid),
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.modified_at.isoformat(),
+            "media_url": self.media_url,
+            "properties": self.properties or {},
+            "tags": [{"name": tag.name, "color": tag.color} for tag in self.get_tags()],
+            "children": None,
+            # Page context fields (optional)
+            "page_title": None,
+            "page_type": None,
+            "page_slug": None,
+            "page_date": None,
+        }
+
+        # Add page context if requested
+        if include_page_context and self.page:
+            data["page_title"] = self.page.title
+            data["page_type"] = self.page.page_type
+            data["page_slug"] = self.page.slug
+            data["page_date"] = self.page.date.isoformat() if self.page.date else None
+
+        return data
+
+    def to_dict_with_children(self, include_page_context: bool = False) -> "BlockData":
+        """Convert block to dict with nested children"""
+        block_data = self.to_dict(include_page_context=include_page_context)
+        children = []
+        for child in self.get_children():
+            children.append(
+                child.to_dict_with_children(include_page_context=include_page_context)
+            )
+        block_data["children"] = children
+        return block_data
+
 
 # API response type for Block data
 class BlockData(TypedDict):
@@ -193,6 +238,8 @@ class BlockData(TypedDict):
     updated_at: str
     media_url: str
     properties: dict
+    tags: Optional[list]
+    children: Optional[list["BlockData"]]
     # Page context fields (when included in API responses)
     page_title: Optional[str]
     page_type: Optional[str]

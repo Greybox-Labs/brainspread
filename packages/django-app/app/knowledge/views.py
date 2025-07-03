@@ -94,8 +94,8 @@ class GetPagesResponse(TypedDict):
 
 
 class GetPageWithBlocksResponse(TypedDict):
-    page: Dict[str, Any]
-    blocks: List[Dict[str, Any]]
+    page: PageData
+    blocks: List[BlockData]
 
 
 class MoveUndoneTodosResponse(TypedDict):
@@ -106,82 +106,6 @@ class MoveUndoneTodosResponse(TypedDict):
 
 def index(request, date=None, tag_name=None, slug=None):
     return render(request, "knowledge/index.html")
-
-
-def model_to_dict(instance):
-    """Convert model instance to dictionary"""
-    data = {
-        "uuid": str(instance.uuid),
-        "created_at": instance.created_at.isoformat(),
-        "modified_at": instance.modified_at.isoformat(),
-    }
-
-    if hasattr(instance, "user"):
-        data["user_id"] = str(instance.user.uuid)
-
-    if hasattr(instance, "date"):
-        # Ensure date is serialized as YYYY-MM-DD format without timezone conversion
-        data["date"] = instance.date.strftime("%Y-%m-%d") if instance.date else None
-
-    if hasattr(instance, "content"):
-        data["content"] = instance.content
-
-    if hasattr(instance, "title"):
-        data["title"] = instance.title
-
-    if hasattr(instance, "slug"):
-        data["slug"] = instance.slug
-
-    if hasattr(instance, "page_type"):
-        data["page_type"] = instance.page_type
-
-    if hasattr(instance, "block_type"):
-        data["block_type"] = instance.block_type
-
-    if hasattr(instance, "content_type"):
-        data["content_type"] = instance.content_type
-
-    if hasattr(instance, "order"):
-        data["order"] = instance.order
-
-    if hasattr(instance, "collapsed"):
-        data["collapsed"] = instance.collapsed
-
-    if hasattr(instance, "parent"):
-        data["parent_uuid"] = str(instance.parent.uuid) if instance.parent else None
-
-    if hasattr(instance, "page"):
-        data["page_uuid"] = str(instance.page.uuid) if instance.page else None
-
-    if hasattr(instance, "media_url"):
-        data["media_url"] = instance.media_url
-
-    if hasattr(instance, "media_file"):
-        data["media_file"] = instance.media_file.url if instance.media_file else None
-
-    if hasattr(instance, "media_metadata"):
-        data["media_metadata"] = instance.media_metadata
-
-    if hasattr(instance, "properties"):
-        data["properties"] = instance.properties
-
-    # Add tags
-    if hasattr(instance, "get_tags"):
-        data["tags"] = [
-            {"name": tag.name, "color": tag.color} for tag in instance.get_tags()
-        ]
-
-    return data
-
-
-def block_to_dict_with_children(block):
-    """Convert block to dict with nested children"""
-    block_data = model_to_dict(block)
-    children = []
-    for child in block.get_children():
-        children.append(block_to_dict_with_children(child))
-    block_data["children"] = children
-    return block_data
 
 
 # Page management endpoints
@@ -197,7 +121,7 @@ def create_page(request):
         if form.is_valid():
             command = CreatePageCommand(form)
             page = command.execute()
-            return Response({"success": True, "data": model_to_dict(page)})
+            return Response({"success": True, "data": page.to_dict()})
         else:
             return Response(
                 {"success": False, "errors": form.errors},
@@ -244,22 +168,11 @@ def get_tag_content(request, tag_name):
         # Format the response data
         blocks_data = []
         for block in result["blocks"]:
-            block_dict = model_to_dict(block)
-            # Add page information for context
-            block_dict["page_title"] = block.page.title
-            block_dict["page_type"] = block.page.page_type
-            block_dict["page_slug"] = block.page.slug
-            block_dict["page_date"] = (
-                block.page.date.isoformat()
-                if hasattr(block.page, "date") and block.page.date
-                else None
-            )
-            blocks_data.append(block_dict)
+            blocks_data.append(block.to_dict(include_page_context=True))
 
         pages_data = []
         for page in result["pages"]:
-            page_dict = model_to_dict(page)
-            pages_data.append(page_dict)
+            pages_data.append(page.to_dict())
 
         tag_dict = {
             "name": result["tag"].name,
@@ -297,7 +210,7 @@ def update_page(request):
         if form.is_valid():
             command = UpdatePageCommand(form)
             page = command.execute()
-            return Response({"success": True, "data": model_to_dict(page)})
+            return Response({"success": True, "data": page.to_dict()})
         else:
             return Response(
                 {"success": False, "errors": form.errors},
@@ -363,7 +276,7 @@ def get_pages(request):
             result = command.execute()
 
             response_data: GetPagesResponse = {
-                "pages": [model_to_dict(page) for page in result["pages"]],
+                "pages": [page.to_dict() for page in result["pages"]],
                 "total_count": result["total_count"],
                 "has_more": result["has_more"],
             }
@@ -397,8 +310,8 @@ def get_page_with_blocks(request):
             page, blocks = command.execute()
 
             response_data: GetPageWithBlocksResponse = {
-                "page": model_to_dict(page),
-                "blocks": [block_to_dict_with_children(block) for block in blocks],
+                "page": page.to_dict(),
+                "blocks": [block.to_dict_with_children() for block in blocks],
             }
 
             return Response({"success": True, "data": response_data})
@@ -434,7 +347,7 @@ def create_block(request):
         if form.is_valid():
             command = CreateBlockCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": model_to_dict(block)})
+            return Response({"success": True, "data": block.to_dict()})
         else:
             return Response(
                 {"success": False, "errors": form.errors},
@@ -461,7 +374,7 @@ def update_block(request):
         if form.is_valid():
             command = UpdateBlockCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": model_to_dict(block)})
+            return Response({"success": True, "data": block.to_dict()})
         else:
             return Response(
                 {"success": False, "errors": form.errors},
@@ -527,7 +440,7 @@ def toggle_block_todo(request):
         if form.is_valid():
             command = ToggleBlockTodoCommand(form)
             block = command.execute()
-            return Response({"success": True, "data": model_to_dict(block)})
+            return Response({"success": True, "data": block.to_dict()})
         else:
             return Response(
                 {"success": False, "errors": form.errors},
@@ -569,21 +482,15 @@ def get_historical_data(request):
         # Format the data
         pages_data = []
         for page in result["pages"]:
-            page_data = model_to_dict(page)
+            page_data = page.to_dict()
             # Get a few recent blocks from this page
             page_blocks = BlockRepository.get_recent_blocks_for_page(page, 3)
-            page_data["recent_blocks"] = [model_to_dict(block) for block in page_blocks]
+            page_data["recent_blocks"] = [block.to_dict() for block in page_blocks]
             pages_data.append(page_data)
 
         blocks_data = []
         for block in result["blocks"]:
-            block_data = model_to_dict(block)
-            block_data["page_title"] = block.page.title
-            block_data["page_type"] = block.page.page_type
-            block_data["page_slug"] = block.page.slug
-            if block.page.date:
-                block_data["page_date"] = block.page.date.isoformat()
-            blocks_data.append(block_data)
+            blocks_data.append(block.to_dict(include_page_context=True))
 
         return Response(
             {
@@ -631,7 +538,7 @@ def move_undone_todos(request):
 
         response_data: MoveUndoneTodosResponse = {
             "moved_count": result["moved_count"],
-            "target_page": model_to_dict(result["target_page"]),
+            "target_page": result["target_page"].to_dict(),
             "message": result["message"],
         }
 
