@@ -104,7 +104,7 @@ class MoveUndoneTodosResponse(TypedDict):
     message: str
 
 
-def index(request, date=None, tag_name=None):
+def index(request, date=None, tag_name=None, slug=None):
     return render(request, "knowledge/index.html")
 
 

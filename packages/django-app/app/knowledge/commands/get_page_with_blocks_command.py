@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 import pytz
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from common.commands.abstract_base_command import AbstractBaseCommand
@@ -23,10 +24,18 @@ class GetPageWithBlocksCommand(AbstractBaseCommand):
         user = self.form.cleaned_data.get("user")
         page = self.form.cleaned_data.get("page")
         date = self.form.cleaned_data.get("date")
+        slug = self.form.cleaned_data.get("slug")
 
-        if date:
+        if slug:
+            # Get regular page by slug
+            page = PageRepository.get_by_slug(slug, user)
+            if not page:
+                raise ValidationError(f"Page with slug '{slug}' not found")
+        elif date:
+            # Get or create daily note
             page, created = PageRepository.get_or_create_daily_note(user, date)
         elif not page:
+            # Default to today's daily note
             try:
                 if user.timezone and user.timezone != "UTC":
                     user_tz = pytz.timezone(user.timezone)

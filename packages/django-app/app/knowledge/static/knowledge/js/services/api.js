@@ -144,12 +144,14 @@ class ApiService {
   }
 
   // New block-centric methods
-  async getPageWithBlocks(pageUuid = null, date = null) {
+  async getPageWithBlocks(pageUuid = null, date = null, slug = null) {
     let params = "";
     if (pageUuid) {
       params = `?page=${pageUuid}`;
     } else if (date) {
       params = `?date=${date}`;
+    } else if (slug) {
+      params = `?slug=${slug}`;
     }
 
     return await this.request(`/knowledge/api/page/${params}`);

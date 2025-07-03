@@ -21,6 +21,8 @@ const KnowledgeApp = createApp({
 
   components: {
     DailyNote: window.DailyNote,
+    DailyNotePage: window.DailyNotePage,
+    PagePage: window.PagePage,
     TagPage: window.TagPage,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
@@ -254,6 +256,41 @@ const KnowledgeApp = createApp({
     onBlockRemoveFromContext(blockId) {
       this.removeBlockFromContext(blockId);
     },
+
+    async createNewPage() {
+      const title = prompt("Enter page title:");
+      if (!title || !title.trim()) return;
+
+      try {
+        // Generate a simple slug from the title
+        const slug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .trim("-");
+
+        const result = await window.apiService.createPage(
+          title.trim(),
+          "",
+          slug,
+          true
+        );
+
+        if (result.success) {
+          // Navigate to the new page
+          window.location.href = `/knowledge/page/${slug}/`;
+        } else {
+          alert(
+            "Failed to create page: " +
+              (result.errors?.title?.[0] || "Unknown error")
+          );
+        }
+      } catch (error) {
+        console.error("Failed to create page:", error);
+        alert("Failed to create page. Please try again.");
+      }
+    },
   },
 
   template: `
@@ -270,6 +307,7 @@ const KnowledgeApp = createApp({
                         <h1><a href="/knowledge/" class="brand-link">brainspread</a></h1>
                         <div class="nav-right">
                             <span class="user-info">Hello, {{ user?.email }}</span>
+                            <button @click="createNewPage" class="btn btn-outline">+ page</button>
                             <button @click="openSettings()" class="settings-btn">settings</button>
                             <button @click="handleLogout" class="btn btn-outline">LOGOUT</button>
                         </div>
@@ -291,7 +329,7 @@ const KnowledgeApp = createApp({
                                 @block-remove-from-context="onBlockRemoveFromContext"
                                 @visible-blocks-changed="updateVisibleBlocks"
                             />
-                            <DailyNote
+                            <DailyNotePage
                                 v-else-if="currentPageType === 'daily'"
                                 ref="dailyNote"
                                 :chat-context-blocks="chatContextBlocks"
@@ -300,10 +338,14 @@ const KnowledgeApp = createApp({
                                 @block-remove-from-context="onBlockRemoveFromContext"
                                 @visible-blocks-changed="updateVisibleBlocks"
                             />
-                            <!-- Add new page components here:
-                            <SearchPage v-else-if="currentPageType === 'search'" ... />
-                            <ArchivePage v-else-if="currentPageType === 'archive'" ... />
-                            -->
+                            <PagePage
+                                v-else-if="currentPageType === 'page'"
+                                :chat-context-blocks="chatContextBlocks"
+                                :is-block-in-context="isBlockInContext"
+                                @block-add-to-context="onBlockAddToContext"
+                                @block-remove-from-context="onBlockRemoveFromContext"
+                                @visible-blocks-changed="updateVisibleBlocks"
+                            />
                         </div>
                         <ChatPanel
                             :chat-context-blocks="chatContextBlocks"

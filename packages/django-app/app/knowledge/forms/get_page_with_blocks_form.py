@@ -14,6 +14,7 @@ class GetPageWithBlocksForm(BaseForm):
     user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
     page = UUIDModelChoiceField(queryset=PageRepository.get_queryset(), required=False)
     date = forms.DateField(required=False)
+    slug = forms.CharField(max_length=255, required=False)
 
     def clean_user(self) -> User:
         user = self.cleaned_data.get("user")
@@ -32,8 +33,9 @@ class GetPageWithBlocksForm(BaseForm):
         cleaned_data = super().clean()
         page = cleaned_data.get("page")
         date = cleaned_data.get("date")
+        slug = cleaned_data.get("slug")
 
-        if not page and not date:
+        if not page and not date and not slug:
             cleaned_data["date"] = datetime.now().date()
 
         return cleaned_data

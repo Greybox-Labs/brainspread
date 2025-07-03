@@ -8,6 +8,7 @@ urlpatterns = [
     # Static pages
     path("", views.index, name="index"),
     path("daily/<str:date>/", views.index, name="daily_note"),
+    path("page/<str:slug>/", views.index, name="page"),
     path("tag/<str:tag_name>/", views.index, name="tag_page"),
     # Block-centric API endpoints
     path("api/blocks/", views.create_block, name="create_block"),
