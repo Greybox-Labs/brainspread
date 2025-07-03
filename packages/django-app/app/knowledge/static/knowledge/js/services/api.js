@@ -213,11 +213,6 @@ class ApiService {
     );
   }
 
-  // Legacy method for backward compatibility
-  async getDailyNote(date) {
-    return await this.getPageWithBlocks(null, date);
-  }
-
   // Utility methods
   isAuthenticated() {
     return !!this.token;
