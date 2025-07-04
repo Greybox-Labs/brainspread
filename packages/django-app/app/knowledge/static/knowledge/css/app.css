@@ -2803,7 +2803,7 @@ body {
 .context-menu {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   background: var(--bg-primary);
   border: 2px solid var(--border-primary);
   box-shadow: 4px 4px 0 var(--border-primary);

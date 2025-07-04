@@ -267,7 +267,7 @@ window.HistoricalSidebar = {
                     <span v-if="block.block_type === 'todo'" class="item-type block-type">{{ block.block_type }}</span>
                     <span class="item-page">{{ block.page_title }}</span>
                   </div>
-                  <div class="item-meta">{{ formatDate(block.modified_at) }}</div>
+                  <div class="item-meta">{{ formatDate(block.modified_at || block.created_at) }}</div>
                   <div class="item-content">{{ truncateContent(block.content, 100) }}</div>
                   <div v-if="block.tags && block.tags.length" class="item-tags">
                     <span

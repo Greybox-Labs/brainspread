@@ -14,7 +14,6 @@ class UpdatePageCommand(AbstractBaseCommand):
         """Execute the command"""
         super().execute()  # This validates the form
 
-        user = self.form.cleaned_data["user"]
         page = self.form.cleaned_data["page"]
 
         # Update fields if provided
@@ -43,8 +42,5 @@ class UpdatePageCommand(AbstractBaseCommand):
             page.is_published = self.form.cleaned_data["is_published"]
 
         page.save()
-
-        if page.content:
-            page.set_tags_from_content(page.content, user)
 
         return page

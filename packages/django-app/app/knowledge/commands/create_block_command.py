@@ -1,7 +1,9 @@
 from common.commands.abstract_base_command import AbstractBaseCommand
 
 from ..forms.create_block_form import CreateBlockForm
+from ..forms.sync_block_tags_form import SyncBlockTagsForm
 from ..models import Block
+from .sync_block_tags_command import SyncBlockTagsCommand
 
 
 class CreateBlockCommand(AbstractBaseCommand):
@@ -46,9 +48,22 @@ class CreateBlockCommand(AbstractBaseCommand):
 
         # Extract and set tags from content (business logic)
         if block.content:
-            block.set_tags_from_content(block.content, user)
-            # Refresh block from database to get updated tag relationships
-            block.refresh_from_db()
+            sync_tags_form = SyncBlockTagsForm(
+                {
+                    "block": block.uuid,
+                    "content": block.content,
+                    "user": user.id,
+                }
+            )
+            if sync_tags_form.is_valid():
+                sync_command = SyncBlockTagsCommand(sync_tags_form)
+                sync_command.execute()
+                # Refresh block from database to get updated tag relationships
+                block.refresh_from_db()
+
+        # Extract and set properties from content (business logic)
+        if block.content:
+            block.extract_properties_from_content()
 
         return block
 

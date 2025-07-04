@@ -1,11 +1,10 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from knowledge.commands import CreateBlockCommand, UpdateBlockCommand
 from knowledge.forms import CreateBlockForm, UpdateBlockForm
-from knowledge.models import Block
 
 from ..helpers import BlockFactory, PageFactory, UserFactory
 
@@ -253,11 +252,14 @@ class TestUpdateBlockCommand(TestCase):
                 updated_block = command.execute()
                 self.assertEqual(updated_block.block_type, expected_type)
 
-    @patch.object(Block, "set_tags_from_content")
+    @patch("knowledge.commands.update_block_command.SyncBlockTagsCommand")
     def test_should_call_set_tags_from_content_when_content_updated(
-        self, mock_set_tags
+        self, mock_sync_command_class
     ):
         """Test that tags are extracted when content is updated"""
+        mock_sync_command = Mock()
+        mock_sync_command_class.return_value = mock_sync_command
+
         form_data = {
             "user": self.user.id,
             "block": str(self.block.uuid),
@@ -268,13 +270,13 @@ class TestUpdateBlockCommand(TestCase):
         command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
-        mock_set_tags.assert_called_once_with(
-            "TODO: Buy #groceries and #food", self.user
-        )
+        # Verify that SyncBlockTagsCommand was instantiated and executed
+        mock_sync_command_class.assert_called_once()
+        mock_sync_command.execute.assert_called_once()
 
-    @patch.object(Block, "set_tags_from_content")
+    @patch("knowledge.commands.update_block_command.SyncBlockTagsCommand")
     def test_should_not_call_set_tags_from_content_when_content_not_updated(
-        self, mock_set_tags
+        self, mock_sync_command_class
     ):
         """Test that tag extraction is skipped when content isn't updated"""
         form_data = {
@@ -287,4 +289,5 @@ class TestUpdateBlockCommand(TestCase):
         command = UpdateBlockCommand(form)
         updated_block = command.execute()
 
-        mock_set_tags.assert_not_called()
+        # Verify that SyncBlockTagsCommand was not called when content wasn't updated
+        mock_sync_command_class.assert_not_called()

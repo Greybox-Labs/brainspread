@@ -26,7 +26,4 @@ class CreatePageCommand(AbstractBaseCommand):
             is_published=self.form.cleaned_data.get("is_published", True),
         )
 
-        if page.content:
-            page.set_tags_from_content(page.content, user)
-
         return page

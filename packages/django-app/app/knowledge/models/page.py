@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
 
 from django.conf import settings
 from django.db import models
@@ -7,13 +7,9 @@ from django.db import models
 from common.models.crud_timestamps_mixin import CRUDTimestampsMixin
 from common.models.uuid_mixin import UUIDModelMixin
 from knowledge.models import BlockData
-from tagging.models import TaggableMixin
-
-if TYPE_CHECKING:
-    pass
 
 
-class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
+class Page(UUIDModelMixin, CRUDTimestampsMixin):
     """
     A page is simply a container/namespace for blocks.
     Pages can be daily notes, regular pages, or any other type of content collection.
@@ -34,6 +30,7 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             ("page", "Regular Page"),
             ("daily", "Daily Note"),
             ("template", "Template"),
+            ("tag", "Tag Page"),
         ],
         default="page",
     )
@@ -59,6 +56,18 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             page=self
         )
 
+    def get_tag_blocks(self):
+        """If this is a tag page, get all blocks that belong to this tag"""
+        if self.page_type == "tag":
+            return self.tagged_blocks.all()
+        return []
+
+    def get_tag_name(self):
+        """If this is a tag page, get the tag name without # prefix"""
+        if self.page_type == "tag" and self.title.startswith("#"):
+            return self.title[1:]
+        return None
+
     def to_dict(self) -> "PageData":
         """Convert page to dictionary with proper typing"""
         return {
@@ -70,9 +79,8 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin, TaggableMixin):
             "page_type": self.page_type,
             "date": self.date.isoformat() if self.date else None,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.modified_at.isoformat(),
+            "modified_at": self.modified_at.isoformat(),
             "user_uuid": str(self.user.uuid),
-            "tags": [{"name": tag.name, "color": tag.color} for tag in self.get_tags()],
             "recent_blocks": None,  # fill these in later
         }
 
@@ -87,7 +95,6 @@ class PageData(TypedDict):
     page_type: str
     date: Optional[str]
     created_at: str
-    updated_at: str
+    modified_at: str
     user_uuid: str
-    tags: list
     recent_blocks: Optional[List[BlockData]]

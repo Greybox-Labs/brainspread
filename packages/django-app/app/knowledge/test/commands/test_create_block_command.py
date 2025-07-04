@@ -1,10 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
 from knowledge.commands import CreateBlockCommand
 from knowledge.forms import CreateBlockForm
-from knowledge.models import Block
 
 from ..helpers import PageFactory, UserFactory
 
@@ -165,9 +164,14 @@ class TestCreateBlockCommand(TestCase):
                 block = command.execute()
                 self.assertEqual(block.block_type, "todo")
 
-    @patch.object(Block, "set_tags_from_content")
-    def test_should_call_set_tags_from_content_when_content_exists(self, mock_set_tags):
+    @patch("knowledge.commands.create_block_command.SyncBlockTagsCommand")
+    def test_should_call_set_tags_from_content_when_content_exists(
+        self, mock_sync_command_class
+    ):
         """Test that tags are extracted from block content"""
+        mock_sync_command = Mock()
+        mock_sync_command_class.return_value = mock_sync_command
+
         form_data = {
             "user": self.user.id,
             "page": self.page.uuid,
@@ -178,12 +182,14 @@ class TestCreateBlockCommand(TestCase):
         command = CreateBlockCommand(form)
         block = command.execute()
 
-        mock_set_tags.assert_called_once_with(
-            "TODO: Buy #groceries and #food", self.user
-        )
+        # Verify that SyncBlockTagsCommand was instantiated and executed
+        mock_sync_command_class.assert_called_once()
+        mock_sync_command.execute.assert_called_once()
 
-    @patch.object(Block, "set_tags_from_content")
-    def test_should_not_call_set_tags_from_content_when_no_content(self, mock_set_tags):
+    @patch("knowledge.commands.create_block_command.SyncBlockTagsCommand")
+    def test_should_not_call_set_tags_from_content_when_no_content(
+        self, mock_sync_command_class
+    ):
         """Test that tag extraction is skipped for empty content"""
         form_data = {
             "user": self.user.id,
@@ -195,4 +201,5 @@ class TestCreateBlockCommand(TestCase):
         command = CreateBlockCommand(form)
         block = command.execute()
 
-        mock_set_tags.assert_not_called()
+        # Verify that SyncBlockTagsCommand was not called for empty content
+        mock_sync_command_class.assert_not_called()

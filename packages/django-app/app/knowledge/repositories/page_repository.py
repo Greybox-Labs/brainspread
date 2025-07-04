@@ -146,3 +146,18 @@ class PageRepository(BaseRepository):
             ]  # Order by date field (creation date), not modified_at
         )
         return pages_with_blocks
+
+    @classmethod
+    def get_tag_page(cls, tag_name: str, user) -> Optional[Page]:
+        """Get tag page by tag name"""
+        try:
+            return cls.get_queryset().get(
+                title=f"#{tag_name}", page_type="tag", user=user
+            )
+        except cls.model.DoesNotExist:
+            return None
+
+    @classmethod
+    def get_all_tag_pages(cls, user) -> QuerySet:
+        """Get all tag pages for a user"""
+        return cls.get_queryset().filter(user=user, page_type="tag").order_by("title")

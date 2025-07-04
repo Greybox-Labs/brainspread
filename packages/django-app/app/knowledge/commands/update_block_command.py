@@ -2,8 +2,10 @@ from django.core.exceptions import ValidationError
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 
+from ..forms.sync_block_tags_form import SyncBlockTagsForm
 from ..forms.update_block_form import UpdateBlockForm
 from ..models import Block
+from .sync_block_tags_command import SyncBlockTagsCommand
 
 
 class UpdateBlockCommand(AbstractBaseCommand):
@@ -64,9 +66,22 @@ class UpdateBlockCommand(AbstractBaseCommand):
 
         # Extract and set tags if content was updated (business logic)
         if content_updated and block.content:
-            block.set_tags_from_content(block.content, user)
-            # Refresh block from database to get updated tag relationships
-            block.refresh_from_db()
+            sync_tags_form = SyncBlockTagsForm(
+                {
+                    "block": block.uuid,
+                    "content": block.content,
+                    "user": user.id,
+                }
+            )
+            if sync_tags_form.is_valid():
+                sync_command = SyncBlockTagsCommand(sync_tags_form)
+                sync_command.execute()
+                # Refresh block from database to get updated tag relationships
+                block.refresh_from_db()
+
+        # Extract and set properties from content if content was updated (business logic)
+        if content_updated and block.content:
+            block.extract_properties_from_content()
 
         return block
 

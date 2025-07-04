@@ -14,6 +14,7 @@ from knowledge.commands import (
     DeletePageCommand,
     GetHistoricalDataCommand,
     GetPageWithBlocksCommand,
+    GetTagContentCommand,
     GetUserPagesCommand,
     MoveUndoneTodosCommand,
     ToggleBlockTodoCommand,
@@ -29,6 +30,7 @@ from knowledge.forms import (
     DeletePageForm,
     GetHistoricalDataForm,
     GetPageWithBlocksForm,
+    GetTagContentForm,
     GetUserPagesForm,
     MoveUndoneTodosForm,
     ToggleBlockTodoForm,
@@ -36,9 +38,6 @@ from knowledge.forms import (
     UpdatePageForm,
 )
 from knowledge.models import BlockData, PageData
-from tagging.commands import GetTagContentCommand
-from tagging.forms import GetTagContentForm
-from tagging.models import TagContentData
 
 
 # Data type definitions for response data fields
@@ -51,6 +50,15 @@ class GetPagesData(TypedDict):
 class GetPageWithBlocksData(TypedDict):
     page: PageData
     blocks: List[BlockData]
+
+
+class TagContentData(TypedDict):
+    tag_page: PageData
+    blocks: List[BlockData]
+    pages: List[PageData]
+    total_blocks: int
+    total_pages: int
+    total_content: int
 
 
 # API Response Types with specific data types
@@ -216,7 +224,7 @@ def get_tag_content(request, tag_name):
             pages_data.append(page.to_dict())
 
         tag_content_data: TagContentData = {
-            "tag": result["tag"].to_dict(),
+            "tag_page": result["tag_page"].to_dict(),
             "blocks": blocks_data,
             "pages": pages_data,
             "total_blocks": len(blocks_data),
