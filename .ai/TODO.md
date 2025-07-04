@@ -15,7 +15,7 @@
   - [x] history sidebar already has pages sorted by most recently modified
   - [x] only one path for page (instead of page vs daily note, bc they're all 
     pages)
-  - 
+- [ ] should be able to edit referenced blocks on a page
 - [ ] cmd + space like mac spotlight to search for pages and blocks
 - [ ] ability to collapse/expand blocks with nested children
 - [ ] reminders/notifications? kinda useless without push notifications which

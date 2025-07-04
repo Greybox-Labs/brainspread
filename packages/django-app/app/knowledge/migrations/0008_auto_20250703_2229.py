@@ -7,38 +7,9 @@ def complete_tag_to_page_migration(apps, schema_editor):
     """
     Complete the migration by adding blocks to tag pages
     """
-    Tag = apps.get_model('tagging', 'Tag')
-    TaggedItem = apps.get_model('tagging', 'TaggedItem')
-    Page = apps.get_model('knowledge', 'Page')
-    Block = apps.get_model('knowledge', 'Block')
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    
-    try:
-        block_content_type = ContentType.objects.get(app_label='knowledge', model='block')
-    except ContentType.DoesNotExist:
-        return
-    
-    # Now that the M2M field exists, we can create the relationships
-    for tag in Tag.objects.all():
-        try:
-            tag_page = Page.objects.get(title=f"#{tag.name}", page_type='tag')
-            
-            # Find all blocks tagged with this tag
-            tagged_blocks = TaggedItem.objects.filter(
-                tag=tag,
-                content_type=block_content_type
-            )
-            
-            # Add each tagged block to the tag page
-            for tagged_item in tagged_blocks:
-                try:
-                    block = Block.objects.get(pk=tagged_item.object_id)
-                    # Add the block to the tag page using the new many-to-many relationship
-                    block.pages.add(tag_page)
-                except Block.DoesNotExist:
-                    continue
-        except Page.DoesNotExist:
-            continue
+    # This migration originally completed the migration from the old tagging system
+    # Since we've removed the tagging app, this is now a no-op
+    pass
 
 
 def reverse_complete_tag_to_page_migration(apps, schema_editor):

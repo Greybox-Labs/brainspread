@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     "corsheaders",
     # own
     "core",
-    "tagging",
     "knowledge",
     "ai_chat",
 ]

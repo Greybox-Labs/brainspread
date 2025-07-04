@@ -8,50 +8,9 @@ def migrate_tags_to_pages(apps, schema_editor):
     """
     Migrate existing tags to pages and create many-to-many relationships
     """
-    # Get models from the current state
-    Tag = apps.get_model('tagging', 'Tag')
-    TaggedItem = apps.get_model('tagging', 'TaggedItem')
-    Page = apps.get_model('knowledge', 'Page')
-    Block = apps.get_model('knowledge', 'Block')
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    
-    # Get content types for Page and Block
-    try:
-        page_content_type = ContentType.objects.get(app_label='knowledge', model='page')
-        block_content_type = ContentType.objects.get(app_label='knowledge', model='block')
-    except ContentType.DoesNotExist:
-        # If content types don't exist, skip migration
-        return
-    
-    # Create tag pages for each existing tag
-    for tag in Tag.objects.all():
-        # Create a page for each tag with a specific page_type
-        tag_page, created = Page.objects.get_or_create(
-            title=f"#{tag.name}",
-            slug=f"{tag.name}",
-            defaults={
-                'user_id': 1,  # We'll need to assign to a user - using admin for now
-                'page_type': 'tag',
-                'content': f"Tag page for #{tag.name}",
-                'is_published': True,
-            }
-        )
-        
-        # Find all blocks tagged with this tag
-        tagged_blocks = TaggedItem.objects.filter(
-            tag=tag,
-            content_type=block_content_type
-        )
-        
-        # Add each tagged block to the tag page
-        for tagged_item in tagged_blocks:
-            try:
-                block = Block.objects.get(pk=tagged_item.object_id)
-                # Add the block to the tag page using the new many-to-many relationship
-                # This will be available after we create the field
-                pass  # We'll handle this after creating the M2M field
-            except Block.DoesNotExist:
-                continue
+    # This migration originally migrated from the old tagging system
+    # Since we've removed the tagging app, this is now a no-op
+    pass
 
 
 def reverse_migrate_tags_to_pages(apps, schema_editor):
@@ -69,7 +28,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("knowledge", "0006_page_content_page_is_published"),
-        ("tagging", "0001_initial"),  # Ensure tagging app migrations exist
     ]
 
     operations = [
