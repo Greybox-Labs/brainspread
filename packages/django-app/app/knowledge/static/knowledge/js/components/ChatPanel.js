@@ -37,10 +37,12 @@ const ChatPanel = {
     this.loadAISettings();
     this.loadLastChatSession();
     this.setupDocumentListener();
+    this.setupClickOutsideListener();
   },
   beforeUnmount() {
     this.removeResizeListener();
     this.removeDocumentListener();
+    this.removeClickOutsideListener();
   },
   watch: {
     messages: {
@@ -564,6 +566,24 @@ const ChatPanel = {
           console.error("Failed to copy message:", fallbackErr);
         }
         document.body.removeChild(textArea);
+      }
+    },
+
+    // Click outside to close panel
+    setupClickOutsideListener() {
+      this.clickOutsideHandler = (e) => {
+        // Only close if panel is open and click is outside the panel
+        if (this.isOpen && !this.$el.contains(e.target)) {
+          this.isOpen = false;
+          this.saveOpenState();
+        }
+      };
+      document.addEventListener("click", this.clickOutsideHandler);
+    },
+
+    removeClickOutsideListener() {
+      if (this.clickOutsideHandler) {
+        document.removeEventListener("click", this.clickOutsideHandler);
       }
     },
   },
