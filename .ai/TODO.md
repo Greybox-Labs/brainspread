@@ -16,6 +16,7 @@
   - [x] only one path for page (instead of page vs daily note, bc they're all 
     pages)
 - [ ] should be able to edit referenced blocks on a page
+- [ ] should be able to add reference blocks on a page to chat context
 - [ ] cmd + space like mac spotlight to search for pages and blocks
 - [ ] ability to collapse/expand blocks with nested children
 - [ ] reminders/notifications? kinda useless without push notifications which

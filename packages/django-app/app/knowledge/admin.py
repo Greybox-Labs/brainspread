@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Block, BlockReference, Page, PageLink
+from .models import Block, Page
 
 
 @admin.register(Page)
@@ -103,21 +103,3 @@ class BlockAdmin(admin.ModelAdmin):
         return ", ".join([f"#{tag.name}" for tag in obj.get_tags()])
 
     get_tags.short_description = "Tags"
-
-
-@admin.register(PageLink)
-class PageLinkAdmin(admin.ModelAdmin):
-    list_display = ("source_block", "short_uuid", "target_page", "created_at")
-    list_filter = ("created_at",)
-    search_fields = ("source_block__content", "target_page__title")
-    readonly_fields = ("id", "uuid", "created_at", "modified_at")
-    raw_id_fields = ("source_block", "target_page")
-
-
-@admin.register(BlockReference)
-class BlockReferenceAdmin(admin.ModelAdmin):
-    list_display = ("source_block", "short_uuid", "target_block", "created_at")
-    list_filter = ("created_at",)
-    search_fields = ("source_block__content", "target_block__content")
-    readonly_fields = ("id", "uuid", "created_at", "modified_at")
-    raw_id_fields = ("source_block", "target_block")

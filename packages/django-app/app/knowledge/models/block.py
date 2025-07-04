@@ -121,20 +121,6 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin):
             current = current.parent
         return depth
 
-    def extract_page_links(self):
-        """Extract [[page]] links from content"""
-        if not self.content:
-            return []
-        pattern = r"\[\[([^\]]+)\]\]"
-        return re.findall(pattern, self.content)
-
-    def extract_block_references(self):
-        """Extract ((block-id)) references from content"""
-        if not self.content:
-            return []
-        pattern = r"\(\(([^\)]+)\)\)"
-        return re.findall(pattern, self.content)
-
     def extract_properties_from_content(self):
         """Extract key:: value properties from content and sync with properties field"""
         if not self.content:
