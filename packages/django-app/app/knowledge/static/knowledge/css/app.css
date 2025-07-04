@@ -3021,6 +3021,23 @@ body {
   max-width: 1000px;
 }
 
+/* Flex layout helpers for page headers */
+.page-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.page-header-flex-left {
+  flex: 1;
+}
+
+.page-title-text,
+.daily-note-title h2 {
+  color: var(--text-primary) !important;
+}
+
 /* Responsive adjustments for page components */
 @media (max-width: 768px) {
   .page-title-container {
@@ -3126,4 +3143,21 @@ body {
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
   }
+}
+
+/* Date picker styling to match existing design */
+.date-picker {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-secondary);
+  padding: 0.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+.date-picker:focus {
+  outline: none;
+  border-color: var(--border-primary);
 }

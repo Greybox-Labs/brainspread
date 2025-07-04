@@ -309,7 +309,7 @@ const Page = {
 
     goToTag(tagName) {
       // Navigate to the tag page with full page redirect
-      const url = `/knowledge/tag/${encodeURIComponent(tagName)}/`;
+      const url = `/knowledge/page/${encodeURIComponent(tagName)}/`;
       window.location.href = url;
     },
 

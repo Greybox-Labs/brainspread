@@ -61,6 +61,14 @@ window.HistoricalSidebar = {
       return new Date(dateString).toLocaleDateString();
     },
 
+    formatPageTitle(page) {
+      // For daily pages, format the title (which is the date) prettily
+      if (page.page_type === "daily") {
+        return this.formatDate(page.title);
+      }
+      return page.title;
+    },
+
     formatTime(dateString) {
       return new Date(dateString).toLocaleTimeString();
     },
@@ -232,7 +240,7 @@ window.HistoricalSidebar = {
                   <div class="page-card-vertical">
                     <!-- First row: title on left, label on right -->
                     <div class="page-header-row">
-                      <div class="item-title">{{ page.title }}</div>
+                      <div class="item-title">{{ formatPageTitle(page) }}</div>
                       <div class="item-type">{{ page.page_type }}</div>
                     </div>
                     

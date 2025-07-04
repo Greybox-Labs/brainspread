@@ -23,8 +23,10 @@ class SyncBlockTagsCommand(AbstractBaseCommand):
         hashtags = self._extract_hashtags(content)
 
         if not hashtags:
-            # Remove all tags if no hashtags found
-            tag_pages = block.pages.filter(page_type="tag")
+            # Remove all tags if no hashtags found (exclude daily notes)
+            tag_pages = block.pages.filter(
+                slug__in=list(block.get_tag_names())
+            ).exclude(page_type="daily")
             for tag_page in tag_pages:
                 block.pages.remove(tag_page)
             return
@@ -32,14 +34,13 @@ class SyncBlockTagsCommand(AbstractBaseCommand):
         current_tag_names = set(block.get_tag_names())
         new_tag_names = set(hashtags)
 
-        # Remove tags that are no longer in content
+        # Remove tags that are no longer in content (exclude daily notes)
         tags_to_remove = current_tag_names - new_tag_names
         if tags_to_remove:
             tag_pages_to_remove = Page.objects.filter(
-                title__in=[f"#{tag}" for tag in tags_to_remove],
-                page_type="tag",
+                slug__in=list(tags_to_remove),
                 user=user,
-            )
+            ).exclude(page_type="daily")
             for tag_page in tag_pages_to_remove:
                 block.pages.remove(tag_page)
 
@@ -59,14 +60,17 @@ class SyncBlockTagsCommand(AbstractBaseCommand):
 
     def _get_or_create_tag_page(self, tag_name: str, user) -> Page:
         """Get or create a tag page for the given tag name"""
-        tag_page, created = Page.objects.get_or_create(
-            title=f"#{tag_name}",
-            slug=f"tag-{tag_name}",
-            user=user,
-            defaults={
-                "page_type": "tag",
-                "content": f"Tag page for #{tag_name}",
-                "is_published": True,
-            },
-        )
+        # Look for existing page by slug
+        try:
+            tag_page = Page.objects.get(slug=tag_name, user=user)
+        except Page.DoesNotExist:
+            # Create new page with human-readable title
+            human_title = tag_name.replace("-", " ").title()
+            tag_page = Page.objects.create(
+                title=human_title,
+                slug=tag_name,
+                user=user,
+                content=f"Tag page for {human_title}",
+                is_published=True,
+            )
         return tag_page

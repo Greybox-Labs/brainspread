@@ -35,6 +35,7 @@ class BlockAdmin(admin.ModelAdmin):
         "short_uuid",
         "user",
         "page",
+        "get_tagged_pages",
         "parent",
         "block_type",
         "content_type",
@@ -53,6 +54,13 @@ class BlockAdmin(admin.ModelAdmin):
             {"fields": ("user", "page", "parent", "order", "collapsed")},
         ),
         ("Content", {"fields": ("content", "content_type", "block_type")}),
+        (
+            "Tags/Pages",
+            {
+                "fields": ("pages",),
+                "description": "Pages this block is tagged with (many-to-many relationship)",
+            },
+        ),
         (
             "Properties",
             {
@@ -85,6 +93,11 @@ class BlockAdmin(admin.ModelAdmin):
             return "[empty block]"
 
     content_preview.short_description = "Content Preview"
+
+    def get_tagged_pages(self, obj):
+        return ", ".join([page.title for page in obj.pages.all()])
+
+    get_tagged_pages.short_description = "Tagged Pages"
 
     def get_tags(self, obj):
         return ", ".join([f"#{tag.name}" for tag in obj.get_tags()])

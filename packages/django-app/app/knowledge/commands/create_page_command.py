@@ -17,11 +17,12 @@ class CreatePageCommand(AbstractBaseCommand):
         super().execute()  # This validates the form
 
         user = self.form.cleaned_data["user"]
+        title = self.form.cleaned_data["title"]
+
         page = Page.objects.create(
             user=user,
-            title=self.form.cleaned_data["title"],
-            slug=self.form.cleaned_data.get("slug")
-            or slugify(self.form.cleaned_data["title"]),
+            title=title,
+            slug=self.form.cleaned_data.get("slug") or slugify(title),
             content=self.form.cleaned_data.get("content", ""),
             is_published=self.form.cleaned_data.get("is_published", True),
         )

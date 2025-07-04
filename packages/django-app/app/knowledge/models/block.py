@@ -205,12 +205,12 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin):
         return None
 
     def get_tags(self):
-        """Get all tags for this block (returns tag pages)"""
-        return self.pages.filter(page_type="tag")
+        """Get all pages this block is tagged with (excludes the page it belongs to and daily notes)"""
+        return self.pages.exclude(uuid=self.page.uuid).exclude(page_type="daily")
 
     def get_tag_names(self):
-        """Get tag names without # prefix"""
-        return [page.title[1:] for page in self.get_tags()]  # Remove # prefix
+        """Get tag names (uses slug format without # prefix)"""
+        return [page.slug for page in self.get_tags()]
 
     def to_dict(self, include_page_context: bool = False) -> "BlockData":
         """Convert block to dictionary with proper typing"""
@@ -228,9 +228,7 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin):
             "modified_at": self.modified_at.isoformat(),
             "media_url": self.media_url,
             "properties": self.properties or {},
-            "tags": [
-                {"name": tag.title[1:], "color": "#007bff"} for tag in self.get_tags()
-            ],
+            "tags": [{"name": tag.slug, "color": "#007bff"} for tag in self.get_tags()],
             "children": None,
             # Page context fields (optional)
             "page_title": None,

@@ -18,8 +18,8 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pages"
     )
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200)
+    title = models.CharField(max_length=200, help_text="Human-readable page title")
+    slug = models.SlugField(max_length=200, help_text="URL-friendly identifier")
     content = models.TextField(blank=True, help_text="Text content of the page")
     is_published = models.BooleanField(
         default=True, help_text="Whether the page is published"
@@ -30,7 +30,6 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin):
             ("page", "Regular Page"),
             ("daily", "Daily Note"),
             ("template", "Template"),
-            ("tag", "Tag Page"),
         ],
         default="page",
     )
@@ -47,6 +46,10 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin):
     def __str__(self):
         return f"{self.user.email} - {self.title}"
 
+    def get_tag_format(self) -> str:
+        """Generate hashtag format from slug for tag matching: 'my-page' -> '#my-page'"""
+        return f"#{self.slug}"
+
     def get_backlinks(self):
         """Get all blocks that link to this page"""
         from .block import Block
@@ -57,16 +60,8 @@ class Page(UUIDModelMixin, CRUDTimestampsMixin):
         )
 
     def get_tag_blocks(self):
-        """If this is a tag page, get all blocks that belong to this tag"""
-        if self.page_type == "tag":
-            return self.tagged_blocks.all()
-        return []
-
-    def get_tag_name(self):
-        """If this is a tag page, get the tag name without # prefix"""
-        if self.page_type == "tag" and self.title.startswith("#"):
-            return self.title[1:]
-        return None
+        """Get all blocks that are tagged with this page"""
+        return self.tagged_blocks.all()
 
     def to_dict(self) -> "PageData":
         """Convert page to dictionary with proper typing"""

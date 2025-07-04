@@ -25,7 +25,6 @@ const KnowledgeApp = createApp({
 
   components: {
     PagePage: window.PagePage,
-    TagPage: window.TagPage,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
     SettingsModal: window.SettingsModal,
@@ -439,16 +438,7 @@ const KnowledgeApp = createApp({
                             @navigate-to-date="onNavigateToDate"
                             @navigate-to-slug="onNavigateToSlug" />
                         <div class="main-content-area">
-                            <TagPage
-                                v-if="currentPageType === 'tag'"
-                                :chat-context-blocks="chatContextBlocks"
-                                :is-block-in-context="isBlockInContext"
-                                @block-add-to-context="onBlockAddToContext"
-                                @block-remove-from-context="onBlockRemoveFromContext"
-                                @visible-blocks-changed="updateVisibleBlocks"
-                            />
                             <PagePage
-                                v-else-if="currentPageType === 'page'"
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
                                 @block-add-to-context="onBlockAddToContext"

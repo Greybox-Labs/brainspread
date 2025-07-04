@@ -28,7 +28,7 @@ def migrate_tags_to_pages(apps, schema_editor):
         # Create a page for each tag with a specific page_type
         tag_page, created = Page.objects.get_or_create(
             title=f"#{tag.name}",
-            slug=f"tag-{tag.name}",
+            slug=f"{tag.name}",
             defaults={
                 'user_id': 1,  # We'll need to assign to a user - using admin for now
                 'page_type': 'tag',

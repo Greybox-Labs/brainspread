@@ -17,6 +17,7 @@
     pages)
   - 
 - [ ] cmd + space like mac spotlight to search for pages and blocks
+- [ ] ability to collapse/expand blocks with nested children
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
   - maybe can use something like Pusher? i still think you need APN details for

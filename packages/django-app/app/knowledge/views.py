@@ -215,9 +215,13 @@ def get_tag_content(request, tag_name):
             )
 
         # Format the response data
-        blocks_data = []
-        for block in result["blocks"]:
-            blocks_data.append(block.to_dict(include_page_context=True))
+        direct_blocks_data = []
+        for block in result["direct_blocks"]:
+            direct_blocks_data.append(block.to_dict_with_children())
+
+        referenced_blocks_data = []
+        for block in result["referenced_blocks"]:
+            referenced_blocks_data.append(block.to_dict(include_page_context=True))
 
         pages_data = []
         for page in result["pages"]:
@@ -225,11 +229,14 @@ def get_tag_content(request, tag_name):
 
         tag_content_data: TagContentData = {
             "tag_page": result["tag_page"].to_dict(),
-            "blocks": blocks_data,
+            "direct_blocks": direct_blocks_data,
+            "referenced_blocks": referenced_blocks_data,
             "pages": pages_data,
-            "total_blocks": len(blocks_data),
+            "total_blocks": len(direct_blocks_data) + len(referenced_blocks_data),
             "total_pages": len(pages_data),
-            "total_content": len(blocks_data) + len(pages_data),
+            "total_content": len(direct_blocks_data)
+            + len(referenced_blocks_data)
+            + len(pages_data),
         }
 
         response: GetTagContentResponse = {
@@ -392,11 +399,17 @@ def get_page_with_blocks(request):
 
         if form.is_valid():
             command = GetPageWithBlocksCommand(form)
-            page, blocks = command.execute()
+            page, direct_blocks, referenced_blocks = command.execute()
 
             page_with_blocks_data: GetPageWithBlocksData = {
                 "page": page.to_dict(),
-                "blocks": [block.to_dict_with_children() for block in blocks],
+                "direct_blocks": [
+                    block.to_dict_with_children() for block in direct_blocks
+                ],
+                "referenced_blocks": [
+                    block.to_dict(include_page_context=True)
+                    for block in referenced_blocks
+                ],
             }
 
             response: GetPageWithBlocksResponse = {

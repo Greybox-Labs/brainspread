@@ -27,17 +27,21 @@ class GetTagContentCommand(AbstractBaseCommand):
         if not tag_page:
             return None
 
-        # Get all blocks that belong to this tag page
-        blocks = tag_page.tagged_blocks.all()
+        # Get direct blocks (blocks that belong directly to this page)
+        direct_blocks = tag_page.blocks.all().order_by("order")
+
+        # Get referenced blocks (blocks from other pages that reference this tag)
+        referenced_blocks = tag_page.tagged_blocks.exclude(page=tag_page)
 
         # Get all pages that have blocks with this tag (excluding the tag page itself)
         pages = []
-        for block in blocks:
+        for block in referenced_blocks:
             if block.page != tag_page and block.page not in pages:
                 pages.append(block.page)
 
         return {
             "tag_page": tag_page,
-            "blocks": blocks,
+            "direct_blocks": direct_blocks,
+            "referenced_blocks": referenced_blocks,
             "pages": pages,
         }
