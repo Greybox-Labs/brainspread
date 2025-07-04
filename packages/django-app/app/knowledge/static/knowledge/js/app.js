@@ -402,7 +402,7 @@ const KnowledgeApp = createApp({
                     <div class="nav-content">
                         <h1><a href="/knowledge/" class="brand-link">brainspread</a></h1>
                         <div class="nav-right">
-                            <span class="user-info">Hello, {{ user?.email }}</span>
+                            <span class="user-info">hello, {{ user?.email }}</span>
                             <div class="menu-container">
                                 <button @click="toggleMenu" class="menu-btn">
                                     menu

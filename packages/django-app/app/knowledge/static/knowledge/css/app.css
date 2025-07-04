@@ -2774,6 +2774,21 @@ body {
   color: var(--text-primary);
 }
 
+/* Referenced blocks in context highlighting */
+.referenced-block-wrapper.in-context > .block {
+  background: rgba(255, 170, 0, 0.1);
+}
+
+.referenced-block-wrapper.in-context .block-bullet {
+  color: var(--text-primary);
+}
+
+/* Referenced blocks layout alignment */
+.referenced-block-wrapper .block-content-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Context Menu Styles */
 .context-menu-container {
   position: relative;

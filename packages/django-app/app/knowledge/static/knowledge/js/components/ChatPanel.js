@@ -469,7 +469,7 @@ const ChatPanel = {
         // Create copy button
         const copyButton = document.createElement("button");
         copyButton.className = "copy-button";
-        copyButton.textContent = "Copy";
+        copyButton.textContent = "copy";
         copyButton.addEventListener("click", () =>
           this.copyToClipboard(pre.textContent, copyButton)
         );
@@ -482,10 +482,10 @@ const ChatPanel = {
     async copyToClipboard(text, button) {
       try {
         await navigator.clipboard.writeText(text);
-        button.textContent = "Copied!";
+        button.textContent = "copied!";
         button.classList.add("copied");
         setTimeout(() => {
-          button.textContent = "Copy";
+          button.textContent = "copy";
           button.classList.remove("copied");
         }, 2000);
       } catch (err) {
@@ -496,16 +496,16 @@ const ChatPanel = {
         textArea.select();
         try {
           document.execCommand("copy");
-          button.textContent = "Copied!";
+          button.textContent = "copied!";
           button.classList.add("copied");
           setTimeout(() => {
-            button.textContent = "Copy";
+            button.textContent = "copy";
             button.classList.remove("copied");
           }, 2000);
         } catch (fallbackErr) {
-          button.textContent = "Failed";
+          button.textContent = "failed";
           setTimeout(() => {
-            button.textContent = "Copy";
+            button.textContent = "copy";
           }, 2000);
         }
         document.body.removeChild(textArea);
@@ -622,7 +622,7 @@ const ChatPanel = {
                     @click="copyMessageContent(msg, index)"
                     class="message-menu-item"
                   >
-                    Copy message
+                    copy message
                   </button>
                 </div>
               </div>
