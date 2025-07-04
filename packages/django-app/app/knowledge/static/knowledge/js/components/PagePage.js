@@ -473,6 +473,140 @@ const PagePage = {
       this.isEditingTitle = false;
       this.newTitle = this.page?.title || "";
     },
+
+    async handleIndentBlock(block) {
+      // Find the previous sibling block to make it the parent
+      const previousSibling = this.findPreviousSibling(block);
+      if (!previousSibling) return; // Can't indent if no previous sibling
+
+      try {
+        // Save current content first
+        await this.handleUpdateBlock({
+          block,
+          newContent: block.content,
+          skipReload: true,
+        });
+
+        // Update the block's parent and order
+        const newOrder = this.getNextChildOrder(previousSibling);
+        const result = await window.apiService.updateBlock(block.uuid, {
+          parent: previousSibling.uuid,
+          order: newOrder,
+        });
+
+        if (result.success) {
+          // Update local state
+          this.removeBlockFromCurrentParent(block);
+
+          // Add to new parent's children
+          if (!previousSibling.children) previousSibling.children = [];
+          block.parent = previousSibling;
+          block.order = newOrder;
+          previousSibling.children.push(block);
+          previousSibling.children.sort((a, b) => a.order - b.order);
+
+          // Focus the block again
+          this.$nextTick(() => {
+            const textarea = document.querySelector(
+              `[data-block-uuid="${block.uuid}"] textarea`
+            );
+            if (textarea) textarea.focus();
+          });
+        }
+      } catch (error) {
+        console.error("Failed to indent block:", error);
+      }
+    },
+
+    async handleOutdentBlock(block) {
+      if (!block.parent) return; // Already at root level
+
+      try {
+        // Save current content first
+        await this.handleUpdateBlock({
+          block,
+          newContent: block.content,
+          skipReload: true,
+        });
+
+        // Move to parent's level, right after parent
+        const grandparent = block.parent.parent;
+        const newOrder = block.parent.order + 1;
+
+        // Update orders of siblings that come after the parent
+        this.updateSiblingOrders(grandparent, newOrder);
+
+        const result = await window.apiService.updateBlock(block.uuid, {
+          parent: grandparent ? grandparent.uuid : null,
+          order: newOrder,
+        });
+
+        if (result.success) {
+          // Update local state
+          this.removeBlockFromCurrentParent(block);
+
+          // Add to new parent level
+          block.parent = grandparent;
+          block.order = newOrder;
+
+          if (grandparent) {
+            if (!grandparent.children) grandparent.children = [];
+            grandparent.children.push(block);
+            grandparent.children.sort((a, b) => a.order - b.order);
+          } else {
+            this.directBlocks.push(block);
+            this.directBlocks.sort((a, b) => a.order - b.order);
+          }
+
+          // Focus the block again
+          this.$nextTick(() => {
+            const textarea = document.querySelector(
+              `[data-block-uuid="${block.uuid}"] textarea`
+            );
+            if (textarea) textarea.focus();
+          });
+        }
+      } catch (error) {
+        console.error("Failed to outdent block:", error);
+      }
+    },
+
+    findPreviousSibling(block) {
+      const siblings = block.parent ? block.parent.children : this.directBlocks;
+      const currentIndex = siblings.findIndex((b) => b.uuid === block.uuid);
+      return currentIndex > 0 ? siblings[currentIndex - 1] : null;
+    },
+
+    getNextChildOrder(parentBlock) {
+      if (!parentBlock.children || parentBlock.children.length === 0) return 0;
+      return Math.max(...parentBlock.children.map((child) => child.order)) + 1;
+    },
+
+    removeBlockFromCurrentParent(block) {
+      if (block.parent) {
+        const parentChildren = block.parent.children || [];
+        const index = parentChildren.findIndex(
+          (child) => child.uuid === block.uuid
+        );
+        if (index !== -1) {
+          parentChildren.splice(index, 1);
+        }
+      } else {
+        const index = this.directBlocks.findIndex((b) => b.uuid === block.uuid);
+        if (index !== -1) {
+          this.directBlocks.splice(index, 1);
+        }
+      }
+    },
+
+    updateSiblingOrders(parent, fromOrder) {
+      const siblings = parent ? parent.children : this.directBlocks;
+      siblings.forEach((sibling) => {
+        if (sibling.order >= fromOrder) {
+          sibling.order += 1;
+        }
+      });
+    },
   },
 
   template: `
@@ -576,6 +710,8 @@ const PagePage = {
             @update-block="handleUpdateBlock"
             @delete-block="handleDeleteBlock"
             @toggle-block-todo="handleToggleBlockTodo"
+            @indent-block="handleIndentBlock"
+            @outdent-block="handleOutdentBlock"
             @block-add-to-context="onBlockAddToContext"
             @block-remove-from-context="onBlockRemoveFromContext"
           />
