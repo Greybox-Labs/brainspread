@@ -61,10 +61,24 @@ window.HistoricalSidebar = {
       return new Date(dateString).toLocaleDateString();
     },
 
+    formatDailyPageDate(dateString) {
+      // For daily page dates, treat the date string as a local date to avoid timezone shifts
+      // Parse the date string (YYYY-MM-DD format) as local date components
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1; // Month is 0-indexed in Date constructor
+        const day = parseInt(parts[2]);
+        return new Date(year, month, day).toLocaleDateString();
+      }
+      // Fallback to regular date formatting if parsing fails
+      return new Date(dateString).toLocaleDateString();
+    },
+
     formatPageTitle(page) {
       // For daily pages, format the title (which is the date) prettily
       if (page.page_type === "daily") {
-        return this.formatDate(page.title);
+        return this.formatDailyPageDate(page.title);
       }
       return page.title;
     },
