@@ -353,6 +353,11 @@ const KnowledgeApp = createApp({
     },
 
     // Menu action methods
+    onMenuSearch() {
+      this.closeMenu();
+      this.openSpotlight();
+    },
+
     onMenuCreatePage() {
       this.closeMenu();
       this.createNewPage();
@@ -567,6 +572,9 @@ const KnowledgeApp = createApp({
                                     menu
                                 </button>
                                 <div v-if="showMenu" class="menu-popover" @click.stop>
+                                    <button @click="onMenuSearch" class="menu-item">
+                                        search
+                                    </button>
                                     <button @click="onMenuCreatePage" class="menu-item">
                                         + page
                                     </button>

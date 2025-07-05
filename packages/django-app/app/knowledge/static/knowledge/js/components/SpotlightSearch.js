@@ -87,7 +87,7 @@ window.SpotlightSearch = {
               ref="searchInput"
               type="text"
               class="spotlight-search-input"
-              placeholder="Search pages..."
+              placeholder="search pages..."
               :value="query"
               @input="handleInputChange"
               @keydown="handleKeydown"
@@ -105,7 +105,7 @@ window.SpotlightSearch = {
           </div>
 
           <div v-else-if="query && results.length === 0" class="spotlight-no-results">
-            <p>No pages found for "<strong>{{ query }}</strong>"</p>
+            <p>no pages found for "<strong>{{ query }}</strong>"</p>
           </div>
 
           <div v-else-if="results.length > 0" class="spotlight-results">
@@ -131,7 +131,7 @@ window.SpotlightSearch = {
           </div>
 
           <div v-else-if="!query" class="spotlight-empty">
-            <p>Start typing to search your pages...</p>
+            <p>start typing to search your pages...</p>
           </div>
         </div>
 

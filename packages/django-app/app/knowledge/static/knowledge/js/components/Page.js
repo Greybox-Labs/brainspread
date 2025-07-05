@@ -66,6 +66,7 @@ const Page = {
   async mounted() {
     // Add event delegation for clickable hashtags in content
     document.addEventListener("click", this.handleTagClick);
+    document.addEventListener("touchend", this.handleTagClick);
     // Add document click handler for closing menus
     document.addEventListener("click", this.handleDocumentClick);
     // Load page data
@@ -75,6 +76,7 @@ const Page = {
   beforeUnmount() {
     // Clean up event listeners
     document.removeEventListener("click", this.handleTagClick);
+    document.removeEventListener("touchend", this.handleTagClick);
     document.removeEventListener("click", this.handleDocumentClick);
   },
 
@@ -363,6 +365,107 @@ const Page = {
       await this.createBlock("", currentBlock.parent, newOrder);
     },
 
+    async createBlockBefore(currentBlock) {
+      const newOrder = currentBlock.order;
+      const siblings = currentBlock.parent
+        ? currentBlock.parent.children
+        : this.directBlocks;
+
+      // Find all blocks that need to be shifted (same parent, order >= newOrder)
+      const blocksToShift = siblings.filter((block) => block.order >= newOrder);
+
+      // Shift existing blocks down by updating their orders
+      for (const block of blocksToShift) {
+        await this.updateBlock(block, block.content, true);
+        block.order = block.order + 1;
+      }
+
+      // Create the new block at the desired position
+      await this.createBlock("", currentBlock.parent, newOrder);
+    },
+
+    async moveBlockUp(block) {
+      const siblings = block.parent ? block.parent.children : this.directBlocks;
+      const currentIndex = siblings.findIndex((b) => b.uuid === block.uuid);
+
+      // Can't move up if already at the top
+      if (currentIndex <= 0) return;
+
+      try {
+        // Save current content first
+        await this.updateBlock(block, block.content, true);
+
+        // Get the block above this one
+        const blockAbove = siblings[currentIndex - 1];
+
+        // Swap their orders
+        const tempOrder = block.order;
+        block.order = blockAbove.order;
+        blockAbove.order = tempOrder;
+
+        // Update both blocks' orders in the API
+        await window.apiService.updateBlock(block.uuid, {
+          order: block.order,
+          parent: block.parent ? block.parent.uuid : null,
+        });
+
+        await window.apiService.updateBlock(blockAbove.uuid, {
+          order: blockAbove.order,
+          parent: blockAbove.parent ? blockAbove.parent.uuid : null,
+        });
+
+        // Update local state - re-sort siblings
+        siblings.sort((a, b) => a.order - b.order);
+
+        // Refresh page data to ensure consistency
+        await this.loadPage();
+      } catch (error) {
+        console.error("Failed to move block up:", error);
+        this.error = "Failed to move block up";
+      }
+    },
+
+    async moveBlockDown(block) {
+      const siblings = block.parent ? block.parent.children : this.directBlocks;
+      const currentIndex = siblings.findIndex((b) => b.uuid === block.uuid);
+
+      // Can't move down if already at the bottom
+      if (currentIndex >= siblings.length - 1) return;
+
+      try {
+        // Save current content first
+        await this.updateBlock(block, block.content, true);
+
+        // Get the block below this one
+        const blockBelow = siblings[currentIndex + 1];
+
+        // Swap their orders
+        const tempOrder = block.order;
+        block.order = blockBelow.order;
+        blockBelow.order = tempOrder;
+
+        // Update both blocks' orders in the API
+        await window.apiService.updateBlock(block.uuid, {
+          order: block.order,
+          parent: block.parent ? block.parent.uuid : null,
+        });
+
+        await window.apiService.updateBlock(blockBelow.uuid, {
+          order: blockBelow.order,
+          parent: blockBelow.parent ? blockBelow.parent.uuid : null,
+        });
+
+        // Update local state - re-sort siblings
+        siblings.sort((a, b) => a.order - b.order);
+
+        // Refresh page data to ensure consistency
+        await this.loadPage();
+      } catch (error) {
+        console.error("Failed to move block down:", error);
+        this.error = "Failed to move block down";
+      }
+    },
+
     onBlockContentChange(block, newContent) {
       // Just update the local content, don't save yet
       block.content = newContent;
@@ -620,6 +723,7 @@ const Page = {
       // Check if the clicked element is a clickable tag
       if (event.target.classList.contains("clickable-tag")) {
         event.preventDefault();
+        event.stopPropagation();
         const tagName = event.target.getAttribute("data-tag");
         if (tagName) {
           this.goToTag(tagName);
@@ -910,7 +1014,8 @@ const Page = {
                       move undone TODOs here
                     </button>
                     <button @click="deletePage" class="context-menu-item context-menu-danger">
-                      delete page
+                       <span class="context-menu-icon">×</span>
+                       <span>delete</span>
                     </button>
                   </div>
                 </div>
@@ -931,7 +1036,7 @@ const Page = {
                     @keyup.escape="cancelEditingTitle"
                     @blur="updatePageTitle"
                     class="form-control page-title-input"
-                    placeholder="Enter page title"
+                    placeholder="enter page title"
                   />
                   <button @click="updatePageTitle" class="btn btn-success save-title-btn" title="Save title">
                     ✓
@@ -977,6 +1082,12 @@ const Page = {
               :isBlockInContext="isBlockInContext"
               :onBlockAddToContext="onBlockAddToContext"
               :onBlockRemoveFromContext="onBlockRemoveFromContext"
+              :indentBlock="indentBlock"
+              :outdentBlock="outdentBlock"
+              :createBlockAfter="createBlockAfter"
+              :createBlockBefore="createBlockBefore"
+              :moveBlockUp="moveBlockUp"
+              :moveBlockDown="moveBlockDown"
             />
             <button @click="addNewBlock" class="add-block-btn">
               + add new block
@@ -1008,6 +1119,12 @@ const Page = {
                 :isBlockInContext="isBlockInContext"
                 :onBlockAddToContext="onBlockAddToContext"
                 :onBlockRemoveFromContext="onBlockRemoveFromContext"
+                :indentBlock="indentBlock"
+                :outdentBlock="outdentBlock"
+                :createBlockAfter="createBlockAfter"
+                :createBlockBefore="createBlockBefore"
+                :moveBlockUp="moveBlockUp"
+                :moveBlockDown="moveBlockDown"
               />
             </div>
           </div>

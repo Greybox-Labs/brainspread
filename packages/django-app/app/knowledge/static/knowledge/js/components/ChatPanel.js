@@ -726,7 +726,7 @@ const ChatPanel = {
             <button class="settings-btn" @click="openSettings" title="AI Settings">cfg</button>
           </div>
           <div class="message-input">
-            <textarea v-model="message" placeholder="Ask something..." @keydown="handleKeydown"></textarea>
+            <textarea v-model="message" placeholder="ask something..." @keydown="handleKeydown"></textarea>
             <button @click="sendMessage" :disabled="loading">
               {{ loading ? 'sending...' : 'send' }}
             </button>

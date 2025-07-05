@@ -46,10 +46,37 @@ const BlockComponent = {
       type: Function,
       default: () => () => {},
     },
+    // Block operations
+    indentBlock: {
+      type: Function,
+      default: () => () => {},
+    },
+    outdentBlock: {
+      type: Function,
+      default: () => () => {},
+    },
+    createBlockAfter: {
+      type: Function,
+      default: () => () => {},
+    },
+    createBlockBefore: {
+      type: Function,
+      default: () => () => {},
+    },
+    moveBlockUp: {
+      type: Function,
+      default: () => () => {},
+    },
+    moveBlockDown: {
+      type: Function,
+      default: () => () => {},
+    },
   },
   data() {
     return {
       isCollapsed: false,
+      showContextMenu: false,
+      contextMenuPosition: { x: 0, y: 0 },
     };
   },
   computed: {
@@ -70,6 +97,85 @@ const BlockComponent = {
     },
     toggleCollapse() {
       this.isCollapsed = !this.isCollapsed;
+    },
+    showContextMenuAt(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Calculate position with viewport constraints
+      const menuWidth = 200; // min-width from CSS
+      const shadowOffset = 4; // shadow extends 4px to right and bottom
+      const menuHeight = 300; // estimated max height
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let x = event.clientX;
+      let y = event.clientY;
+
+      // Adjust X position if menu would overflow right edge (including shadow)
+      if (x + menuWidth + shadowOffset > viewportWidth) {
+        x = viewportWidth - menuWidth - shadowOffset - 10; // 10px padding from edge
+      }
+
+      // Adjust Y position if menu would overflow bottom edge (including shadow)
+      if (y + menuHeight + shadowOffset > viewportHeight) {
+        y = viewportHeight - menuHeight - shadowOffset - 10; // 10px padding from edge
+      }
+
+      // Ensure menu doesn't go off left or top edge
+      x = Math.max(10, x);
+      y = Math.max(10, y);
+
+      this.contextMenuPosition = { x, y };
+      this.showContextMenu = true;
+
+      // Add click listener to close menu after a short delay
+      setTimeout(() => {
+        document.addEventListener("click", this.hideContextMenu);
+      }, 10);
+    },
+    hideContextMenu() {
+      this.showContextMenu = false;
+      document.removeEventListener("click", this.hideContextMenu);
+    },
+    handleContextMenuAction(action) {
+      this.hideContextMenu();
+
+      switch (action) {
+        case "expand":
+          if (this.hasChildren) this.isCollapsed = false;
+          break;
+        case "collapse":
+          if (this.hasChildren) this.isCollapsed = true;
+          break;
+        case "indent":
+          this.indentBlock(this.block);
+          break;
+        case "outdent":
+          this.outdentBlock(this.block);
+          break;
+        case "delete":
+          this.deleteBlock(this.block);
+          break;
+        case "addToContext":
+          this.onBlockAddToContext(this.block);
+          break;
+        case "removeFromContext":
+          this.onBlockRemoveFromContext(this.block.uuid);
+          break;
+        case "moveUp":
+          this.moveBlockUp(this.block);
+          break;
+        case "moveDown":
+          this.moveBlockDown(this.block);
+          break;
+        case "newBlockBefore":
+          this.createBlockBefore(this.block);
+          break;
+        case "newBlockAfter":
+          this.createBlockAfter(this.block);
+          break;
+      }
     },
   },
   template: `
@@ -111,20 +217,68 @@ const BlockComponent = {
           class="block-content"
           :class="{ 'completed': block.block_type === 'done' }"
           rows="1"
-          placeholder="Start writing..."
+          placeholder="start writing..."
           ref="blockTextarea"
         ></textarea>
         <button
-          @click="toggleBlockContext"
-          class="block-context"
-          :class="{ active: blockInContext }"
-          :title="blockInContext ? 'Remove from chat context' : 'Add to chat context'"
-        >{{ blockInContext ? '-' : '+ ctx' }}</button>
-        <button
-          @click="deleteBlock(block)"
-          class="block-delete"
-          title="Delete block"
-        >del</button>
+          @click="showContextMenuAt($event)"
+          @contextmenu="showContextMenuAt($event)"
+          class="block-menu"
+          title="Block options"
+        >⋮</button>
+      </div>
+      
+      <!-- Context Menu -->
+      <div v-if="showContextMenu" class="block-context-menu" :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }" @click.stop>
+        <div class="context-menu-item" v-if="hasChildren && isCollapsed" @click="handleContextMenuAction('expand')">
+          <span class="context-menu-icon">▶</span>
+          <span>expand</span>
+        </div>
+        <div class="context-menu-item" v-if="hasChildren && !isCollapsed" @click="handleContextMenuAction('collapse')">
+          <span class="context-menu-icon">▼</span>
+          <span>collapse</span>
+        </div>
+        <div class="context-menu-separator" v-if="hasChildren"></div>
+        <div class="context-menu-item" @click="handleContextMenuAction('indent')">
+          <span class="context-menu-icon">→</span>
+          <span>indent</span>
+        </div>
+        <div class="context-menu-item" @click="handleContextMenuAction('outdent')">
+          <span class="context-menu-icon">←</span>
+          <span>outdent</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" @click="handleContextMenuAction('moveUp')">
+          <span class="context-menu-icon">↑</span>
+          <span>move up</span>
+        </div>
+        <div class="context-menu-item" @click="handleContextMenuAction('moveDown')">
+          <span class="context-menu-icon">↓</span>
+          <span>move down</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" @click="handleContextMenuAction('newBlockBefore')">
+          <span class="context-menu-icon">+</span>
+          <span>new block before</span>
+        </div>
+        <div class="context-menu-item" @click="handleContextMenuAction('newBlockAfter')">
+          <span class="context-menu-icon">+</span>
+          <span>new block after</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" v-if="!blockInContext" @click="handleContextMenuAction('addToContext')">
+          <span class="context-menu-icon">+</span>
+          <span>add to ai context</span>
+        </div>
+        <div class="context-menu-item" v-if="blockInContext" @click="handleContextMenuAction('removeFromContext')">
+          <span class="context-menu-icon">-</span>
+          <span>remove from ai context</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item context-menu-danger" @click="handleContextMenuAction('delete')">
+          <span class="context-menu-icon">×</span>
+          <span>delete</span>
+        </div>
       </div>
       
       <!-- Recursively render children -->
@@ -143,6 +297,12 @@ const BlockComponent = {
           :isBlockInContext="isBlockInContext"
           :onBlockAddToContext="onBlockAddToContext"
           :onBlockRemoveFromContext="onBlockRemoveFromContext"
+          :indentBlock="indentBlock"
+          :outdentBlock="outdentBlock"
+          :createBlockAfter="createBlockAfter"
+          :createBlockBefore="createBlockBefore"
+          :moveBlockUp="moveBlockUp"
+          :moveBlockDown="moveBlockDown"
         />
       </div>
     </div>

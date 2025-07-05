@@ -1110,6 +1110,95 @@ body {
   opacity: 1;
 }
 
+.block-collapse-toggle:hover {
+  color: var(--text-primary);
+}
+
+.block-menu {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem;
+  margin-left: 0.25rem;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.block:hover .block-menu {
+  opacity: 1;
+}
+
+/* Always show menu button on mobile/touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .block-menu {
+    opacity: 1;
+  }
+}
+
+.block-menu:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.block-context-menu {
+  position: fixed;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  box-shadow: 4px 4px 0 var(--border-primary);
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-secondary);
+  text-align: left;
+}
+
+.context-menu-item:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.context-menu-item.context-menu-danger {
+  color: var(--text-danger, #dc3545);
+}
+
+.context-menu-item.context-menu-danger:hover {
+  background: var(--hover-bg);
+}
+
+.context-menu-icon {
+  width: 1.2rem;
+  margin-right: 0.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: var(--border-secondary);
+  margin: 0;
+}
+
 .add-block-btn {
   background: var(--bg-primary);
   border: 3px solid var(--border-primary);
