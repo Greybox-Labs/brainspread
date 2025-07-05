@@ -693,34 +693,19 @@ const PagePage = {
     },
 
     async handleToggleReferencedBlockTodo(block) {
-      if (block.block_type === "todo") {
-        await this.updateReferencedBlockType(block, "done");
-      } else if (block.block_type === "done") {
-        await this.updateReferencedBlockType(block, "bullet");
-      } else {
-        await this.updateReferencedBlockType(block, "todo");
-      }
-    },
-
-    async updateReferencedBlockType(block, newType) {
       try {
-        const result = await window.apiService.updateBlock(block.uuid, {
-          block_type: newType,
-        });
-
+        const result = await window.apiService.toggleBlockTodo(block.uuid);
         if (result.success) {
-          block.block_type = newType;
-
-          // Refresh the page context since the block type changed
-          await this.loadPage();
+          block.block_type = result.data.block_type;
+          block.content = result.data.content;
+          this.error = null;
         } else {
-          console.error(
-            "Failed to update referenced block type:",
-            result.error
-          );
+          this.error =
+            result.errors?.non_field_errors?.[0] || "Failed to toggle todo";
         }
       } catch (error) {
-        console.error("Error updating referenced block type:", error);
+        console.error("Failed to toggle referenced block todo:", error);
+        this.error = "Failed to toggle todo. Please try again.";
       }
     },
 
