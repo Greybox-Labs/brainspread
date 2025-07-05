@@ -1,9 +1,10 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from common.commands.abstract_base_command import AbstractBaseCommand
 from core.models import User
 
 from ..forms import GetTagContentForm
+from ..models import BlockData, PageData
 from ..repositories import PageRepository
 
 
@@ -45,3 +46,12 @@ class GetTagContentCommand(AbstractBaseCommand):
             "referenced_blocks": referenced_blocks,
             "pages": pages,
         }
+
+
+class TagContentData(TypedDict):
+    tag_page: PageData
+    blocks: List[BlockData]
+    pages: List[PageData]
+    total_blocks: int
+    total_pages: int
+    total_content: int

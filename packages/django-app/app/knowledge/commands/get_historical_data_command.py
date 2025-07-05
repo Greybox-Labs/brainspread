@@ -46,15 +46,15 @@ class GetHistoricalDataCommand(AbstractBaseCommand):
         for block in blocks:
             blocks_data.append(block.to_dict(include_page_context=True))
 
-        return {
-            "pages": pages_data,
-            "blocks": blocks_data,
-            "date_range": {
-                "start": start_date.isoformat(),
-                "end": end_date.isoformat(),
-                "days_back": days_back,
-            },
-        }
+        return HistoricalData(
+            pages=pages_data,
+            blocks=blocks_data,
+            date_range=DateRangeData(
+                start=start_date.isoformat(),
+                end=end_date.isoformat(),
+                days_back=days_back,
+            ),
+        )
 
 
 class DateRangeData(TypedDict):

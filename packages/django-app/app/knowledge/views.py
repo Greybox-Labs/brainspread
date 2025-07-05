@@ -17,11 +17,13 @@ from knowledge.commands import (
     GetTagContentCommand,
     GetUserPagesCommand,
     MoveUndoneTodosCommand,
+    SearchPagesCommand,
     ToggleBlockTodoCommand,
     UpdateBlockCommand,
     UpdatePageCommand,
 )
 from knowledge.commands.get_historical_data_command import HistoricalData
+from knowledge.commands.get_tag_content_command import TagContentData
 from knowledge.commands.move_undone_todos_command import MoveUndoneTodosData
 from knowledge.forms import (
     CreateBlockForm,
@@ -33,78 +35,35 @@ from knowledge.forms import (
     GetTagContentForm,
     GetUserPagesForm,
     MoveUndoneTodosForm,
+    SearchPagesForm,
     ToggleBlockTodoForm,
     UpdateBlockForm,
     UpdatePageForm,
 )
-from knowledge.models import BlockData, PageData
-
-
-# Data type definitions for response data fields
-class GetPagesData(TypedDict):
-    pages: List[PageData]
-    total_count: int
-    has_more: bool
-
-
-class GetPageWithBlocksData(TypedDict):
-    page: PageData
-    blocks: List[BlockData]
-
-
-class TagContentData(TypedDict):
-    tag_page: PageData
-    blocks: List[BlockData]
-    pages: List[PageData]
-    total_blocks: int
-    total_pages: int
-    total_content: int
+from knowledge.models import BlockData, PageData, PagesData
+from knowledge.models.page import PageWithBlocksData
 
 
 # API Response Types with specific data types
-class CreatePageResponse(TypedDict):
+class PageResponse(TypedDict):
     success: bool
     data: Optional[PageData]
     errors: Optional[Dict[str, List[str]]]
 
 
-class UpdatePageResponse(TypedDict):
+class PagesResponse(TypedDict):
     success: bool
-    data: Optional[PageData]
+    data: Optional[PagesData]
     errors: Optional[Dict[str, List[str]]]
 
 
-class GetUserPagesResponse(TypedDict):
-    success: bool
-    data: Optional[GetPagesData]
-    errors: Optional[Dict[str, List[str]]]
-
-
-class DeletePageResponse(TypedDict):
-    success: bool
-    data: Optional[Dict[str, str]]
-    errors: Optional[Dict[str, List[str]]]
-
-
-class CreateBlockResponse(TypedDict):
+class BlockResponse(TypedDict):
     success: bool
     data: Optional[BlockData]
     errors: Optional[Dict[str, List[str]]]
 
 
-class UpdateBlockResponse(TypedDict):
-    success: bool
-    data: Optional[BlockData]
-    errors: Optional[Dict[str, List[str]]]
-
-
-class ToggleBlockTodoResponse(TypedDict):
-    success: bool
-    data: Optional[BlockData]
-    errors: Optional[Dict[str, List[str]]]
-
-
-class DeleteBlockResponse(TypedDict):
+class DeleteResponse(TypedDict):
     success: bool
     data: Optional[Dict[str, str]]
     errors: Optional[Dict[str, List[str]]]
@@ -122,15 +81,9 @@ class GetTagContentResponse(TypedDict):
     errors: Optional[Dict[str, List[str]]]
 
 
-class GetPagesResponse(TypedDict):
-    success: bool
-    data: Optional[GetPagesData]
-    errors: Optional[Dict[str, List[str]]]
-
-
 class GetPageWithBlocksResponse(TypedDict):
     success: bool
-    data: Optional[GetPageWithBlocksData]
+    data: Optional[PageWithBlocksData]
     errors: Optional[Dict[str, List[str]]]
 
 
@@ -158,7 +111,7 @@ def create_page(request):
             command = CreatePageCommand(form)
             page = command.execute()
 
-            response: CreatePageResponse = {
+            response: PageResponse = {
                 "success": True,
                 "data": page.to_dict(),
                 "errors": None,
@@ -166,7 +119,7 @@ def create_page(request):
 
             return Response(response)
         else:
-            response: CreatePageResponse = {
+            response: PageResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -174,7 +127,7 @@ def create_page(request):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        response: CreatePageResponse = {
+        response: PageResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -182,7 +135,7 @@ def create_page(request):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        response: CreatePageResponse = {
+        response: PageResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -269,7 +222,7 @@ def update_page(request):
             command = UpdatePageCommand(form)
             page = command.execute()
 
-            response: UpdatePageResponse = {
+            response: PageResponse = {
                 "success": True,
                 "data": page.to_dict(),
                 "errors": None,
@@ -277,7 +230,7 @@ def update_page(request):
 
             return Response(response)
         else:
-            response: UpdatePageResponse = {
+            response: PageResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -291,7 +244,7 @@ def update_page(request):
         )
 
     except Exception as e:
-        response: UpdatePageResponse = {
+        response: PageResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -312,7 +265,7 @@ def delete_page(request):
             command = DeletePageCommand(form)
             command.execute()
 
-            response: DeletePageResponse = {
+            response: DeleteResponse = {
                 "success": True,
                 "data": {"message": "Page deleted successfully"},
                 "errors": None,
@@ -320,7 +273,7 @@ def delete_page(request):
 
             return Response(response)
         else:
-            response: DeletePageResponse = {
+            response: DeleteResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -328,7 +281,7 @@ def delete_page(request):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        response: DeletePageResponse = {
+        response: DeleteResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -336,7 +289,7 @@ def delete_page(request):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        response: DeletePageResponse = {
+        response: DeleteResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -357,13 +310,13 @@ def get_pages(request):
             command = GetUserPagesCommand(form)
             result = command.execute()
 
-            pages_data: GetPagesData = {
+            pages_data: PagesData = {
                 "pages": [page.to_dict() for page in result["pages"]],
                 "total_count": result["total_count"],
                 "has_more": result["has_more"],
             }
 
-            response: GetPagesResponse = {
+            response: PagesResponse = {
                 "success": True,
                 "data": pages_data,
                 "errors": None,
@@ -371,7 +324,7 @@ def get_pages(request):
 
             return Response(response)
         else:
-            response: GetPagesResponse = {
+            response: PagesResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -379,7 +332,7 @@ def get_pages(request):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        response: GetPagesResponse = {
+        response: PagesResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -401,16 +354,16 @@ def get_page_with_blocks(request):
             command = GetPageWithBlocksCommand(form)
             page, direct_blocks, referenced_blocks = command.execute()
 
-            page_with_blocks_data: GetPageWithBlocksData = {
-                "page": page.to_dict(),
-                "direct_blocks": [
+            page_with_blocks_data = PageWithBlocksData(
+                page=page.to_dict(),
+                direct_blocks=[
                     block.to_dict_with_children() for block in direct_blocks
                 ],
-                "referenced_blocks": [
+                referenced_blocks=[
                     block.to_dict(include_page_context=True)
                     for block in referenced_blocks
                 ],
-            }
+            )
 
             response: GetPageWithBlocksResponse = {
                 "success": True,
@@ -456,7 +409,7 @@ def create_block(request):
             command = CreateBlockCommand(form)
             block = command.execute()
 
-            response: CreateBlockResponse = {
+            response: BlockResponse = {
                 "success": True,
                 "data": block.to_dict(),
                 "errors": None,
@@ -464,7 +417,7 @@ def create_block(request):
 
             return Response(response)
         else:
-            response: CreateBlockResponse = {
+            response: BlockResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -472,7 +425,7 @@ def create_block(request):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        response: CreateBlockResponse = {
+        response: BlockResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -494,7 +447,7 @@ def update_block(request):
             command = UpdateBlockCommand(form)
             block = command.execute()
 
-            response: UpdateBlockResponse = {
+            response: BlockResponse = {
                 "success": True,
                 "data": block.to_dict(),
                 "errors": None,
@@ -502,7 +455,7 @@ def update_block(request):
 
             return Response(response)
         else:
-            response: UpdateBlockResponse = {
+            response: BlockResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -516,7 +469,7 @@ def update_block(request):
         )
 
     except Exception as e:
-        response: UpdateBlockResponse = {
+        response: BlockResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -538,7 +491,7 @@ def delete_block(request):
             command = DeleteBlockCommand(form)
             command.execute()
 
-            response: DeleteBlockResponse = {
+            response: DeleteResponse = {
                 "success": True,
                 "data": {"message": "Block deleted successfully"},
                 "errors": None,
@@ -546,7 +499,7 @@ def delete_block(request):
 
             return Response(response)
         else:
-            response: DeleteBlockResponse = {
+            response: DeleteResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -554,7 +507,7 @@ def delete_block(request):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except ValidationError as e:
-        response: DeleteBlockResponse = {
+        response: DeleteResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -562,7 +515,7 @@ def delete_block(request):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        response: DeleteBlockResponse = {
+        response: DeleteResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -584,7 +537,7 @@ def toggle_block_todo(request):
             command = ToggleBlockTodoCommand(form)
             block = command.execute()
 
-            response: ToggleBlockTodoResponse = {
+            response: BlockResponse = {
                 "success": True,
                 "data": block.to_dict(),
                 "errors": None,
@@ -592,7 +545,7 @@ def toggle_block_todo(request):
 
             return Response(response)
         else:
-            response: ToggleBlockTodoResponse = {
+            response: BlockResponse = {
                 "success": False,
                 "data": None,
                 "errors": form.errors,
@@ -606,7 +559,7 @@ def toggle_block_todo(request):
         )
 
     except Exception as e:
-        response: ToggleBlockTodoResponse = {
+        response: BlockResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},
@@ -693,6 +646,49 @@ def move_undone_todos(request):
 
     except Exception as e:
         response: MoveUndoneTodosResponse = {
+            "success": False,
+            "data": None,
+            "errors": {"non_field_errors": [str(e)]},
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def search_pages(request):
+    """API endpoint to search pages by title and slug"""
+    try:
+        data = request.query_params.copy()
+        data["user"] = request.user.id
+        form = SearchPagesForm(data)
+
+        if form.is_valid():
+            command = SearchPagesCommand(form)
+            result = command.execute()
+
+            search_data: PagesData = {
+                "pages": result["pages"],
+                "total_count": len(result["pages"]),
+                "has_more": False,  # Since we're limiting results, we don't need pagination for search
+            }
+
+            response: PagesResponse = {
+                "success": True,
+                "data": search_data,
+                "errors": None,
+            }
+
+            return Response(response)
+        else:
+            response: PagesResponse = {
+                "success": False,
+                "data": None,
+                "errors": form.errors,
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        response: PagesResponse = {
             "success": False,
             "data": None,
             "errors": {"non_field_errors": [str(e)]},

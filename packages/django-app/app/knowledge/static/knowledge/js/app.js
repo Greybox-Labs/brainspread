@@ -20,6 +20,13 @@ const KnowledgeApp = createApp({
       // Toast notifications
       toasts: [], // Array of toast notifications
       toastIdCounter: 0, // Counter for unique toast IDs
+      // Spotlight search
+      showSpotlight: false, // Spotlight search modal state
+      spotlightQuery: "", // Current search query
+      spotlightResults: [], // Search results
+      spotlightLoading: false, // Loading state for search
+      spotlightSelectedIndex: 0, // Selected result index for keyboard navigation
+      spotlightSearchTimeout: null, // Debounce timeout for search
     };
   },
 
@@ -30,6 +37,7 @@ const KnowledgeApp = createApp({
     SettingsModal: window.SettingsModal,
     ChatPanel: window.ChatPanel,
     ToastNotifications: window.ToastNotifications,
+    SpotlightSearch: window.SpotlightSearch,
   },
 
   computed: {
@@ -60,6 +68,9 @@ const KnowledgeApp = createApp({
     // Add event listener for click-outside-to-close menu
     document.addEventListener("click", this.handleDocumentClick);
 
+    // Add global keyboard shortcut listener
+    document.addEventListener("keydown", this.handleGlobalKeydown);
+
     // If we have cached user data, we can show the app immediately
     if (this.isAuthenticated && this.user) {
       this.loading = false;
@@ -86,6 +97,7 @@ const KnowledgeApp = createApp({
   beforeUnmount() {
     // Clean up event listeners
     document.removeEventListener("click", this.handleDocumentClick);
+    document.removeEventListener("keydown", this.handleGlobalKeydown);
   },
 
   methods: {
@@ -387,6 +399,153 @@ const KnowledgeApp = createApp({
     clearAllToasts() {
       this.toasts = [];
     },
+
+    // Global keyboard handler
+    handleGlobalKeydown(event) {
+      // Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        if (this.isAuthenticated) {
+          this.openSpotlight();
+        }
+      }
+
+      // Handle Escape to close spotlight
+      if (event.key === "Escape" && this.showSpotlight) {
+        this.closeSpotlight();
+      }
+    },
+
+    // Spotlight search methods
+    openSpotlight() {
+      this.showSpotlight = true;
+      this.spotlightQuery = "";
+      this.spotlightResults = [];
+      this.spotlightSelectedIndex = 0;
+
+      // Focus search input after a brief delay to ensure modal is rendered
+      this.$nextTick(() => {
+        const searchInput = document.querySelector(".spotlight-search-input");
+        if (searchInput) {
+          searchInput.focus();
+        }
+      });
+    },
+
+    closeSpotlight() {
+      this.showSpotlight = false;
+      this.spotlightQuery = "";
+      this.spotlightResults = [];
+      this.spotlightSelectedIndex = 0;
+    },
+
+    performSpotlightSearchDebounced() {
+      // Clear existing timeout
+      if (this.spotlightSearchTimeout) {
+        clearTimeout(this.spotlightSearchTimeout);
+      }
+
+      // Set new timeout
+      this.spotlightSearchTimeout = setTimeout(() => {
+        this.performSpotlightSearch();
+      }, 300);
+    },
+
+    async performSpotlightSearch() {
+      if (!this.spotlightQuery.trim()) {
+        this.spotlightResults = [];
+        this.spotlightLoading = false;
+        return;
+      }
+
+      this.spotlightLoading = true;
+      this.spotlightSelectedIndex = 0;
+
+      try {
+        // Use the new dedicated search endpoint
+        const result = await window.apiService.searchPages(
+          this.spotlightQuery,
+          10
+        );
+
+        if (result.success) {
+          this.spotlightResults = result.data.pages.map((page) => ({
+            type: "page",
+            title: page.title,
+            slug: page.slug,
+            snippet: "", // No snippet needed since we only search titles/slugs
+            url: `/knowledge/page/${page.slug}/`,
+          }));
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        this.spotlightResults = [];
+      } finally {
+        this.spotlightLoading = false;
+      }
+    },
+
+    generateSnippet(content, query) {
+      if (!content) return "";
+
+      // For title-based search, just return a truncated version of the title
+      if (content.length <= 60) {
+        return content;
+      }
+
+      const lowerContent = content.toLowerCase();
+      const lowerQuery = query.toLowerCase();
+      const index = lowerContent.indexOf(lowerQuery);
+
+      if (index === -1) {
+        return content.substring(0, 60) + (content.length > 60 ? "..." : "");
+      }
+
+      const start = Math.max(0, index - 20);
+      const end = Math.min(content.length, index + query.length + 20);
+      const snippet = content.substring(start, end);
+
+      return (
+        (start > 0 ? "..." : "") + snippet + (end < content.length ? "..." : "")
+      );
+    },
+
+    navigateToSpotlightResult(index = null) {
+      const targetIndex = index !== null ? index : this.spotlightSelectedIndex;
+      const result = this.spotlightResults[targetIndex];
+
+      if (result) {
+        this.closeSpotlight();
+        window.location.href = result.url;
+      }
+    },
+
+    handleSpotlightKeydown(event) {
+      if (!this.spotlightResults.length) return;
+
+      switch (event.key) {
+        case "ArrowDown":
+          event.preventDefault();
+          this.spotlightSelectedIndex = Math.min(
+            this.spotlightSelectedIndex + 1,
+            this.spotlightResults.length - 1
+          );
+          break;
+
+        case "ArrowUp":
+          event.preventDefault();
+          this.spotlightSelectedIndex = Math.max(
+            this.spotlightSelectedIndex - 1,
+            0
+          );
+          break;
+
+        case "Enter":
+          event.preventDefault();
+          this.navigateToSpotlightResult();
+          break;
+      }
+    },
   },
 
   template: `
@@ -472,6 +631,19 @@ const KnowledgeApp = createApp({
             :active-tab="settingsActiveTab"
             @close="closeSettings"
             @theme-updated="onThemeUpdated"
+        />
+
+        <!-- Spotlight Search Modal -->
+        <SpotlightSearch
+            :is-open="showSpotlight"
+            :query="spotlightQuery"
+            :results="spotlightResults"
+            :loading="spotlightLoading"
+            :selected-index="spotlightSelectedIndex"
+            @close="closeSpotlight"
+            @query-changed="spotlightQuery = $event; performSpotlightSearchDebounced()"
+            @navigate="navigateToSpotlightResult"
+            @keydown="handleSpotlightKeydown"
         />
     `,
 });

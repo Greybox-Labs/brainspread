@@ -93,3 +93,15 @@ class PageData(TypedDict):
     modified_at: str
     user_uuid: str
     recent_blocks: Optional[List[BlockData]]
+
+
+class PagesData(TypedDict):
+    pages: List[PageData]
+    total_count: int
+    has_more: bool
+
+
+class PageWithBlocksData(TypedDict):
+    page: PageData
+    direct_blocks: List[BlockData]
+    referenced_blocks: List[BlockData]
