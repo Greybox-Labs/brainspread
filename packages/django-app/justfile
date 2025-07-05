@@ -161,6 +161,31 @@ loaddata FIXTURE:
 showmigrations:
   just django-admin showmigrations
 
+# Show only unapplied migrations
+showundonemigrations:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  echo "Checking for unapplied migrations..."
+  undone=$(just django-admin showmigrations --plan | grep -E "^\[ \]" || true)
+  if [ -z "$undone" ]; then
+    echo "✅ No unapplied migrations found!"
+  else
+    echo "❌ Found unapplied migrations:"
+    echo "$undone"
+  fi
+
+# Check for model changes that need migrations
+check-pending-migrations:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  echo "Checking for model changes that need migrations..."
+  if just django-admin makemigrations --check --dry-run > /dev/null 2>&1; then
+    echo "✅ No pending migrations needed!"
+  else
+    echo "❌ Model changes detected that need migrations!"
+    echo "Run 'just makemigrations' to create them."
+  fi
+
 # Docker compose shortcuts
 up:
   docker-compose up

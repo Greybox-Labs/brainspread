@@ -3,6 +3,16 @@
 from django.db import migrations
 
 
+def do_nothing(apps, schema_editor):
+    # Models already deleted in migration 0015
+    pass
+
+
+def reverse_do_nothing(apps, schema_editor):
+    # No-op reverse migration
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,14 +20,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # These models were already removed from the codebase
-        # For safety, we use RunSQL to handle the case where tables might exist
-        migrations.RunSQL(
-            "DROP TABLE IF EXISTS block_references CASCADE;",
-            reverse_sql="-- Cannot reverse dropping block_references table"
-        ),
-        migrations.RunSQL(
-            "DROP TABLE IF EXISTS page_links CASCADE;",
-            reverse_sql="-- Cannot reverse dropping page_links table"
-        ),
+        migrations.RunPython(do_nothing, reverse_do_nothing),
     ]

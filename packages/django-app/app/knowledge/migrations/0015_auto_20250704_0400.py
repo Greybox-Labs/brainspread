@@ -10,14 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Drop BlockReference and PageLink tables since they're no longer used
-        # These models are replaced by the page/hashtag system
-        migrations.RunSQL(
-            "DROP TABLE IF EXISTS block_references CASCADE;",
-            reverse_sql="-- Cannot reverse dropping block_references table"
+        migrations.DeleteModel(
+            name="BlockReference",
         ),
-        migrations.RunSQL(
-            "DROP TABLE IF EXISTS page_links CASCADE;",
-            reverse_sql="-- Cannot reverse dropping page_links table"
+        migrations.DeleteModel(
+            name="PageLink",
         ),
     ]

@@ -22,7 +22,6 @@ const PagePage = {
     return {
       pageSlug: this.getSlugFromURL(),
       currentDate: this.getDateFromURL(),
-      currentTag: this.getTagFromURL(),
       page: null,
       directBlocks: [], // Blocks that belong directly to this page
       referencedBlocks: [], // Blocks from other pages that reference this page
@@ -49,11 +48,11 @@ const PagePage = {
 
   computed: {
     isDaily() {
-      return this.page && this.page.page_type === "daily";
+      return this.page?.page_type === "daily";
     },
 
     pageTitle() {
-      return this.page?.title || "Untitled Page";
+      return this.page?.title || "untitled page";
     },
 
     totalDirectBlocks() {
@@ -84,12 +83,6 @@ const PagePage = {
       if (slug && /^\d{4}-\d{2}-\d{2}$/.test(slug)) {
         return slug;
       }
-      return null;
-    },
-
-    getTagFromURL() {
-      // Since we unified routes, tags are now handled through /page/ routes
-      // We'll determine if it's a tag page by checking if the page title_as_tag starts with #
       return null;
     },
 
@@ -163,7 +156,7 @@ const PagePage = {
         const result = await window.apiService.createBlock({
           page: this.page.uuid,
           content: content,
-          parent: parent ? parent.uuid : null,
+          parent: parent?.uuid ?? null,
           block_type: "bullet",
           content_type: "text",
           order: blockOrder,
@@ -283,6 +276,44 @@ const PagePage = {
       return siblings.length > 0
         ? Math.max(...siblings.map((b) => b.order)) + 1
         : 0;
+    },
+
+    async handleCreateBlockAfter(currentBlock) {
+      // Calculate the new order (right after current block)
+      const newOrder = currentBlock.order + 1;
+      const siblings = currentBlock.parent
+        ? currentBlock.parent.children
+        : this.directBlocks;
+
+      // Find blocks that need to be shifted down
+      const blocksToShift = siblings.filter(
+        (block) => block.uuid !== currentBlock.uuid && block.order >= newOrder
+      );
+
+      try {
+        // Shift existing blocks down by updating their orders in the backend
+        for (const block of blocksToShift) {
+          await window.apiService.updateBlock(block.uuid, {
+            content: block.content,
+            parent: block.parent ? block.parent.uuid : null,
+            order: block.order + 1,
+          });
+          // Update local state
+          block.order = block.order + 1;
+        }
+
+        // Create the new block at the desired position
+        return await this.handleCreateBlock({
+          content: "",
+          parent: currentBlock.parent,
+          order: newOrder,
+          autoFocus: true,
+        });
+      } catch (error) {
+        console.error("Failed to create block after current:", error);
+        this.error = "Failed to create block";
+        return { success: false };
+      }
     },
 
     handleDocumentClick(event) {
@@ -607,6 +638,99 @@ const PagePage = {
         }
       });
     },
+
+    // Referenced Block Editing Methods
+    startEditingReferencedBlock(block) {
+      block.isEditing = true;
+      this.$nextTick(() => {
+        // Find the textarea for this specific block using the data attribute
+        const textarea = document.querySelector(
+          `[data-block-uuid="${block.uuid}"] .block-content`
+        );
+        if (textarea) {
+          textarea.focus();
+          textarea.select();
+        }
+      });
+    },
+
+    async stopEditingReferencedBlock(block) {
+      if (!block.isEditing) return;
+
+      try {
+        // Update the block content via API
+        const result = await window.apiService.updateBlock(block.uuid, {
+          content: block.content,
+        });
+
+        if (result.success) {
+          // Update the block with the response data
+          Object.assign(block, result.data);
+          block.isEditing = false;
+
+          // Refresh the page context since the block might have new tags
+          await this.loadPage();
+        } else {
+          console.error("Failed to update referenced block:", result.error);
+          // Revert changes on failure
+          block.isEditing = false;
+        }
+      } catch (error) {
+        console.error("Error updating referenced block:", error);
+        block.isEditing = false;
+      }
+    },
+
+    handleReferencedBlockKeyDown(block, event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        this.stopEditingReferencedBlock(block);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        // Cancel editing without saving
+        block.isEditing = false;
+      }
+    },
+
+    async handleToggleReferencedBlockTodo(block) {
+      if (block.block_type === "todo") {
+        await this.updateReferencedBlockType(block, "done");
+      } else if (block.block_type === "done") {
+        await this.updateReferencedBlockType(block, "bullet");
+      } else {
+        await this.updateReferencedBlockType(block, "todo");
+      }
+    },
+
+    async updateReferencedBlockType(block, newType) {
+      try {
+        const result = await window.apiService.updateBlock(block.uuid, {
+          block_type: newType,
+        });
+
+        if (result.success) {
+          block.block_type = newType;
+
+          // Refresh the page context since the block type changed
+          await this.loadPage();
+        } else {
+          console.error(
+            "Failed to update referenced block type:",
+            result.error
+          );
+        }
+      } catch (error) {
+        console.error("Error updating referenced block type:", error);
+      }
+    },
+
+    toggleReferencedBlockContext(block) {
+      if (this.isBlockInContext(block.uuid)) {
+        this.onBlockRemoveFromContext(block.uuid);
+      } else {
+        this.onBlockAddToContext(block);
+      }
+    },
   },
 
   template: `
@@ -658,10 +782,7 @@ const PagePage = {
             <div v-else class="page-title-container page-header-flex">
               <div class="page-header-flex-left">
                 <div v-if="!isEditingTitle" class="page-title-display">
-                  <h1 @click="startEditingTitle" class="page-title-text">{{ page.title || 'Untitled Page' }}</h1>
-                  <button @click="startEditingTitle" class="btn btn-outline edit-title-btn" title="Edit page title">
-                    ✎
-                  </button>
+                  <h1 class="page-title-text">{{ page.title || 'Untitled Page' }}</h1>
                 </div>
                 <div v-else class="page-title-edit">
                   <input
@@ -687,6 +808,9 @@ const PagePage = {
                     ⋮
                   </button>
                   <div v-if="showPageMenu" class="context-menu" @click.stop>
+                    <button @click="startEditingTitle" class="context-menu-item">
+                      edit title
+                    </button>
                     <button @click="deletePage" class="context-menu-item context-menu-danger">
                       delete page
                     </button>
@@ -707,6 +831,7 @@ const PagePage = {
             :chat-context-blocks="chatContextBlocks"
             :is-block-in-context="isBlockInContext"
             @create-block="handleCreateBlock"
+            @create-block-after="handleCreateBlockAfter"
             @update-block="handleUpdateBlock"
             @delete-block="handleDeleteBlock"
             @toggle-block-todo="handleToggleBlockTodo"
@@ -724,23 +849,48 @@ const PagePage = {
           </h3>
           
           <div class="referenced-blocks-container">
-            <div v-for="block in referencedBlocks" :key="block.uuid" class="referenced-block-wrapper">
+            <div v-for="block in referencedBlocks" :key="block.uuid" class="referenced-block-wrapper" :class="{ 'in-context': isBlockInContext(block.uuid) }" :data-block-uuid="block.uuid">
               <div class="block">
                 <div
                   class="block-bullet"
                   :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
+                  @click="handleToggleReferencedBlockTodo(block)"
                 >
                   <span v-if="block.block_type === 'todo'">☐</span>
                   <span v-else-if="block.block_type === 'done'">☑</span>
                   <span v-else>•</span>
                 </div>
-                <div class="block-content-display" :class="{ 'completed': block.block_type === 'done' }">
+                <div class="block-content-wrapper">
                   <div class="block-meta">
                     <span class="page-title">{{ block.page_type === 'daily' ? formatDate(block.page_title) : block.page_title }}</span>
                     <span v-if="block.page_date" class="page-date">{{ formatDate(block.page_date) }}</span>
                   </div>
-                  <div v-html="formatContentWithTags(block.content)" class="block-text"></div>
+                  <div 
+                    v-if="!block.isEditing"
+                    class="block-content-display" 
+                    :class="{ 'completed': block.block_type === 'done' }"
+                    @click="startEditingReferencedBlock(block)"
+                  >
+                    <div v-html="formatContentWithTags(block.content)" class="block-text"></div>
+                  </div>
+                  <div v-else class="block-content-edit">
+                    <textarea
+                      v-model="block.content"
+                      @blur="stopEditingReferencedBlock(block)"
+                      @keydown="handleReferencedBlockKeyDown(block, $event)"
+                      class="block-content"
+                      :class="{ 'completed': block.block_type === 'done' }"
+                      :placeholder="'Enter content...'"
+                      ref="referencedBlockTextarea"
+                    ></textarea>
+                  </div>
                 </div>
+                <button
+                  @click="toggleReferencedBlockContext(block)"
+                  class="block-context"
+                  :class="{ active: isBlockInContext(block.uuid) }"
+                  :title="isBlockInContext(block.uuid) ? 'Remove from chat context' : 'Add to chat context'"
+                >{{ isBlockInContext(block.uuid) ? '-' : '+' }}</button>
               </div>
             </div>
           </div>

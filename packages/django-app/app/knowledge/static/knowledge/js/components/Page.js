@@ -34,6 +34,7 @@ const Page = {
     "block-remove-from-context",
     "visible-blocks-changed",
     "create-block",
+    "create-block-after",
     "update-block",
     "delete-block",
     "toggle-block-todo",
@@ -171,7 +172,7 @@ const Page = {
         event.preventDefault();
         // Save current block before creating new one
         await this.updateBlock(block, block.content, true);
-        await this.createBlockAfter(block);
+        this.$emit("create-block-after", block);
       } else if (
         event.key === "Backspace" &&
         block.content.trim() === "" &&
