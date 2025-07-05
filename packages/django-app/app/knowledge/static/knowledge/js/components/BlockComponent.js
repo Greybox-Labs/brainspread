@@ -68,6 +68,7 @@ const BlockComponent = {
           class="block-bullet"
           :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
           @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
+          @touchend.prevent="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
         >
           <span v-if="block.block_type === 'todo'">☐</span>
           <span v-else-if="block.block_type === 'done'">☑</span>
@@ -78,6 +79,7 @@ const BlockComponent = {
           class="block-content-display"
           :class="{ 'completed': block.block_type === 'done' }"
           @click="startEditing(block)"
+          @touchend.prevent="startEditing(block)"
           v-html="formatContentWithTags(block.content)"
         ></div>
         <textarea

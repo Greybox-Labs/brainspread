@@ -840,6 +840,7 @@ const PagePage = {
                   class="block-bullet"
                   :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
                   @click="handleToggleReferencedBlockTodo(block)"
+                  @touchend.prevent="handleToggleReferencedBlockTodo(block)"
                 >
                   <span v-if="block.block_type === 'todo'">☐</span>
                   <span v-else-if="block.block_type === 'done'">☑</span>
@@ -855,6 +856,7 @@ const PagePage = {
                     class="block-content-display" 
                     :class="{ 'completed': block.block_type === 'done' }"
                     @click="startEditingReferencedBlock(block)"
+                    @touchend.prevent="startEditingReferencedBlock(block)"
                   >
                     <div v-html="formatContentWithTags(block.content)" class="block-text"></div>
                   </div>

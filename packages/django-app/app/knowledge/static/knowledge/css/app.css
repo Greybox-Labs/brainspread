@@ -917,6 +917,12 @@ body {
     color 0.1s ease,
     transform 0.1s ease;
   position: relative;
+  touch-action: manipulation;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .block-bullet.todo:active,
@@ -966,6 +972,7 @@ body {
   cursor: text;
   white-space: pre-wrap;
   word-wrap: break-word;
+  touch-action: manipulation;
   color: var(--text-primary);
 }
 
@@ -2787,6 +2794,28 @@ body {
 .referenced-block-wrapper .block-content-wrapper {
   flex: 1;
   min-width: 0;
+}
+
+/* Mobile touch improvements for referenced blocks */
+.referenced-block-wrapper .block-bullet {
+  touch-action: manipulation;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.referenced-block-wrapper .block-content-display {
+  touch-action: manipulation;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.referenced-block-wrapper .block-text {
+  pointer-events: none;
 }
 
 /* Context Menu Styles */
