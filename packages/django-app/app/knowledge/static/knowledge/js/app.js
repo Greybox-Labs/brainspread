@@ -24,7 +24,7 @@ const KnowledgeApp = createApp({
   },
 
   components: {
-    PagePage: window.PagePage,
+    Page: window.Page,
     LoginForm: window.LoginForm,
     HistoricalSidebar: window.HistoricalSidebar,
     SettingsModal: window.SettingsModal,
@@ -439,6 +439,7 @@ const KnowledgeApp = createApp({
                             @navigate-to-slug="onNavigateToSlug" />
                         <div class="main-content-area">
                             <PagePage
+                            <Page
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
                                 @block-add-to-context="onBlockAddToContext"

@@ -94,14 +94,6 @@ window.HistoricalSidebar = {
         : content;
     },
 
-    getTagColors(tags) {
-      if (!tags || !tags.length) return [];
-      return tags.map((tag) => ({
-        name: tag.name,
-        color: tag.color || "#00ff00",
-      }));
-    },
-
     // Resize functionality
     setupResizeListener() {
       this.resizeHandler = (e) => this.handleMouseMove(e);
@@ -157,6 +149,49 @@ window.HistoricalSidebar = {
       // Navigate to the page containing this block
       // All pages now use the unified /knowledge/page/{slug}/ pattern
       this.$emit("navigate-to-slug", block.page_slug);
+    },
+
+    openTag(tagName) {
+      // Navigate to the tag page
+      this.$emit("navigate-to-slug", tagName);
+    },
+
+    async toggleBlockTodo(block, event) {
+      // Prevent navigation to block page when clicking checkbox
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      try {
+        const result = await window.apiService.toggleBlockTodo(block.uuid);
+        if (result.success) {
+          // Update the block's type in the local data without reloading
+          // This prevents the sidebar from scrolling to the top
+          block.block_type = result.data.block_type;
+          block.content = result.data.content;
+        }
+      } catch (error) {
+        console.error("Error toggling todo:", error);
+      }
+    },
+
+    formatContentWithTags(content) {
+      if (!content) return "";
+
+      // Replace hashtags with clickable styled spans
+      return content.replace(
+        /#([a-zA-Z0-9_-]+)/g,
+        '<span class="inline-tag clickable-tag" data-tag="$1">#$1</span>'
+      );
+    },
+
+    handleTagClick(event) {
+      const tagName = event.target.getAttribute("data-tag");
+      if (tagName) {
+        event.stopPropagation();
+        this.openTag(tagName);
+      }
     },
 
     // Click outside to close sidebar
@@ -264,9 +299,8 @@ window.HistoricalSidebar = {
                     </div>
                     
                     <!-- Content rows: recent blocks -->
-                    <div v-if="page.recent_blocks && page.recent_blocks.length" class="page-content-rows">
-                      <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.uuid" class="block-preview">
-                        {{ truncateContent(block.content, 60) }}
+                    <div v-if="page.recent_blocks && page.recent_blocks.length" class="page-content-rows" @click="handleTagClick">
+                      <div v-for="block in page.recent_blocks.slice(0, 2)" :key="block.uuid" class="block-preview" :class="{ 'completed': block.block_type === 'done' }" v-html="formatContentWithTags(truncateContent(block.content, 60))">
                       </div>
                     </div>
                   </div>
@@ -286,20 +320,19 @@ window.HistoricalSidebar = {
                   :title="'Click to open ' + block.page_title"
                 >
                   <div class="item-header">
-                    <span v-if="block.block_type === 'todo'" class="item-type block-type">{{ block.block_type }}</span>
                     <span class="item-page">{{ block.page_title }}</span>
                   </div>
-                  <div class="item-meta">{{ formatDate(block.modified_at || block.created_at) }}</div>
-                  <div class="item-content">{{ truncateContent(block.content, 100) }}</div>
-                  <div v-if="block.tags && block.tags.length" class="item-tags">
+                  <div class="item-meta">{{ formatTime(block.modified_at || block.created_at) }}</div>
+                  <div class="item-content-row" @click="handleTagClick">
                     <span
-                      v-for="tag in getTagColors(block.tags)"
-                      :key="tag.name"
-                      class="sidebar-tag"
-                      :style="{ backgroundColor: tag.color }"
+                      v-if="block.block_type === 'todo' || block.block_type === 'done'"
+                      @click="toggleBlockTodo(block, $event)"
+                      :class="['block-bullet', block.block_type]"
+                      :title="'Toggle ' + (block.block_type === 'done' ? 'undone' : 'done')"
                     >
-                      {{ tag.name }}
+                      {{ block.block_type === 'done' ? '☑' : '☐' }}
                     </span>
+                    <span class="item-content" :class="{ 'completed': block.block_type === 'done' }" v-html="formatContentWithTags(truncateContent(block.content, 100))"></span>
                   </div>
                 </div>
               </div>

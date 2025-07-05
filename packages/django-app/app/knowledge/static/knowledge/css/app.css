@@ -495,8 +495,8 @@ body {
 
 /* Inline tag styling within block content */
 .inline-tag {
-  background-color: var(--tag-bg) !important;
-  color: var(--tag-text) !important;
+  background-color: var(--tag-bg);
+  color: var(--tag-text);
   padding: 0.1rem 0.3rem;
   font-weight: normal;
   border: 1px solid var(--tag-bg);
@@ -505,8 +505,8 @@ body {
 /* More specific selector for inline tags in block content */
 .block-content-display .inline-tag,
 .block-content .inline-tag {
-  background-color: var(--tag-bg) !important;
-  color: var(--tag-text) !important;
+  background-color: var(--tag-bg);
+  color: var(--tag-text);
 }
 
 /* Clickable tag styling */
@@ -516,7 +516,7 @@ body {
 }
 
 .clickable-tag:hover {
-  background-color: var(--tag-hover) !important;
+  background-color: var(--tag-hover);
   text-decoration: underline;
 }
 
@@ -1396,8 +1396,8 @@ body {
 
 .tag {
   padding: 0.2rem 0.5rem;
-  background: var(--tag-bg) !important;
-  color: var(--tag-text) !important;
+  background: var(--tag-bg);
+  color: var(--tag-text);
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -1649,10 +1649,37 @@ body {
 .sidebar-tag,
 .historical-tag {
   padding: 0.1rem 0.3rem;
-  background: var(--tag-bg) !important;
-  color: var(--tag-text) !important;
+  background: var(--tag-bg);
+  color: var(--tag-text);
   font-size: 0.6rem;
   font-weight: bold;
+}
+
+.item-content-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.item-content-row .block-bullet {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.item-content-row .item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Completed item styling for sidebar */
+.historical-sidebar .item-content.completed,
+.historical-sidebar .block-preview.completed {
+  text-decoration: line-through !important;
+  text-decoration-color: var(--text-secondary) !important;
+  text-decoration-thickness: 1px !important;
+  color: var(--completed-text) !important;
 }
 
 .recent-blocks-preview {
@@ -1698,7 +1725,6 @@ body {
   color: var(--text-secondary);
   font-size: 0.7rem;
   font-weight: normal;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0;
   margin-left: auto;
