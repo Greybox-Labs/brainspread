@@ -22,4 +22,4 @@ EXPOSE 8000
 WORKDIR /code/app
 
 # this CMD is overridden by the command in docker-compose.yml for local development
-CMD /code/bin/wait-for-it.sh db:5433 -- python /code/app/manage.py runserver 0.0.0.0:8000
+CMD /code/bin/wait-for-it.sh db:${POSTGRES_PORT:-5432} -- python /code/app/manage.py runserver 0.0.0.0:${WEB_PORT:-8000}

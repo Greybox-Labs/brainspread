@@ -12,9 +12,9 @@ services:
     env_file:
       - ./.env
     environment:
-      - PGPORT=5433
+      - PGPORT=${POSTGRES_PORT:-5432}
     ports:
-      - "5433:5433"
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
     volumes:
       - brainspread_postgres:/var/lib/postgresql/data/
   web:
@@ -29,15 +29,15 @@ services:
       - MEDIA_ROOT=/code/app/media/
     command:
       - "/code/bin/wait-for-it.sh"
-      - "db:5433"
+      - "db:${POSTGRES_PORT:-5432}"
       - "--"
       - "python"
       - "/code/app/manage.py"
       - "runserver"
-      - "0.0.0.0:8001"
+      - "0.0.0.0:${WEB_PORT:-8000}"
     volumes:
       - .:/code
     ports:
-      - "8001:8001"
+      - "${WEB_PORT:-8000}:${WEB_PORT:-8000}"
     depends_on:
       - db
