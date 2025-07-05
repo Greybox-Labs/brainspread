@@ -80,7 +80,7 @@ run +ARGS:
 
 # Create Docker volumes
 create-volumes:
-  docker volume create --name=brainspread_postgres
+  docker volume create --name=${POSTGRES_VOLUME_NAME:-brainspread_postgres}
 
 # Dump database data to stdout
 dump-data:
@@ -122,8 +122,8 @@ reload-db DATA="dev_data.json":
   docker-compose rm -f db
 
   # Remove and recreate postgres volume
-  docker volume rm brainspread_postgres || true
-  docker volume create --name=brainspread_postgres
+  docker volume rm ${POSTGRES_VOLUME_NAME:-brainspread_postgres} || true
+  docker volume create --name=${POSTGRES_VOLUME_NAME:-brainspread_postgres}
 
   # Bring container back up and wait for db
   docker-compose up -d db
@@ -222,7 +222,7 @@ ps:
 dcp-cleanup:
   docker-compose stop
   docker-compose rm -f db web
-  docker volume rm brainspread_postgres
+  docker volume rm ${POSTGRES_VOLUME_NAME:-brainspread_postgres}
 
 # Setup local Python virtual environment
 setup-local-python-venv:
