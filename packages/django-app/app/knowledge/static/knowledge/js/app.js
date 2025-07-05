@@ -368,6 +368,11 @@ const KnowledgeApp = createApp({
       this.handleLogout();
     },
 
+    onMenuSearch() {
+      this.closeMenu();
+      this.openSpotlight();
+    },
+
     // Toast notification methods
     addToast(message, type = "info", duration = 5000) {
       const toast = {
@@ -569,6 +574,9 @@ const KnowledgeApp = createApp({
                                 <div v-if="showMenu" class="menu-popover" @click.stop>
                                     <button @click="onMenuCreatePage" class="menu-item">
                                         + page
+                                    </button>
+                                    <button @click="onMenuSearch" class="menu-item">
+                                        search
                                     </button>
                                     <button @click="onMenuSettings" class="menu-item">
                                         settings
