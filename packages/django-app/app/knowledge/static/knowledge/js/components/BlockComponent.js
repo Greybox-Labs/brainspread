@@ -74,7 +74,16 @@ const BlockComponent = {
   },
   template: `
     <div class="block-wrapper" :class="{ 'child-block': block.parent, 'in-context': blockInContext }" :data-block-uuid="block.uuid">
-      <div class="block">
+      <div class="block" :class="{ 'has-children': hasChildren }">
+        <button
+          v-if="hasChildren"
+          @click="toggleCollapse"
+          class="block-collapse-toggle"
+          :class="{ 'collapsed': isCollapsed }"
+          :title="isCollapsed ? 'Expand children' : 'Collapse children'"
+        >
+          {{ isCollapsed ? '▶' : '▼' }}
+        </button>
         <div
           class="block-bullet"
           :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
@@ -85,15 +94,6 @@ const BlockComponent = {
           <span v-else-if="block.block_type === 'done'">☑</span>
           <span v-else>•</span>
         </div>
-        <button
-          v-if="hasChildren"
-          @click="toggleCollapse"
-          class="block-collapse-toggle"
-          :class="{ 'collapsed': isCollapsed }"
-          :title="isCollapsed ? 'Expand children' : 'Collapse children'"
-        >
-          {{ isCollapsed ? '▶' : '▼' }}
-        </button>
         <div
           v-if="!block.isEditing"
           class="block-content-display"
