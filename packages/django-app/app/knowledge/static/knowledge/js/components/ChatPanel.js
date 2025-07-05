@@ -574,6 +574,12 @@ const ChatPanel = {
       this.clickOutsideHandler = (e) => {
         // Only close if panel is open and click is outside the panel
         if (this.isOpen && !this.$el.contains(e.target)) {
+          // Check if click is within the history dropdown (teleported content)
+          const historyDropdown = e.target.closest('.history-dropdown');
+          if (historyDropdown) {
+            return; // Don't close if clicking within history dropdown
+          }
+          
           this.isOpen = false;
           this.saveOpenState();
         }
