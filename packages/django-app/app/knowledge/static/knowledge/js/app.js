@@ -438,7 +438,6 @@ const KnowledgeApp = createApp({
                             @navigate-to-date="onNavigateToDate"
                             @navigate-to-slug="onNavigateToSlug" />
                         <div class="main-content-area">
-                            <PagePage
                             <Page
                                 :chat-context-blocks="chatContextBlocks"
                                 :is-block-in-context="isBlockInContext"
