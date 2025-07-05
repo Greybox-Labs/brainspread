@@ -15,10 +15,10 @@
   - [x] history sidebar already has pages sorted by most recently modified
   - [x] only one path for page (instead of page vs daily note, bc they're all 
     pages)
-- [ ] should be able to edit referenced blocks on a page
-- [ ] should be able to add reference blocks on a page to chat context
-- [ ] cmd + space like mac spotlight to search for pages and blocks
-- [ ] ability to collapse/expand blocks with nested children
+- [x] should be able to edit referenced blocks on a page
+- [x] should be able to add reference blocks on a page to chat context
+- [x] cmd + space like mac spotlight to search for pages and blocks
+- [x] ability to collapse/expand blocks with nested children
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
   - maybe can use something like Pusher? i still think you need APN details for
@@ -27,11 +27,11 @@
     through some hoops to get a phone number now
 - [ ] blocks should have a context menu popover. right now a cool option would
   be to move to current day
+  - could move delete here? kinda makes it annoying to delete lots of blocks
+  - 
 - [ ] should be able to drag and move block ordering and nestings around
 - [ ] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
-- [ ] should be able to click on a historical daily note to go to that daily note's
-  page
 
 ## mobile usage
 - [x] better use of space on mobile

@@ -47,9 +47,17 @@ const BlockComponent = {
       default: () => () => {},
     },
   },
+  data() {
+    return {
+      isCollapsed: false,
+    };
+  },
   computed: {
     blockInContext() {
       return this.isBlockInContext(this.block.uuid);
+    },
+    hasChildren() {
+      return this.block.children?.length > 0;
     },
   },
   methods: {
@@ -59,6 +67,9 @@ const BlockComponent = {
       } else {
         this.onBlockAddToContext(this.block);
       }
+    },
+    toggleCollapse() {
+      this.isCollapsed = !this.isCollapsed;
     },
   },
   template: `
@@ -74,6 +85,15 @@ const BlockComponent = {
           <span v-else-if="block.block_type === 'done'">☑</span>
           <span v-else>•</span>
         </div>
+        <button
+          v-if="hasChildren"
+          @click="toggleCollapse"
+          class="block-collapse-toggle"
+          :class="{ 'collapsed': isCollapsed }"
+          :title="isCollapsed ? 'Expand children' : 'Collapse children'"
+        >
+          {{ isCollapsed ? '▶' : '▼' }}
+        </button>
         <div
           v-if="!block.isEditing"
           class="block-content-display"
@@ -99,7 +119,7 @@ const BlockComponent = {
           class="block-context"
           :class="{ active: blockInContext }"
           :title="blockInContext ? 'Remove from chat context' : 'Add to chat context'"
-        >{{ blockInContext ? '-' : '+' }}</button>
+        >{{ blockInContext ? '-' : '+ ctx' }}</button>
         <button
           @click="deleteBlock(block)"
           class="block-delete"
@@ -108,7 +128,7 @@ const BlockComponent = {
       </div>
       
       <!-- Recursively render children -->
-      <div v-if="block.children && block.children.length" class="block-children">
+      <div v-if="block.children && block.children.length && !isCollapsed" class="block-children">
         <BlockComponent
           v-for="child in block.children"
           :key="child.uuid"
