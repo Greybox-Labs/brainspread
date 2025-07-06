@@ -1,3 +1,5 @@
+set dotenv-load
+
 default:
   @just --list
 
@@ -313,7 +315,7 @@ lint-py-fix:
 lint:
   just lint-py
 
-# Initialize project - create volumes, build images, setup database
+# Initialize project - create volume, build images, setup database
 init:
   just create-volumes
   just build
