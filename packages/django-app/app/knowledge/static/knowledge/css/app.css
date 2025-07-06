@@ -2923,7 +2923,7 @@ body {
 }
 
 .block-wrapper.in-context > .block {
-  background: rgba(255, 170, 0, 0.1);
+  background: color-mix(in srgb, var(--context-color) 15%, transparent);
 }
 
 .block-wrapper.in-context .block-bullet {
@@ -2932,7 +2932,7 @@ body {
 
 /* Referenced blocks in context highlighting */
 .referenced-block-wrapper.in-context > .block {
-  background: rgba(255, 170, 0, 0.1);
+  background: color-mix(in srgb, var(--context-color) 15%, transparent);
 }
 
 .referenced-block-wrapper.in-context .block-bullet {
