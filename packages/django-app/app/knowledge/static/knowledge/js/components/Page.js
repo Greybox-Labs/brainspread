@@ -126,7 +126,7 @@ const Page = {
           );
           this.referencedBlocks = result.data.referenced_blocks || [];
         } else {
-          this.error = "Failed to load page";
+          this.error = "failed to load page";
         }
 
         if (this.page) {
@@ -134,8 +134,8 @@ const Page = {
           this.initializeDateSelector();
         }
       } catch (error) {
-        console.error("Failed to load page:", error);
-        this.error = "Failed to load page";
+        console.error("failed to load page:", error);
+        this.error = "failed to load page. does it exist?";
       } finally {
         this.loading = false;
       }
@@ -225,8 +225,8 @@ const Page = {
 
         return result;
       } catch (error) {
-        console.error("Failed to create block:", error);
-        this.error = "Failed to create block";
+        console.error("failed to create block:", error);
+        this.error = "failed to create block";
         return { success: false };
       }
     },
@@ -248,14 +248,14 @@ const Page = {
           }
         }
       } catch (error) {
-        console.error("Failed to update block:", error);
-        this.error = "Failed to update block";
+        console.error("failed to update block:", error);
+        this.error = "failed to update block";
       }
     },
 
     async deleteBlock(block) {
       const confirmed = confirm(
-        `Are you sure you want to delete this block? This will also delete any child blocks and cannot be undone.`
+        `are you sure you want to delete this block? this will also delete any child blocks and cannot be undone.`
       );
 
       if (!confirmed) return;
@@ -266,8 +266,8 @@ const Page = {
           await this.loadPage();
         }
       } catch (error) {
-        console.error("Failed to delete block:", error);
-        this.error = "Failed to delete block";
+        console.error("failed to delete block:", error);
+        this.error = "failed to delete block";
       }
     },
 
@@ -332,8 +332,8 @@ const Page = {
             result.errors?.non_field_errors?.[0] || "Failed to toggle todo";
         }
       } catch (error) {
-        console.error("Failed to toggle block todo:", error);
-        this.error = "Failed to toggle todo. Please try again.";
+        console.error("failed to toggle block todo:", error);
+        this.error = "failed to toggle todo. please try again.";
       }
     },
 
@@ -420,8 +420,8 @@ const Page = {
         // Refresh page data to ensure consistency
         await this.loadPage();
       } catch (error) {
-        console.error("Failed to move block up:", error);
-        this.error = "Failed to move block up";
+        console.error("failed to move block up:", error);
+        this.error = "failed to move block up";
       }
     },
 
@@ -461,8 +461,8 @@ const Page = {
         // Refresh page data to ensure consistency
         await this.loadPage();
       } catch (error) {
-        console.error("Failed to move block down:", error);
-        this.error = "Failed to move block down";
+        console.error("failed to move block down:", error);
+        this.error = "failed to move block down";
       }
     },
 
@@ -737,6 +737,12 @@ const Page = {
       window.location.href = url;
     },
 
+    goToPage(pageSlug) {
+      // Navigate to a page by slug with full page redirect
+      const url = `/knowledge/page/${encodeURIComponent(pageSlug)}/`;
+      window.location.href = url;
+    },
+
     startEditing(block) {
       // Stop editing all other blocks first (save them)
       const allBlocks = this.getAllBlocks();
@@ -858,11 +864,11 @@ const Page = {
           const todayString = `${year}-${month}-${day}`;
           window.location.href = `/knowledge/page/${todayString}/`;
         } else {
-          this.error = "Failed to delete page";
+          this.error = "failed to delete page";
         }
       } catch (error) {
-        console.error("Failed to delete page:", error);
-        this.error = "Failed to delete page";
+        console.error("failed to delete page:", error);
+        this.error = "failed to delete page";
       }
     },
 
@@ -882,25 +888,25 @@ const Page = {
 
           if (movedCount > 0) {
             this.$parent.addToast(
-              `Moved ${movedCount} undone TODOs to ${this.page.title}`,
+              `moved ${movedCount} undone TODOs to ${this.page.title}`,
               "success"
             );
             // Reload the page to show the moved todos
             await this.loadPage();
           } else {
             this.$parent.addToast(
-              message || "No undone TODOs found to move",
+              message || "no undone TODOs found to move",
               "info"
             );
           }
         } else {
-          this.error = "Failed to move undone TODOs";
-          this.$parent.addToast("Failed to move undone TODOs", "error");
+          this.error = "failed to move undone TODOs";
+          this.$parent.addToast("failed to move undone TODOs", "error");
         }
       } catch (error) {
-        console.error("Failed to move undone TODOs:", error);
-        this.error = "Failed to move undone TODOs";
-        this.$parent.addToast("Failed to move undone TODOs", "error");
+        console.error("failed to move undone TODOs:", error);
+        this.error = "failed to move undone TODOs";
+        this.$parent.addToast("failed to move undone TODOs", "error");
       }
     },
 
@@ -930,20 +936,27 @@ const Page = {
       }
 
       try {
+        const oldSlug = this.page.slug;
         const result = await window.apiService.updatePage(this.page.uuid, {
           title: this.newTitle.trim(),
         });
 
         if (result.success) {
           this.page.title = this.newTitle.trim();
+          this.page.slug = result.data.slug;
           this.isEditingTitle = false;
-          this.$parent.addToast("Page title updated successfully", "success");
+          this.$parent.addToast("page title updated successfully", "success");
+
+          // Redirect to new URL if slug changed
+          if (oldSlug !== result.data.slug) {
+            window.location.href = `/knowledge/page/${encodeURIComponent(result.data.slug)}/`;
+          }
         } else {
-          this.error = "Failed to update page title";
+          this.error = "failed to update page title";
         }
       } catch (error) {
-        console.error("Failed to update page title:", error);
-        this.error = "Failed to update page title";
+        console.error("failed to update page title:", error);
+        this.error = "failed to update page title";
       }
     },
 
@@ -1026,7 +1039,7 @@ const Page = {
             <div v-else class="page-title-container page-header-flex">
               <div class="page-header-flex-left">
                 <div v-if="!isEditingTitle" class="page-title-display">
-                  <h1 class="page-title-text">{{ page.title || 'Untitled Page' }}</h1>
+                  <h1 class="page-title-text" @click="startEditingTitle">{{ page.title || 'Untitled Page' }}</h1>
                 </div>
                 <div v-else class="page-title-edit">
                   <input
@@ -1034,7 +1047,6 @@ const Page = {
                     v-model="newTitle"
                     @keyup.enter="updatePageTitle"
                     @keyup.escape="cancelEditingTitle"
-                    @blur="updatePageTitle"
                     class="form-control page-title-input"
                     placeholder="enter page title"
                   />
@@ -1104,7 +1116,7 @@ const Page = {
           <div class="referenced-blocks-container">
             <div v-for="block in referencedBlocks" :key="block.uuid" class="referenced-block-wrapper" :class="{ 'in-context': isBlockInContext(block.uuid) }" :data-block-uuid="block.uuid">
               <div class="block-meta">
-                <span class="page-title">{{ block.page_type === 'daily' ? formatDate(block.page_title) : block.page_title }}</span>
+                <span class="page-title clickable" @click="goToPage(block.page_slug)">{{ block.page_type === 'daily' ? formatDate(block.page_title) : block.page_title }}</span>
                 <span v-if="block.page_date" class="page-date">{{ formatDate(block.page_date) }}</span>
               </div>
               <BlockComponent

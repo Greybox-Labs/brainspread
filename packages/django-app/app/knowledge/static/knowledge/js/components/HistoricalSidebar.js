@@ -39,11 +39,11 @@ window.HistoricalSidebar = {
         if (result.success) {
           this.historicalData = result.data;
         } else {
-          this.error = "Failed to load historical data";
+          this.error = "failed to load historical data";
         }
       } catch (error) {
-        console.error("Error loading historical data:", error);
-        this.error = error.message || "Failed to load historical data";
+        console.error("error loading historical data:", error);
+        this.error = error.message || "failed to load historical data";
       } finally {
         this.loading = false;
       }
@@ -172,7 +172,7 @@ window.HistoricalSidebar = {
           block.content = result.data.content;
         }
       } catch (error) {
-        console.error("Error toggling todo:", error);
+        console.error("error toggling todo:", error);
       }
     },
 

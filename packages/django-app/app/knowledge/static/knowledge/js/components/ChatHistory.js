@@ -23,8 +23,8 @@ const ChatHistory = {
           this.$emit("sessions-loaded", this.sessions);
         }
       } catch (error) {
-        console.error("Failed to load chat sessions:", error);
-        this.error = "Failed to load chat history";
+        console.error("failed to load chat sessions:", error);
+        this.error = "failed to load chat history";
       } finally {
         this.loading = false;
       }

@@ -74,6 +74,8 @@ test +ARGS="":
     docker-compose run --rm -w /code/app web pytest {{ARGS}}
   fi
 
+alias t := test
+
 # Run shell commands in new web container
 run +ARGS:
   docker-compose run --rm web {{ARGS}}
@@ -343,6 +345,8 @@ prepush:
   echo ""
   
   echo "🎉 All pre-push checks passed! Ready to push! 🎉"
+
+alias p := prepush
 
 # AI Tools
 # start playwright mcp server

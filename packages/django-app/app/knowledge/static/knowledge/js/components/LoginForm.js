@@ -47,11 +47,11 @@ const LoginForm = {
           this.error =
             result.errors?.email?.[0] ||
             result.errors?.non_field_errors?.[0] ||
-            "Registration failed";
+            "registration failed";
         }
       } catch (error) {
-        console.error("Registration error:", error);
-        this.error = "Registration failed. Please try again.";
+        console.error("registration error:", error);
+        this.error = "registration failed. please try again.";
       } finally {
         this.loading = false;
       }

@@ -16,7 +16,6 @@ class UpdatePageForm(BaseForm):
     page = UUIDModelChoiceField(queryset=PageRepository.get_queryset(), required=True)
     title = forms.CharField(max_length=200, required=False)
     content = forms.CharField(widget=forms.Textarea, required=False)
-    slug = forms.SlugField(max_length=200, required=False)
     is_published = forms.BooleanField(required=False)
 
     def clean_page(self) -> Page:
@@ -35,19 +34,6 @@ class UpdatePageForm(BaseForm):
             if not title:
                 raise ValidationError("Title cannot be empty")
         return title
-
-    def clean_slug(self) -> Optional[str]:
-        slug = self.cleaned_data.get("slug")
-        page = self.cleaned_data.get("page")
-        user = self.cleaned_data.get("user")
-
-        if slug and user and page:
-            # Check if new slug conflicts with existing pages (excluding current page)
-            existing = Page.objects.filter(user=user, slug=slug).exclude(uuid=page.uuid)
-            if existing.exists():
-                raise ValidationError(f"Page with slug '{slug}' already exists")
-
-        return slug
 
     def clean_user(self) -> User:
         user = self.cleaned_data.get("user")

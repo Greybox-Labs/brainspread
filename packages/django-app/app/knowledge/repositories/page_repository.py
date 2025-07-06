@@ -161,3 +161,15 @@ class PageRepository(BaseRepository):
     def get_all_tag_pages(cls, user) -> QuerySet:
         """Get all tag pages for a user"""
         return cls.get_queryset().filter(user=user, page_type="tag").order_by("title")
+
+    @classmethod
+    def slug_exists_for_user(
+        cls, slug: str, user, exclude_page_uuid: str = None
+    ) -> bool:
+        """Check if a slug already exists for a user, optionally excluding a specific page"""
+        queryset = cls.get_queryset().filter(user=user, slug=slug)
+
+        if exclude_page_uuid:
+            queryset = queryset.exclude(uuid=exclude_page_uuid)
+
+        return queryset.exists()

@@ -4,6 +4,9 @@
 - [x] should be able to copy content from code blocks in ai chat view
 - [x] ai chat messages should have a context menu popover with option to copy
   content
+- [ ] tim as mcp accessible via ai chat to take actions on the database
+  - [ ] could organize TODOs, cleanup data, etc. can do things i would have had
+    to do manually through django admin or write a mgmt command for
 - [ ] when a user submits a web link, it should be accessed and summarized with
   tags auto-generated from the content
 - [ ] when a user submits a web link use semantic search to find similar blocks
@@ -19,31 +22,40 @@
 - [x] should be able to add reference blocks on a page to chat context
 - [x] cmd + space like mac spotlight to search for pages and blocks
 - [x] ability to collapse/expand blocks with nested children
+- [x] refactor the data models
+  - instead of having a Page, Block, Tag, could we just have Page and Block, and
+    to support "tags", we would allow a Block to belong to many Pages. a "tag"
+    would mean a block belongs to that Page and the frontend would render and
+    parse the information as "tags" visually.
 - [ ] reminders/notifications? kinda useless without push notifications which
   require a mobile app i think?
   - maybe can use something like Pusher? i still think you need APN details for
     that
   - maybe can use Twilio? though Sam did say recently that you have to jump
     through some hoops to get a phone number now
-- [ ] blocks should have a context menu popover. right now a cool option would
+- [x] blocks should have a context menu popover. right now a cool option would
   be to move to current day
   - could move delete here? kinda makes it annoying to delete lots of blocks
-  - 
 - [ ] should be able to drag and move block ordering and nestings around
 - [ ] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
+- [ ] ability to select multiple blocks and perform actions on them
+  - [ ] delete multiple blocks
+  - [ ] move multiple blocks to current day
+- [ ] support for [[this syntax of tags]] in blocks
+- [ ] spotlight should allow for actions to, like creating a new page
 
 ## mobile usage
 - [x] better use of space on mobile
   - [x] daily note view 
   - [x] ai chat 
-- [ ] ability to reorder blocks. drag n drop would be great, but maybe just an 
+- [x] ability to reorder blocks. drag n drop would be great, but maybe just an 
   "editing view" w/ up/down arrow would be sufficient for now
 
 # Optimizations
 - [ ] need to cleanup frontend routes, django templates, and the vue app
 - [ ] infinite scroll for ai chat history
-- [ ] infinite scroll for daily notes
+- [-] infinite scroll for daily notes
 
 # Cleanup
 - [x] remove empty __init__.py files that are not needed
@@ -88,7 +100,7 @@
   command logic to handle the `target_date` field. If the field is not provided,
   it should default to the current date. If it is provided, it should move the
   undone blocks to that date instead of the current date.
-- [ ] hitting "enter" to create a new block when on a note from a previous day,
+- [-] hitting "enter" to create a new block when on a note from a previous day,
   it incorrectly creates a new block for the current day instead of under the
   active block
 - [ ] when hitting tab on a new block, it indents the block properly, but it
@@ -97,12 +109,13 @@
   - maybe this isn't the worst ui, but we should show that there are nested
     blocks and either let the user expand them there or let the user click into
     the note. the latter should be possible regardless.
+- [ ] it's possible to delete a page. this will delete any direct blocks for the
+  page, but will not delete reference blocks. when you click the tag in a ref
+  block, it will say failed to load page. in logseq it looks like it recreates
+  the page if it doesn't exist, but the previous referenced blocks are no longer
+  referenced. should we try to reference existing blocks with tags that match
+  new pages?
 
 # Maybe later
 
 - [ ] implement sentence-transformer and chromadb
-- [ ] refactor the data models
-  - instead of having a Page, Block, Tag, could we just have Page and Block, and
-  to support "tags", we would allow a Block to belong to many Pages. a "tag"
-  would mean a block belongs to that Page and the frontend would render and
-  parse the information as "tags" visually.
