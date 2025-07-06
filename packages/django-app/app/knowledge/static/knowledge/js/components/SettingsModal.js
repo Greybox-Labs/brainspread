@@ -381,23 +381,19 @@ window.SettingsModal = {
         <div v-if="currentTab === 'general'" class="tab-content">
           <div class="settings-section">
             <h3>theme</h3>
-            <div class="theme-options">
-              <button
-                class="theme-option"
-                :class="{ active: selectedTheme === 'dark' }"
-                @click="selectTheme('dark')"
-                type="button"
+            <div class="theme-selector">
+              <select
+                v-model="selectedTheme"
+                class="theme-select"
+                @change="selectTheme($event.target.value)"
               >
-                dark
-              </button>
-              <button
-                class="theme-option"
-                :class="{ active: selectedTheme === 'light' }"
-                @click="selectTheme('light')"
-                type="button"
-              >
-                light
-              </button>
+                <option value="dark">dark</option>
+                <option value="light">light</option>
+                <option value="solarized_dark">solarized dark</option>
+                <option value="purple">purple</option>
+                <option value="earthy">earthy</option>
+                <option value="forest">forest</option>
+              </select>
             </div>
           </div>
 

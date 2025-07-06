@@ -65,7 +65,8 @@
       "WebFetch(domain:platform.openai.com)",
       "WebFetch(domain:ai.google.dev)",
       "mcp__sse-server__browser_navigate_back",
-      "mcp__tim__ask_tim"
+      "mcp__tim__ask_tim",
+      "WebFetch(domain:colorhunt.co)"
     ],
     "deny": []
   }

@@ -42,14 +42,18 @@ class User(
     THEME_CHOICES = [
         ("dark", "Dark"),
         ("light", "Light"),
+        ("solarized_dark", "Solarized Dark"),
+        ("purple", "Purple"),
+        ("earthy", "Earthy"),
+        ("forest", "Forest"),
     ]
 
     theme = models.CharField(
         _("theme"),
-        max_length=10,
+        max_length=20,
         choices=THEME_CHOICES,
         default="dark",
-        help_text=_("User's preferred theme (dark or light)"),
+        help_text=_("User's preferred theme"),
     )
 
     def __str__(self):

@@ -54,6 +54,10 @@ class UpdateThemeForm(BaseForm):
     THEME_CHOICES = [
         ("dark", "Dark"),
         ("light", "Light"),
+        ("solarized_dark", "Solarized Dark"),
+        ("purple", "Purple"),
+        ("earthy", "Earthy"),
+        ("forest", "Forest"),
     ]
 
     user = forms.ModelChoiceField(queryset=UserRepository.get_queryset())
@@ -61,6 +65,7 @@ class UpdateThemeForm(BaseForm):
 
     def clean_theme(self):
         theme = self.cleaned_data.get("theme")
-        if theme not in ["dark", "light"]:
+        valid_themes = ["dark", "light", "solarized_dark", "purple", "earthy", "forest"]
+        if theme not in valid_themes:
             raise ValidationError("Invalid theme choice")
         return theme

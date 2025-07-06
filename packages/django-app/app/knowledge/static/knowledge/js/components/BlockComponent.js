@@ -87,6 +87,14 @@ const BlockComponent = {
       return this.block.children?.length > 0;
     },
   },
+  mounted() {
+    // Listen for the custom event to close menus
+    document.addEventListener("closeBlockMenus", this.handleCloseBlockMenus);
+  },
+  beforeUnmount() {
+    // Clean up event listener
+    document.removeEventListener("closeBlockMenus", this.handleCloseBlockMenus);
+  },
   methods: {
     toggleBlockContext() {
       if (this.blockInContext) {
@@ -98,9 +106,24 @@ const BlockComponent = {
     toggleCollapse() {
       this.isCollapsed = !this.isCollapsed;
     },
+    closeOtherMenus() {
+      // Dispatch a custom event to close all other menus
+      document.dispatchEvent(
+        new CustomEvent("closeBlockMenus", { detail: { except: this } })
+      );
+    },
+    handleCloseBlockMenus(event) {
+      // Close this menu if the event is not from this component
+      if (event.detail.except !== this && this.showContextMenu) {
+        this.hideContextMenu();
+      }
+    },
     showContextMenuAt(event) {
       event.preventDefault();
       event.stopPropagation();
+
+      // Close any other open menus first
+      this.closeOtherMenus();
 
       // Calculate position with viewport constraints
       const menuWidth = 200; // min-width from CSS
@@ -108,23 +131,49 @@ const BlockComponent = {
       const menuHeight = 300; // estimated max height
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
+      const isMobile = window.innerWidth <= 768;
 
       let x = event.clientX;
       let y = event.clientY;
 
-      // Adjust X position if menu would overflow right edge (including shadow)
-      if (x + menuWidth + shadowOffset > viewportWidth) {
-        x = viewportWidth - menuWidth - shadowOffset - 10; // 10px padding from edge
-      }
+      // Mobile-specific adjustments
+      if (isMobile) {
+        // On mobile, add extra padding to prevent cutoff
+        const mobilePadding = 20;
+        const mobileBottomPadding = 60; // Extra space for mobile browsers UI
 
-      // Adjust Y position if menu would overflow bottom edge (including shadow)
-      if (y + menuHeight + shadowOffset > viewportHeight) {
-        y = viewportHeight - menuHeight - shadowOffset - 10; // 10px padding from edge
-      }
+        // Adjust X position if menu would overflow right edge
+        if (x + menuWidth + shadowOffset > viewportWidth - mobilePadding) {
+          x = viewportWidth - menuWidth - shadowOffset - mobilePadding;
+        }
 
-      // Ensure menu doesn't go off left or top edge
-      x = Math.max(10, x);
-      y = Math.max(10, y);
+        // Adjust Y position if menu would overflow bottom edge
+        if (
+          y + menuHeight + shadowOffset >
+          viewportHeight - mobileBottomPadding
+        ) {
+          y = viewportHeight - menuHeight - shadowOffset - mobileBottomPadding;
+        }
+
+        // Ensure menu doesn't go off left or top edge
+        x = Math.max(mobilePadding, x);
+        y = Math.max(mobilePadding, y);
+      } else {
+        // Desktop positioning logic
+        // Adjust X position if menu would overflow right edge (including shadow)
+        if (x + menuWidth + shadowOffset > viewportWidth) {
+          x = viewportWidth - menuWidth - shadowOffset - 10; // 10px padding from edge
+        }
+
+        // Adjust Y position if menu would overflow bottom edge (including shadow)
+        if (y + menuHeight + shadowOffset > viewportHeight) {
+          y = viewportHeight - menuHeight - shadowOffset - 10; // 10px padding from edge
+        }
+
+        // Ensure menu doesn't go off left or top edge
+        x = Math.max(10, x);
+        y = Math.max(10, y);
+      }
 
       this.contextMenuPosition = { x, y };
       this.showContextMenu = true;
