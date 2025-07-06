@@ -189,17 +189,33 @@ check-pending-migrations:
   fi
 
 # Docker compose shortcuts
-up:
-  docker-compose up
+up SERVICE="":
+  @if [ -z "{{SERVICE}}" ]; then \
+    docker-compose up; \
+  else \
+    docker-compose up {{SERVICE}}; \
+  fi
 
-up-d:
-  docker-compose up -d
+up-d SERVICE="":
+  @if [ -z "{{SERVICE}}" ]; then \
+    docker-compose up -d; \
+  else \
+    docker-compose up -d {{SERVICE}}; \
+  fi
 
-down:
-  docker-compose down
+down SERVICE="":
+  @if [ -z "{{SERVICE}}" ]; then \
+    docker-compose down; \
+  else \
+    docker-compose stop {{SERVICE}}; \
+  fi
 
-build:
-  docker-compose build
+build SERVICE="":
+  @if [ -z "{{SERVICE}}" ]; then \
+    docker-compose build; \
+  else \
+    docker-compose build {{SERVICE}}; \
+  fi
 
 logs SERVICE="":
   @if [ -z "{{SERVICE}}" ]; then \
@@ -304,6 +320,7 @@ init:
   just up-d db
   sleep 5
   just migrate
+  just generate-secret-key
   echo "Project initialized! Run 'just copy-env' and add your SECRET_KEY, then 'just create-superuser' to get started."
 
 # Pre-push checks - runs all tests, formatters, linters, and Django checks
