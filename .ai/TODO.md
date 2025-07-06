@@ -37,7 +37,7 @@
   be to move to current day
   - could move delete here? kinda makes it annoying to delete lots of blocks
 - [ ] should be able to drag and move block ordering and nestings around
-- [ ] clicking dark or light option in settings should toggle the mode
+- [x] clicking dark or light option in settings should toggle the mode
   immediately so the user can see the change
 - [ ] ability to select multiple blocks and perform actions on them
   - [ ] delete multiple blocks

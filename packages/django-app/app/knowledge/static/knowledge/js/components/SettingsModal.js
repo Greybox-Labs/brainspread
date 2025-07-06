@@ -103,6 +103,8 @@ window.SettingsModal = {
   methods: {
     selectTheme(theme) {
       this.selectedTheme = theme;
+      // Apply theme immediately so user can see the change
+      this.applyTheme(theme);
     },
 
     selectTimezone(timezone) {
