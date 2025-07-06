@@ -4,7 +4,8 @@ default:
   @just --list
 
 # Execute django-admin commands in web container with database safety checks
-django-admin +ARGS:
+[positional-arguments]
+django-admin *ARGS="":
   #!/usr/bin/env bash
   set -euo pipefail
 
@@ -24,7 +25,7 @@ django-admin +ARGS:
     echo "Running command against database at $DB_HOST..."
   fi
 
-  docker-compose run --rm -w /code/app web /code/app/manage.py {{ARGS}}
+  docker-compose run --rm -w /code/app web /code/app/manage.py "$@"
 
 # Execute shell commands in running web container
 exec +ARGS:
@@ -147,8 +148,9 @@ migrate:
 makemigrations:
   just django-admin makemigrations
 
-shell:
-  just django-admin shell
+[positional-arguments]
+shell *ARGS="":
+  just django-admin shell "$@"
 
 collectstatic:
   just django-admin collectstatic --noinput
