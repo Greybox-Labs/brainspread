@@ -712,8 +712,46 @@ const Page = {
     formatContentWithTags(content) {
       if (!content) return "";
 
+      let formatted = content;
+
+      // Replace all bold and italic markdown ***text*** with styled spans (must be first)
+      formatted = formatted.replace(
+        /\*\*\*(.+?)\*\*\*/g,
+        '<span class="markdown-bold-italic">$1</span>'
+      );
+
+      // Replace bold markdown **text** with styled spans
+      formatted = formatted.replace(
+        /\*\*(.+?)\*\*/g,
+        '<span class="markdown-bold">$1</span>'
+      );
+
+      // Replace bold markdown __text__ with styled spans
+      formatted = formatted.replace(
+        /__(.+?)__/g,
+        '<span class="markdown-bold">$1</span>'
+      );
+
+      // Replace italic markdown *text* with styled spans (single asterisks)
+      formatted = formatted.replace(
+        /\*([^*]+?)\*/g,
+        '<span class="markdown-italic">$1</span>'
+      );
+
+      // Replace italic markdown _text_ with styled spans (single underscores)
+      formatted = formatted.replace(
+        /_([^_]+?)_/g,
+        '<span class="markdown-italic">$1</span>'
+      );
+
+      // Replace strikethrough markdown ~~text~~ with styled spans
+      formatted = formatted.replace(
+        /~~(.+?)~~/g,
+        '<span class="markdown-strikethrough">$1</span>'
+      );
+
       // Replace hashtags with clickable styled spans
-      return content.replace(
+      return formatted.replace(
         /#([a-zA-Z0-9_-]+)/g,
         '<span class="inline-tag clickable-tag" data-tag="$1">#$1</span>'
       );

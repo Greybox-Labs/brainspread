@@ -241,18 +241,25 @@ const BlockComponent = {
         </button>
         <div
           class="block-bullet"
-          :class="{ 'todo': block.block_type === 'todo', 'done': block.block_type === 'done' }"
-          @click="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
-          @touchend.prevent="block.block_type === 'todo' || block.block_type === 'done' ? toggleBlockTodo(block) : null"
+          :class="{ 
+            'todo': block.block_type === 'todo', 
+            'done': block.block_type === 'done',
+            'later': block.block_type === 'later',
+            'wontdo': block.block_type === 'wontdo'
+          }"
+          @click="['todo', 'done', 'later', 'wontdo'].includes(block.block_type) ? toggleBlockTodo(block) : null"
+          @touchend.prevent="['todo', 'done', 'later', 'wontdo'].includes(block.block_type) ? toggleBlockTodo(block) : null"
         >
           <span v-if="block.block_type === 'todo'">☐</span>
           <span v-else-if="block.block_type === 'done'">☑</span>
+          <span v-else-if="block.block_type === 'later'">☐</span>
+          <span v-else-if="block.block_type === 'wontdo'">⊘</span>
           <span v-else>•</span>
         </div>
         <div
           v-if="!block.isEditing"
           class="block-content-display"
-          :class="{ 'completed': block.block_type === 'done' }"
+          :class="{ 'completed': ['done', 'wontdo'].includes(block.block_type) }"
           @click="startEditing(block)"
           @touchend.prevent="startEditing(block)"
           v-html="formatContentWithTags(block.content)"
@@ -264,7 +271,7 @@ const BlockComponent = {
           @keydown="onBlockKeyDown($event, block)"
           @blur="stopEditing(block)"
           class="block-content"
-          :class="{ 'completed': block.block_type === 'done' }"
+          :class="{ 'completed': ['done', 'wontdo'].includes(block.block_type) }"
           rows="1"
           placeholder="start writing..."
           ref="blockTextarea"

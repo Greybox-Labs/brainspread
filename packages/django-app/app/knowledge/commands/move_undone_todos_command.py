@@ -47,7 +47,7 @@ class MoveUndoneTodosCommand(AbstractBaseCommand):
         return {
             "moved_count": len(past_todos),
             "target_page": target_page.to_dict(),
-            "moved_blocks": past_todos,
+            "moved_blocks": [block.to_dict() for block in past_todos],
             "message": f"Moved {len(past_todos)} undone TODOs to {target_date.strftime('%Y-%m-%d')} page",
         }
 

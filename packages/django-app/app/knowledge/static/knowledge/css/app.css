@@ -1045,7 +1045,9 @@ body {
 }
 
 .block-bullet.todo,
-.block-bullet.done {
+.block-bullet.done,
+.block-bullet.later,
+.block-bullet.wontdo {
   cursor: pointer;
   transition:
     color 0.1s ease,
@@ -1056,7 +1058,9 @@ body {
 }
 
 .block-bullet.todo:active,
-.block-bullet.done:active {
+.block-bullet.done:active,
+.block-bullet.later:active,
+.block-bullet.wontdo:active {
   transform: scale(0.95);
 }
 
@@ -1071,6 +1075,27 @@ body {
 
 .block-bullet.done:hover {
   color: var(--tag-hover);
+  transform: scale(1.1);
+}
+
+.block-bullet.later {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.block-bullet.later:hover {
+  color: var(--text-secondary);
+  transform: scale(1.05);
+  opacity: 0.7;
+}
+
+.block-bullet.wontdo {
+  color: var(--text-secondary);
+}
+
+.block-bullet.wontdo:hover {
+  color: var(--text-primary);
   transform: scale(1.1);
 }
 
@@ -3725,4 +3750,26 @@ kbd {
   .spotlight-shortcut-item {
     font-size: 0.625rem;
   }
+}
+
+/* Markdown text formatting */
+.markdown-bold {
+  font-weight: 900 !important;
+  text-shadow: 0.5px 0 0 currentColor !important;
+}
+
+.markdown-italic {
+  font-style: italic !important;
+}
+
+.markdown-bold-italic {
+  font-weight: 900 !important;
+  font-style: italic !important;
+  text-shadow: 0.5px 0 0 currentColor !important;
+}
+
+.markdown-strikethrough {
+  text-decoration: line-through !important;
+  text-decoration-color: var(--text-primary) !important;
+  text-decoration-thickness: 2px !important;
 }

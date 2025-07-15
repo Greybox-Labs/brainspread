@@ -91,6 +91,7 @@ class UpdateBlockCommand(AbstractBaseCommand):
         """Auto-detect block type from content patterns"""
         # Only auto-detect for bullet, todo, and done types
         # Don't override other explicit types like heading, code, etc.
+        # Don't auto-detect for later and wontdo - these are explicit states
         if current_block_type not in ["bullet", "todo", "done"]:
             return current_block_type
 
@@ -114,6 +115,10 @@ class UpdateBlockCommand(AbstractBaseCommand):
             return "done"
         elif content_lower.startswith("done"):
             return "done"
+        elif content_lower.startswith("later"):
+            return "later"
+        elif content_lower.startswith("wontdo"):
+            return "wontdo"
 
         # If none of the patterns match, return bullet for todo/done types
         if current_block_type in ["todo", "done"]:

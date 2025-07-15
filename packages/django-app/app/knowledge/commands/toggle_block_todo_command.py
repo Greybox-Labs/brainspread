@@ -18,13 +18,19 @@ class ToggleBlockTodoCommand(AbstractBaseCommand):
 
         block = self.form.cleaned_data["block"]
 
-        # Toggle todo status and update content (business logic)
+        # Cycle through todo states: bullet -> todo -> done -> later -> wontdo -> todo
         if block.block_type == "todo":
             block.block_type = "done"
-            block.content = self._replace_todo_with_done(block.content)
+            block.content = self._replace_content_prefix(block.content, "TODO", "DONE")
         elif block.block_type == "done":
+            block.block_type = "later"
+            block.content = self._replace_content_prefix(block.content, "DONE", "LATER")
+        elif block.block_type == "later":
+            block.block_type = "wontdo"
+            block.content = self._replace_content_prefix(block.content, "LATER", "WONTDO")
+        elif block.block_type == "wontdo":
             block.block_type = "todo"
-            block.content = self._replace_done_with_todo(block.content)
+            block.content = self._replace_content_prefix(block.content, "WONTDO", "TODO")
         else:
             block.block_type = "todo"
             # For non-todo blocks, prepend TODO if content doesn't start with it
@@ -34,24 +40,13 @@ class ToggleBlockTodoCommand(AbstractBaseCommand):
         block.save()
         return block
 
-    def _replace_todo_with_done(self, content: str) -> str:
-        """Replace TODO with DONE in content, preserving case and formatting"""
-        # Replace TODO: with DONE:
-        content = re.sub(r"\bTODO\b(?=\s*:)", "DONE", content)
-        # Replace TODO (without colon) with DONE
-        content = re.sub(r"\bTODO\b(?!\s*:)", "DONE", content)
+    def _replace_content_prefix(self, content: str, old_prefix: str, new_prefix: str) -> str:
+        """Replace old prefix with new prefix in content, preserving case and formatting"""
+        # Replace with colon (e.g., "TODO:" -> "DONE:")
+        content = re.sub(rf"\b{old_prefix}\b(?=\s*:)", new_prefix, content)
+        # Replace without colon (e.g., "TODO" -> "DONE")
+        content = re.sub(rf"\b{old_prefix}\b(?!\s*:)", new_prefix, content)
         # Handle lowercase variants
-        content = re.sub(r"\btodo\b(?=\s*:)", "DONE", content, flags=re.IGNORECASE)
-        content = re.sub(r"\btodo\b(?!\s*:)", "DONE", content, flags=re.IGNORECASE)
-        return content
-
-    def _replace_done_with_todo(self, content: str) -> str:
-        """Replace DONE with TODO in content, preserving case and formatting"""
-        # Replace DONE: with TODO:
-        content = re.sub(r"\bDONE\b(?=\s*:)", "TODO", content)
-        # Replace DONE (without colon) with TODO
-        content = re.sub(r"\bDONE\b(?!\s*:)", "TODO", content)
-        # Handle lowercase variants
-        content = re.sub(r"\bdone\b(?=\s*:)", "TODO", content, flags=re.IGNORECASE)
-        content = re.sub(r"\bdone\b(?!\s*:)", "TODO", content, flags=re.IGNORECASE)
+        content = re.sub(rf"\b{old_prefix.lower()}\b(?=\s*:)", new_prefix, content, flags=re.IGNORECASE)
+        content = re.sub(rf"\b{old_prefix.lower()}\b(?!\s*:)", new_prefix, content, flags=re.IGNORECASE)
         return content

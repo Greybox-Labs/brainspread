@@ -65,6 +65,8 @@ class Block(UUIDModelMixin, CRUDTimestampsMixin):
             ("bullet", "Bullet Point"),
             ("todo", "Todo"),
             ("done", "Done"),
+            ("later", "Later"),
+            ("wontdo", "Won't Do"),
             ("heading", "Heading"),
             ("quote", "Quote"),
             ("code", "Code Block"),
