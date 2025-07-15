@@ -32,16 +32,16 @@ class TestTodoContentIntegration(TestCase):
         self.assertEqual(updated_block.content, "DONE google tasks integration")
         self.assertEqual(updated_block.block_type, "done")
 
-        # Toggle back to todo
+        # Toggle to later (next state after done)
         form_data = {"user": self.user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
         command2 = ToggleBlockTodoCommand(form)
         updated_block2 = command2.execute()
 
-        # Verify content and type changed back
-        self.assertEqual(updated_block2.content, "TODO google tasks integration")
-        self.assertEqual(updated_block2.block_type, "todo")
+        # Verify content and type changed to later
+        self.assertEqual(updated_block2.content, "LATER google tasks integration")
+        self.assertEqual(updated_block2.block_type, "later")
 
     def test_should_handle_todo_content_replacement_patterns(self):
         """Test various todo content replacement patterns"""
@@ -74,15 +74,15 @@ class TestTodoContentIntegration(TestCase):
                 self.assertEqual(updated_block.block_type, "done")
 
     def test_should_handle_done_content_replacement_patterns(self):
-        """Test various done content replacement patterns"""
+        """Test various done content replacement patterns - done goes to later first"""
         test_cases = [
-            ("DONE simple task", "TODO simple task"),
-            ("DONE: task with colon", "TODO: task with colon"),
-            ("done lowercase", "TODO lowercase"),
-            ("Done mixed case", "TODO mixed case"),
+            ("DONE simple task", "LATER simple task"),
+            ("DONE: task with colon", "LATER: task with colon"),
+            ("done lowercase", "LATER lowercase"),
+            ("Done mixed case", "LATER mixed case"),
         ]
 
-        for original_content, expected_todo_content in test_cases:
+        for original_content, expected_later_content in test_cases:
             with self.subTest(content=original_content):
                 # Create block with original content
                 block = BlockFactory(
@@ -92,7 +92,7 @@ class TestTodoContentIntegration(TestCase):
                     block_type="done",
                 )
 
-                # Toggle to todo
+                # Toggle to later (next state after done)
                 form_data = {"user": self.user.id, "block": str(block.uuid)}
                 form = ToggleBlockTodoForm(form_data)
                 form.is_valid()
@@ -100,8 +100,8 @@ class TestTodoContentIntegration(TestCase):
                 updated_block = command.execute()
 
                 # Verify content transformation
-                self.assertEqual(updated_block.content, expected_todo_content)
-                self.assertEqual(updated_block.block_type, "todo")
+                self.assertEqual(updated_block.content, expected_later_content)
+                self.assertEqual(updated_block.block_type, "later")
 
     def test_should_handle_regex_replacement_edge_cases(self):
         """Test edge cases in regex content replacement"""
@@ -168,3 +168,32 @@ class TestTodoContentIntegration(TestCase):
             updated_block.content, "DONE:   spaced    content   with    gaps"
         )
         self.assertEqual(updated_block.block_type, "done")
+
+    def test_later_and_wontdo_content_replacement(self):
+        """Test content replacement for later and wontdo states"""
+        # Test later -> wontdo
+        block = BlockFactory(
+            user=self.user,
+            page=self.page,
+            content="LATER review PR",
+            block_type="later",
+        )
+
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
+        updated_block = command.execute()
+
+        self.assertEqual(updated_block.content, "WONTDO review PR")
+        self.assertEqual(updated_block.block_type, "wontdo")
+
+        # Test wontdo -> todo
+        form_data = {"user": self.user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command2 = ToggleBlockTodoCommand(form)
+        updated_block2 = command2.execute()
+
+        self.assertEqual(updated_block2.content, "TODO review PR")
+        self.assertEqual(updated_block2.block_type, "todo")

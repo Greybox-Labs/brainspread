@@ -27,10 +27,14 @@ class ToggleBlockTodoCommand(AbstractBaseCommand):
             block.content = self._replace_content_prefix(block.content, "DONE", "LATER")
         elif block.block_type == "later":
             block.block_type = "wontdo"
-            block.content = self._replace_content_prefix(block.content, "LATER", "WONTDO")
+            block.content = self._replace_content_prefix(
+                block.content, "LATER", "WONTDO"
+            )
         elif block.block_type == "wontdo":
             block.block_type = "todo"
-            block.content = self._replace_content_prefix(block.content, "WONTDO", "TODO")
+            block.content = self._replace_content_prefix(
+                block.content, "WONTDO", "TODO"
+            )
         else:
             block.block_type = "todo"
             # For non-todo blocks, prepend TODO if content doesn't start with it
@@ -40,13 +44,25 @@ class ToggleBlockTodoCommand(AbstractBaseCommand):
         block.save()
         return block
 
-    def _replace_content_prefix(self, content: str, old_prefix: str, new_prefix: str) -> str:
+    def _replace_content_prefix(
+        self, content: str, old_prefix: str, new_prefix: str
+    ) -> str:
         """Replace old prefix with new prefix in content, preserving case and formatting"""
         # Replace with colon (e.g., "TODO:" -> "DONE:")
         content = re.sub(rf"\b{old_prefix}\b(?=\s*:)", new_prefix, content)
         # Replace without colon (e.g., "TODO" -> "DONE")
         content = re.sub(rf"\b{old_prefix}\b(?!\s*:)", new_prefix, content)
         # Handle lowercase variants
-        content = re.sub(rf"\b{old_prefix.lower()}\b(?=\s*:)", new_prefix, content, flags=re.IGNORECASE)
-        content = re.sub(rf"\b{old_prefix.lower()}\b(?!\s*:)", new_prefix, content, flags=re.IGNORECASE)
+        content = re.sub(
+            rf"\b{old_prefix.lower()}\b(?=\s*:)",
+            new_prefix,
+            content,
+            flags=re.IGNORECASE,
+        )
+        content = re.sub(
+            rf"\b{old_prefix.lower()}\b(?!\s*:)",
+            new_prefix,
+            content,
+            flags=re.IGNORECASE,
+        )
         return content

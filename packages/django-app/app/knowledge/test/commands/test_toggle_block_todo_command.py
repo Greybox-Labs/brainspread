@@ -55,8 +55,8 @@ class TestToggleBlockTodoCommand:
         block.refresh_from_db()
         assert block.block_type == "done"
 
-    def test_toggle_done_to_todo(self):
-        """Test toggling a done block to todo"""
+    def test_toggle_done_to_later(self):
+        """Test toggling a done block to later"""
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
@@ -69,14 +69,14 @@ class TestToggleBlockTodoCommand:
         command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
-        assert result.block_type == "todo"
+        assert result.block_type == "later"
 
         # Verify in database
         block.refresh_from_db()
-        assert block.block_type == "todo"
+        assert block.block_type == "later"
 
     def test_full_cycle_toggle(self):
-        """Test the full cycle: bullet -> todo -> done -> todo"""
+        """Test the full cycle: bullet -> todo -> done -> later -> wontdo -> todo"""
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
@@ -99,7 +99,23 @@ class TestToggleBlockTodoCommand:
         result = command.execute()
         assert result.block_type == "done"
 
-        # done -> todo
+        # done -> later
+        form_data = {"user": user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
+        result = command.execute()
+        assert result.block_type == "later"
+
+        # later -> wontdo
+        form_data = {"user": user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
+        result = command.execute()
+        assert result.block_type == "wontdo"
+
+        # wontdo -> todo
         form_data = {"user": user.id, "block": str(block.uuid)}
         form = ToggleBlockTodoForm(form_data)
         form.is_valid()
@@ -132,8 +148,8 @@ class TestToggleBlockTodoCommand:
         block.refresh_from_db()
         assert block.content == "DONE write documentation"
 
-    def test_content_update_done_to_todo(self):
-        """Test that content is updated when toggling from done to todo"""
+    def test_content_update_done_to_later(self):
+        """Test that content is updated when toggling from done to later"""
         user = User.objects.create_user(email="test@example.com", password="password")
         page = Page.objects.create(title="Test Page", user=user)
         block = Block.objects.create(
@@ -150,12 +166,12 @@ class TestToggleBlockTodoCommand:
         command = ToggleBlockTodoCommand(form)
         result = command.execute()
 
-        assert result.block_type == "todo"
-        assert result.content == "TODO write documentation"
+        assert result.block_type == "later"
+        assert result.content == "LATER write documentation"
 
         # Verify in database
         block.refresh_from_db()
-        assert block.content == "TODO write documentation"
+        assert block.content == "LATER write documentation"
 
     def test_content_with_colon_todo_to_done(self):
         """Test that content with colon is updated correctly"""
@@ -191,6 +207,58 @@ class TestToggleBlockTodoCommand:
             form.is_valid()
             command = ToggleBlockTodoCommand(form)
             command.execute()
+
+    def test_toggle_later_to_wontdo(self):
+        """Test toggling a later block to wontdo"""
+        user = User.objects.create_user(email="test@example.com", password="password")
+        page = Page.objects.create(title="Test Page", user=user)
+        block = Block.objects.create(
+            page=page,
+            user=user,
+            content="LATER review code",
+            block_type="later",
+            order=0,
+        )
+
+        form_data = {"user": user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
+        result = command.execute()
+
+        assert result.block_type == "wontdo"
+        assert result.content == "WONTDO review code"
+
+        # Verify in database
+        block.refresh_from_db()
+        assert block.block_type == "wontdo"
+        assert block.content == "WONTDO review code"
+
+    def test_toggle_wontdo_to_todo(self):
+        """Test toggling a wontdo block to todo"""
+        user = User.objects.create_user(email="test@example.com", password="password")
+        page = Page.objects.create(title="Test Page", user=user)
+        block = Block.objects.create(
+            page=page,
+            user=user,
+            content="WONTDO review code",
+            block_type="wontdo",
+            order=0,
+        )
+
+        form_data = {"user": user.id, "block": str(block.uuid)}
+        form = ToggleBlockTodoForm(form_data)
+        form.is_valid()
+        command = ToggleBlockTodoCommand(form)
+        result = command.execute()
+
+        assert result.block_type == "todo"
+        assert result.content == "TODO review code"
+
+        # Verify in database
+        block.refresh_from_db()
+        assert block.block_type == "todo"
+        assert block.content == "TODO review code"
 
     def test_toggle_unauthorized_block(self):
         """Test toggling a block owned by another user raises ValidationError"""
