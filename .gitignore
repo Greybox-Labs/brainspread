@@ -5,6 +5,11 @@
 __pycache__
 db.sqlite3
 
+# AI
+.claude/
+.cursor/
+.gemini/
+
 # Backup files #
 *.bak
 
